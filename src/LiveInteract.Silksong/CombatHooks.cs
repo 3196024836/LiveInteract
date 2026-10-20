@@ -25,7 +25,8 @@ internal static class HeroDamageHook
     [ThreadStatic] internal static int DamageDepth;
     private static bool Prefix(GameObject __0,out bool __state)
     {
-        if(NativeAllyExecution.IsFriendly(__0)){__state=false;return false;}
+        // 友军（含远程投射物）的命中一律不结算，并记一条诊断，方便实机确认有没有漏网来源。
+        if(NativeAllyExecution.IsFriendly(__0)){GameActions.Current?.ReportFriendlyDamageBlocked(__0);__state=false;return false;}
         __state = GameActions.Current != null && !GameActions.Current.Invincible;
         if (GameActions.Current?.Invincible == true) { return false; }
         if (__state) { DamageDepth++; }

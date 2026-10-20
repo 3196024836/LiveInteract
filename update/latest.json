@@ -1,7 +1,7 @@
 ﻿{
-    "version":  "0.7.8",
-    "notes":  "弹幕口令「大招 / 灵丝风暴」改为「技能」→ 苍白之爪（原生丝技入口 BOSS NEEDLE）。直播图里丝技只显示技能名，不再带「施放」前缀；旧关键词不再命中。",
-    "url":  "https://github.com/3196024836/LiveInteract/releases/download/v0.7.8/LiveInteract-0.7.8-slim-win-x64.zip",
-    "sha256":  "1ebe7388f9beedeebae5638f9aa091a8d5a19374ba722cff33eee5dcb3dcfba3",
-    "size":  3724490
+    "version":  "0.7.9",
+    "notes":  "远程友军伤害链路再加固：友军身上每 0.5 秒扫描一次新出现的原生伤害组件并关闭（飞行道具、特效子物体也收编），投射物创建时、池化复用时、每帧都会保持关闭；万一仍命中主播，会拦截并在游戏日志里记一条“已拦截友军对主播的伤害：来源名”，方便实机核对是否还有漏网来源。",
+    "url":  "https://github.com/3196024836/LiveInteract/releases/download/v0.7.9/LiveInteract-0.7.9-slim-win-x64.zip",
+    "sha256":  "0681b1ae87622a2f3423536c664712809e468a8c3a27b476c0d8aa1524926160",
+    "size":  3724667
 }

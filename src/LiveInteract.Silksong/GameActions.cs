@@ -41,6 +41,7 @@ internal sealed class GameActions
     private readonly List<AsyncOperationHandle<GameObject>> assetHandles = new();
     private readonly Dictionary<string, AsyncOperationHandle<GameObject>> namedPrefabHandles = new();
     private readonly List<string> diagnostics = new();
+    private readonly Dictionary<string, float> friendlyBlockNext = new();
     private readonly HashSet<string> exercised = new();
     private readonly List<string> sceneKeys = new();
     private readonly List<string> prefabKeys = new();
@@ -578,6 +579,16 @@ internal sealed class GameActions
             }
     }
 
+    /// <summary>友军命中主播时记一条限频诊断：真机上能直接看出有没有漏网来源。</summary>
+    public void ReportFriendlyDamageBlocked(GameObject source)
+    {
+        var name = source != null ? source.name : "未知来源";
+        if (friendlyBlockNext.TryGetValue(name, out var next) && Time.realtimeSinceStartup < next) { return; }
+        friendlyBlockNext[name] = Time.realtimeSinceStartup + 10f;
+        diagnostics.Add("已拦截友军对主播的伤害：" + name);
+        Diagnostic?.Invoke("已拦截友军对主播的伤害：" + name);
+    }
+
     /// <summary>恢复临时属性并清除仅本工具创建的对象，不撤销永久修改。</summary>
     public void Reset()
     {
@@ -634,7 +645,7 @@ internal sealed class GameActions
         var data = ExistingPlayerData(); // 只读已有数据，禁止为心跳创建单例。
         var status = new GameStatus
         {
-            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.7.8", CanAct = CanAct,
+            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.7.9", CanAct = CanAct,
             Health = data?.health ?? 0, BlueHealth = data?.healthBlue ?? 0, ShieldPoints = shieldPoints, CompanionCount = CompanionCount, PickupCount = pickups.Count, SizeLayerCount = appearanceStacks.Where(a => a != null).Sum(a => a.Count), Silk = data?.silk ?? 0,
             ActiveEffects = effects.Describe(Time.realtimeSinceStartup).ToList(),
             SpawnableMonsterIds = monsterAssets.AvailableIds,

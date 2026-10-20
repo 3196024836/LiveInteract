@@ -30,6 +30,7 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     private GameObject? followPoint;
     private Rigidbody2D? body;
     private float nextTarget;
+    private float nextWeaponScan;
     private float nextSelfHit;
     private float nearSince;
     private Vector3 lastHeroPosition;
@@ -71,6 +72,16 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
         if(followPoint!=null)followPoint.transform.position=heroPosition+new Vector3(-2,Flying?1.2f:0,0);
         if(GameActions.Current?.CanAct!=true)return;
         if(Time.unscaledTime>=nextTarget){weapons.RemoveAll(w=>w==null);projectiles.RemoveAll(p=>p==null||p.Owner!=this);nextTarget=Time.unscaledTime+.25f;enemy=GameActions.Current.FindHostile(transform.position,14);}
+        if(Time.unscaledTime>=nextWeaponScan)
+        {
+            // 后加进来的子物体（飞行道具、特效）同样收编并关掉原生伤害组件。
+            nextWeaponScan=Time.unscaledTime+.5f;
+            foreach(var weapon in GetComponentsInChildren<DamageHero>(true))
+            {
+                if(weapon==null||weapons.Contains(weapon))continue;
+                weapons.Add(weapon);weapon.enabled=false;
+            }
+        }
         Retarget();
     }
     /// <summary>把友军直接放到角色身侧；重生、传送和场景切换后都走这里，并同步物理位置。</summary>
