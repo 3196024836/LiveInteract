@@ -1,20 +1,17 @@
 {
   "SchemaVersion": 1,
-  "Name": "丝之歌 · 原生援军与轻整活",
+  "Name": "丝之歌 · 金币雨与随机召唤",
   "SpawnLimitOverride": 0,
   "Rules": [
     {
-      "Id": "v04-life",
-      "Name": "原生回血",
+      "Id": "v06-friend-melee",
+      "Name": "小弟 · 颅潜虫",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
-          "回血",
-          "加血",
-          "奶我",
-          "救命"
+          "小弟"
         ],
         "TextMatching": 1,
         "GiftId": "",
@@ -27,7 +24,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -37,234 +36,11 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "health.add",
-        "Arguments": {
-          "value": "2"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-silk",
-      "Name": "补充原生灵丝",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "回丝",
-          "回蓝",
-          "能量"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "silk.add",
-        "Arguments": {
-          "value": "6"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-shield",
-      "Name": "护盾应援",
-      "Enabled": false,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "护盾",
-          "保护罩"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "health.blue",
-        "Arguments": {
-          "value": "1"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-guard",
-      "Name": "无敌护佑（逐次加时）",
-      "Enabled": false,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "无敌",
-          "保护我"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "health.invincible",
-        "Arguments": {},
-        "ParameterBindings": {},
-        "DurationSeconds": 2,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 1,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-survive",
-      "Name": "免死护佑（逐次加时）",
-      "Enabled": false,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "别死",
-          "救一下"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "health.survive",
-        "Arguments": {},
-        "ParameterBindings": {},
-        "DurationSeconds": 4,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 1,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-free-ally",
-      "Name": "短时机械援军",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "小弟",
-          "援军",
-          "帮忙"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
+        "ActionId": "ally.native.bone-goomba",
         "Arguments": {
           "count": "1",
-          "value": "8",
-          "lifetime": "12"
+          "value": "1",
+          "lifetime": "0"
         },
         "ParameterBindings": {},
         "DurationSeconds": 8,
@@ -276,15 +52,14 @@
       }
     },
     {
-      "Id": "v04-grow",
-      "Name": "变大独立叠层",
+      "Id": "v06-friend-ranged",
+      "Name": "远程小弟 · 圣厂投掷工",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
-          "怪变大",
-          "巨兽登场"
+          "远程小弟"
         ],
         "TextMatching": 1,
         "GiftId": "",
@@ -297,7 +72,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -307,103 +84,11 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "enemy.growStack",
-        "Arguments": {
-          "enemy": "",
-          "value": "0.2"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-shrink",
-      "Name": "变小独立叠层",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "怪变小",
-          "迷你怪"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "enemy.shrinkStack",
-        "Arguments": {
-          "enemy": "",
-          "value": "0.2"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-copy",
-      "Name": "复制普通敌人",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "复制",
-          "影分身"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "enemy.cloneSafe",
+        "ActionId": "ally.native.understore-thrower",
         "Arguments": {
           "count": "1",
-          "offsetX": "5",
-          "offsetY": "1"
+          "value": "1",
+          "lifetime": "0"
         },
         "ParameterBindings": {},
         "DurationSeconds": 8,
@@ -415,15 +100,14 @@
       }
     },
     {
-      "Id": "v04-small",
-      "Name": "添一只小怪",
+      "Id": "v06-enemy-melee",
+      "Name": "小怪 · 颅潜虫",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
-          "小怪",
-          "刷怪"
+          "小怪"
         ],
         "TextMatching": 1,
         "GiftId": "",
@@ -436,7 +120,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -462,16 +148,14 @@
       }
     },
     {
-      "Id": "v04-clear",
-      "Name": "只清敌对召唤",
+      "Id": "v06-enemy-ranged",
+      "Name": "远程小怪 · 圣厂投掷工",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
-          "清场",
-          "清怪",
-          "清理"
+          "远程小怪"
         ],
         "TextMatching": 1,
         "GiftId": "",
@@ -484,7 +168,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -494,8 +180,12 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "enemy.clearHostiles",
-        "Arguments": {},
+        "ActionId": "spawn.understore-thrower",
+        "Arguments": {
+          "count": "1",
+          "offsetX": "6",
+          "offsetY": "1"
+        },
         "ParameterBindings": {},
         "DurationSeconds": 8,
         "RepeatCount": 1,
@@ -506,17 +196,110 @@
       }
     },
     {
-      "Id": "v04-calm",
-      "Name": "恢复整活保留支援",
+      "Id": "v06-named-enemy",
+      "Name": "生成怪物＋准确名称 · 5秒",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
-          "恢复",
-          "恢复正常",
-          "重置",
-          "救场"
+          "生成怪物"
+        ],
+        "TextMatching": 2,
+        "GiftId": "",
+        "GiftName": "",
+        "AllowedUsers": [],
+        "BlockedUsers": [],
+        "MinimumFanLevel": 0,
+        "RequireFollower": false,
+        "Counting": 0,
+        "SingleExecution": false,
+        "Threshold": 1,
+        "MinGiftUnitValue": 0,
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
+      },
+      "Probability": 1,
+      "CooldownSeconds": 0,
+      "UserCooldownSeconds": 0,
+      "MaximumTriggers": 0,
+      "MaximumPerEvent": 1000,
+      "StopAfterMatch": true,
+      "Root": {
+        "Kind": 0,
+        "ActionId": "summon.named.enemy",
+        "Arguments": {
+          "name": "",
+          "count": "1",
+          "lifetime": "5"
+        },
+        "ParameterBindings": {},
+        "DurationSeconds": 8,
+        "RepeatCount": 1,
+        "DelaySeconds": 0,
+        "Weight": 1,
+        "Stacking": 2,
+        "Children": []
+      }
+    },
+    {
+      "Id": "v06-named-ally",
+      "Name": "生成小弟＋准确名称 · 5秒",
+      "Enabled": true,
+      "GameId": "silksong",
+      "Trigger": {
+        "Type": 0,
+        "Keywords": [
+          "生成小弟"
+        ],
+        "TextMatching": 2,
+        "GiftId": "",
+        "GiftName": "",
+        "AllowedUsers": [],
+        "BlockedUsers": [],
+        "MinimumFanLevel": 0,
+        "RequireFollower": false,
+        "Counting": 0,
+        "SingleExecution": false,
+        "Threshold": 1,
+        "MinGiftUnitValue": 0,
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
+      },
+      "Probability": 1,
+      "CooldownSeconds": 0,
+      "UserCooldownSeconds": 0,
+      "MaximumTriggers": 0,
+      "MaximumPerEvent": 1000,
+      "StopAfterMatch": true,
+      "Root": {
+        "Kind": 0,
+        "ActionId": "summon.named.ally",
+        "Arguments": {
+          "name": "",
+          "count": "1",
+          "lifetime": "5"
+        },
+        "ParameterBindings": {},
+        "DurationSeconds": 8,
+        "RepeatCount": 1,
+        "DelaySeconds": 0,
+        "Weight": 1,
+        "Stacking": 2,
+        "Children": []
+      }
+    },
+    {
+      "Id": "v06-grow",
+      "Name": "怪变大 · 最近敌人永久叠加",
+      "Enabled": true,
+      "GameId": "silksong",
+      "Trigger": {
+        "Type": 0,
+        "Keywords": [
+          "怪变大"
         ],
         "TextMatching": 1,
         "GiftId": "",
@@ -529,7 +312,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -539,8 +324,106 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "effects.calm",
-        "Arguments": {},
+        "ActionId": "enemy.growStack",
+        "Arguments": {
+          "enemy": "",
+          "value": "0.2"
+        },
+        "ParameterBindings": {},
+        "DurationSeconds": 0,
+        "RepeatCount": 1,
+        "DelaySeconds": 0,
+        "Weight": 1,
+        "Stacking": 2,
+        "Children": []
+      }
+    },
+    {
+      "Id": "v06-shrink",
+      "Name": "怪变小 · 最近敌人永久叠加",
+      "Enabled": true,
+      "GameId": "silksong",
+      "Trigger": {
+        "Type": 0,
+        "Keywords": [
+          "怪变小"
+        ],
+        "TextMatching": 1,
+        "GiftId": "",
+        "GiftName": "",
+        "AllowedUsers": [],
+        "BlockedUsers": [],
+        "MinimumFanLevel": 0,
+        "RequireFollower": false,
+        "Counting": 0,
+        "SingleExecution": false,
+        "Threshold": 1,
+        "MinGiftUnitValue": 0,
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
+      },
+      "Probability": 1,
+      "CooldownSeconds": 0,
+      "UserCooldownSeconds": 0,
+      "MaximumTriggers": 0,
+      "MaximumPerEvent": 1000,
+      "StopAfterMatch": true,
+      "Root": {
+        "Kind": 0,
+        "ActionId": "enemy.shrinkStack",
+        "Arguments": {
+          "enemy": "",
+          "value": "0.2"
+        },
+        "ParameterBindings": {},
+        "DurationSeconds": 0,
+        "RepeatCount": 1,
+        "DelaySeconds": 0,
+        "Weight": 1,
+        "Stacking": 2,
+        "Children": []
+      }
+    },
+    {
+      "Id": "v06-coins",
+      "Name": "金币 · 原生念珠雨",
+      "Enabled": true,
+      "GameId": "silksong",
+      "Trigger": {
+        "Type": 0,
+        "Keywords": [
+          "金币"
+        ],
+        "TextMatching": 1,
+        "GiftId": "",
+        "GiftName": "",
+        "AllowedUsers": [],
+        "BlockedUsers": [],
+        "MinimumFanLevel": 0,
+        "RequireFollower": false,
+        "Counting": 0,
+        "SingleExecution": false,
+        "Threshold": 1,
+        "MinGiftUnitValue": 0,
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
+      },
+      "Probability": 1,
+      "CooldownSeconds": 0,
+      "UserCooldownSeconds": 0,
+      "MaximumTriggers": 0,
+      "MaximumPerEvent": 1000,
+      "StopAfterMatch": true,
+      "Root": {
+        "Kind": 0,
+        "ActionId": "currency.rain",
+        "Arguments": {
+          "count": "10",
+          "spread": "6",
+          "height": "5"
+        },
         "ParameterBindings": {},
         "DurationSeconds": 8,
         "RepeatCount": 1,
@@ -551,13 +434,15 @@
       }
     },
     {
-      "Id": "v04-chat-help",
-      "Name": "每5条普通弹幕原生回血",
+      "Id": "v06-heal",
+      "Name": "回血1格",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
-        "Keywords": [],
+        "Keywords": [
+          "回血"
+        ],
         "TextMatching": 1,
         "GiftId": "",
         "GiftName": "",
@@ -565,11 +450,13 @@
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
         "RequireFollower": false,
-        "Counting": 1,
+        "Counting": 0,
         "SingleExecution": false,
-        "Threshold": 5,
+        "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -593,13 +480,16 @@
       }
     },
     {
-      "Id": "v04-likes",
-      "Name": "每50赞补充原生灵丝",
+      "Id": "v06-silk",
+      "Name": "回蓝/回丝1点",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
-        "Type": 2,
-        "Keywords": [],
+        "Type": 0,
+        "Keywords": [
+          "回蓝",
+          "回丝"
+        ],
         "TextMatching": 1,
         "GiftId": "",
         "GiftName": "",
@@ -607,11 +497,13 @@
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
         "RequireFollower": false,
-        "Counting": 1,
+        "Counting": 0,
         "SingleExecution": false,
-        "Threshold": 50,
+        "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -623,48 +515,6 @@
         "Kind": 0,
         "ActionId": "silk.add",
         "Arguments": {
-          "value": "3"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-follow",
-      "Name": "原生回血",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 3,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "health.add",
-        "Arguments": {
           "value": "1"
         },
         "ParameterBindings": {},
@@ -677,365 +527,14 @@
       }
     },
     {
-      "Id": "v04-heart",
-      "Name": "小心心：机械小弟持续跟随",
+      "Id": "v06-storm",
+      "Name": "大招 · 原生灵丝风暴",
       "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "小心心",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
-        "Arguments": {
-          "count": "1",
-          "value": "8",
-          "lifetime": "0"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-rose",
-      "Name": "玫瑰：双小弟持续跟随",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "玫瑰",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
-        "Arguments": {
-          "count": "2",
-          "value": "8",
-          "lifetime": "0"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-party-wasp",
-      "Name": "棒棒糖：来只木蜂添乱",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "棒棒糖",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "spawn.shellwood-wasp",
-        "Arguments": {
-          "count": "1",
-          "offsetX": "6",
-          "offsetY": "1"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-party-copy",
-      "Name": "啤酒：复制一只普通敌人",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "啤酒",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "enemy.cloneSafe",
-        "Arguments": {
-          "count": "1",
-          "offsetX": "6",
-          "offsetY": "1"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-tier-elite",
-      "Name": "原生机械援军 ×4",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 500,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
-        "Arguments": {
-          "count": "4",
-          "value": "8",
-          "lifetime": "0"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-tier-guard",
-      "Name": "原生机械援军 ×3",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 100,
-        "MaxGiftUnitValue": 499
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
-        "Arguments": {
-          "count": "3",
-          "value": "8",
-          "lifetime": "0"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-tier-scout",
-      "Name": "原生机械援军 ×2",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 10,
-        "MaxGiftUnitValue": 99
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
-        "Arguments": {
-          "count": "2",
-          "value": "8",
-          "lifetime": "0"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-tier-base",
-      "Name": "基础支援（含单价未知）",
-      "Enabled": true,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 1,
-        "Keywords": [],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 9
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "ally.clockwork",
-        "Arguments": {
-          "count": "1",
-          "value": "8",
-          "lifetime": "0"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 8,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-opt-storm",
-      "Name": "可选：原生灵丝风暴（会占用动作）",
-      "Enabled": false,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
+          "大招",
           "灵丝风暴"
         ],
         "TextMatching": 1,
@@ -1049,7 +548,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -1071,15 +572,13 @@
       }
     },
     {
-      "Id": "v04-opt-spear",
-      "Name": "可选：原生丝之矛（会占用动作）",
-      "Enabled": false,
+      "Id": "v06-likes-rain",
+      "Name": "每100赞 · 超大念珠雨",
+      "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "丝之矛"
-        ],
+        "Type": 2,
+        "Keywords": [],
         "TextMatching": 1,
         "GiftId": "",
         "GiftName": "",
@@ -1087,11 +586,13 @@
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
         "RequireFollower": false,
-        "Counting": 0,
+        "Counting": 1,
         "SingleExecution": false,
-        "Threshold": 1,
+        "Threshold": 100,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -1101,8 +602,12 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "cast.silkspear",
-        "Arguments": {},
+        "ActionId": "currency.rain",
+        "Arguments": {
+          "count": "120",
+          "spread": "14",
+          "height": "8"
+        },
         "ParameterBindings": {},
         "DurationSeconds": 8,
         "RepeatCount": 1,
@@ -1113,18 +618,16 @@
       }
     },
     {
-      "Id": "v04-opt-damage",
-      "Name": "可选：数值增伤",
-      "Enabled": false,
+      "Id": "v06-heart",
+      "Name": "小心心 · 随机普通友军2只",
+      "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "爆发"
-        ],
+        "Type": 1,
+        "Keywords": [],
         "TextMatching": 1,
         "GiftId": "",
-        "GiftName": "",
+        "GiftName": "小心心",
         "AllowedUsers": [],
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
@@ -1133,7 +636,12 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": [
+          "1号小心心",
+          "2号小心心"
+        ]
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -1143,12 +651,15 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "damage.all",
+        "ActionId": "summon.random.ally",
         "Arguments": {
-          "value": "2"
+          "count": "2",
+          "pool": "ordinary",
+          "power": "1",
+          "lifetime": "0"
         },
         "ParameterBindings": {},
-        "DurationSeconds": 4,
+        "DurationSeconds": 8,
         "RepeatCount": 1,
         "DelaySeconds": 0,
         "Weight": 1,
@@ -1157,18 +668,16 @@
       }
     },
     {
-      "Id": "v04-opt-defense",
-      "Name": "可选：数值减伤",
-      "Enabled": false,
+      "Id": "v06-note",
+      "Name": "玫瑰 · 随机普通敌军1只",
+      "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "减伤"
-        ],
+        "Type": 1,
+        "Keywords": [],
         "TextMatching": 1,
         "GiftId": "",
-        "GiftName": "",
+        "GiftName": "玫瑰",
         "AllowedUsers": [],
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
@@ -1177,7 +686,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -1187,12 +698,15 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "damage.taken",
+        "ActionId": "summon.random.enemy",
         "Arguments": {
-          "value": "0.5"
+          "count": "1",
+          "pool": "ordinary",
+          "power": "1",
+          "lifetime": "0"
         },
         "ParameterBindings": {},
-        "DurationSeconds": 6,
+        "DurationSeconds": 8,
         "RepeatCount": 1,
         "DelaySeconds": 0,
         "Weight": 1,
@@ -1201,18 +715,16 @@
       }
     },
     {
-      "Id": "v04-opt-silk",
-      "Name": "可选：无限灵丝",
-      "Enabled": false,
+      "Id": "v06-strong-friend",
+      "Name": "棒棒糖 · 随机强力友军2只",
+      "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "无限丝"
-        ],
+        "Type": 1,
+        "Keywords": [],
         "TextMatching": 1,
         "GiftId": "",
-        "GiftName": "",
+        "GiftName": "棒棒糖",
         "AllowedUsers": [],
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
@@ -1221,7 +733,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -1231,10 +745,15 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "silk.infinite",
-        "Arguments": {},
+        "ActionId": "summon.random.ally",
+        "Arguments": {
+          "count": "2",
+          "pool": "all",
+          "power": "4",
+          "lifetime": "0"
+        },
         "ParameterBindings": {},
-        "DurationSeconds": 4,
+        "DurationSeconds": 8,
         "RepeatCount": 1,
         "DelaySeconds": 0,
         "Weight": 1,
@@ -1243,18 +762,16 @@
       }
     },
     {
-      "Id": "v04-opt-fast",
-      "Name": "可选：鬼畜动画",
-      "Enabled": false,
+      "Id": "v06-strong-enemy",
+      "Name": "给到夯 · 随机强力敌军1只",
+      "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "鬼畜"
-        ],
+        "Type": 1,
+        "Keywords": [],
         "TextMatching": 1,
         "GiftId": "",
-        "GiftName": "",
+        "GiftName": "给到夯",
         "AllowedUsers": [],
         "BlockedUsers": [],
         "MinimumFanLevel": 0,
@@ -1263,7 +780,9 @@
         "SingleExecution": false,
         "Threshold": 1,
         "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
       },
       "Probability": 1,
       "CooldownSeconds": 0,
@@ -1273,58 +792,15 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "enemy.speed",
+        "ActionId": "summon.random.enemy",
         "Arguments": {
-          "enemy": "",
-          "value": "1.25"
+          "count": "1",
+          "pool": "all",
+          "power": "2",
+          "lifetime": "0"
         },
         "ParameterBindings": {},
-        "DurationSeconds": 5,
-        "RepeatCount": 1,
-        "DelaySeconds": 0,
-        "Weight": 1,
-        "Stacking": 2,
-        "Children": []
-      }
-    },
-    {
-      "Id": "v04-opt-slow",
-      "Name": "可选：慢怪动画",
-      "Enabled": false,
-      "GameId": "silksong",
-      "Trigger": {
-        "Type": 0,
-        "Keywords": [
-          "慢怪"
-        ],
-        "TextMatching": 1,
-        "GiftId": "",
-        "GiftName": "",
-        "AllowedUsers": [],
-        "BlockedUsers": [],
-        "MinimumFanLevel": 0,
-        "RequireFollower": false,
-        "Counting": 0,
-        "SingleExecution": false,
-        "Threshold": 1,
-        "MinGiftUnitValue": 0,
-        "MaxGiftUnitValue": 0
-      },
-      "Probability": 1,
-      "CooldownSeconds": 0,
-      "UserCooldownSeconds": 0,
-      "MaximumTriggers": 0,
-      "MaximumPerEvent": 1000,
-      "StopAfterMatch": true,
-      "Root": {
-        "Kind": 0,
-        "ActionId": "enemy.speed",
-        "Arguments": {
-          "enemy": "",
-          "value": "0.75"
-        },
-        "ParameterBindings": {},
-        "DurationSeconds": 6,
+        "DurationSeconds": 8,
         "RepeatCount": 1,
         "DelaySeconds": 0,
         "Weight": 1,

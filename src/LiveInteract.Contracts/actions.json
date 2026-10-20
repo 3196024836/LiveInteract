@@ -1571,5 +1571,453 @@
     "RequiresGameplay": false,
     "Support": "implemented",
     "Parameters": []
+  },
+  {
+    "Id": "ally.native.free-random",
+    "Name": "随机免费小弟（原生转友方）",
+    "Category": "原生转友方",
+    "Description": "使用原生单位的模型、动画和攻击碰撞；适配目标、阵营和跟随，不套用机械随从。属于未完成实机验收的转友方功能。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "原生接触攻击伤害倍率",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 0.1,
+        "Maximum": 20
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "ally.native.bone-goomba",
+    "Name": "召唤友方颅潜虫",
+    "Category": "原生转友方",
+    "Description": "使用原生单位的模型、动画和攻击碰撞；适配目标、阵营和跟随，不套用机械随从。属于未完成实机验收的转友方功能。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "原生接触攻击伤害倍率",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 0.1,
+        "Maximum": 20
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "ally.native.shellwood-gnat",
+    "Name": "召唤友方壳木蚋虫",
+    "Category": "原生转友方",
+    "Description": "使用原生单位的模型、动画和攻击碰撞；适配目标、阵营和跟随，不套用机械随从。属于未完成实机验收的转友方功能。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "原生接触攻击伤害倍率",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 0.1,
+        "Maximum": 20
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "ally.native.shellwood-wasp",
+    "Name": "召唤强力友方木蜂",
+    "Category": "原生转友方",
+    "Description": "使用原生单位的模型、动画和攻击碰撞；适配目标、阵营和跟随，不套用机械随从。属于未完成实机验收的转友方功能。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "原生接触攻击伤害倍率",
+        "Kind": 0,
+        "DefaultValue": "4",
+        "Minimum": 0.1,
+        "Maximum": 20
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "ally.native.slab-fly-large",
+    "Name": "召唤强力友方狱卒蝇",
+    "Category": "原生转友方",
+    "Description": "使用原生单位的模型、动画和攻击碰撞；适配目标、阵营和跟随，不套用机械随从。属于未完成实机验收的转友方功能。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "原生接触攻击伤害倍率",
+        "Kind": 0,
+        "DefaultValue": "8",
+        "Minimum": 0.1,
+        "Maximum": 20
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "boss.random",
+    "Name": "召唤一只随机Boss",
+    "Category": "生成Boss",
+    "Description": "从当前兼容映射的尼莱斯、针姬中随机选1只；同一单位重试保持选择。跨场景Boss完整AI仍属试验功能。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次Boss数量（固定1）",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 1
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平距离",
+        "Kind": 0,
+        "DefaultValue": "8",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直距离",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "ally.native.understore-thrower",
+    "Name": "召唤友方圣厂投掷工",
+    "Category": "原生转友方",
+    "Description": "保留原生投掷动作和投射物；适配敌方目标、友军投射物伤害归属与跨场景跟随。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "原生接触攻击伤害倍率",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 0.1,
+        "Maximum": 20
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "summon.named.enemy",
+    "Name": "按准确名称召唤敌人",
+    "Category": "召唤",
+    "Description": "弹幕前缀后自动提取准确名称；手动使用时填写名录名称，临时召唤默认5秒。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 1
+      },
+      {
+        "Key": "name",
+        "Label": "准确怪名（弹幕自动提取）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "lifetime",
+        "Label": "存活秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "5",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "summon.named.ally",
+    "Name": "按准确名称召唤友军",
+    "Category": "召唤",
+    "Description": "弹幕前缀后自动提取准确名称；手动使用时填写名录名称，临时召唤默认5秒。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 1
+      },
+      {
+        "Key": "name",
+        "Label": "准确怪名（弹幕自动提取）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "lifetime",
+        "Label": "存活秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "5",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "summon.random.enemy",
+    "Name": "随机召唤敌人",
+    "Category": "召唤",
+    "Description": "从原生已映射名录独立随机选取每一只，可配置普通怪池或含Boss全池。转友方与Boss完整AI仍待实机确认。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "pool",
+        "Label": "随机池",
+        "Kind": 3,
+        "DefaultValue": "ordinary",
+        "Choices": {
+          "ordinary": "普通怪（无Boss）",
+          "all": "全池（可能Boss）"
+        }
+      },
+      {
+        "Key": "power",
+        "Label": "强度倍率（敌方Boss保持原生）",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 8
+      },
+      {
+        "Key": "lifetime",
+        "Label": "存活秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "summon.random.ally",
+    "Name": "随机召唤友军",
+    "Category": "召唤",
+    "Description": "从原生已映射名录独立随机选取每一只，可配置普通怪池或含Boss全池。转友方与Boss完整AI仍待实机确认。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "pool",
+        "Label": "随机池",
+        "Kind": 3,
+        "DefaultValue": "ordinary",
+        "Choices": {
+          "ordinary": "普通怪（无Boss）",
+          "all": "全池（可能Boss）"
+        }
+      },
+      {
+        "Key": "power",
+        "Label": "强度倍率（敌方Boss保持原生）",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 8
+      },
+      {
+        "Key": "lifetime",
+        "Label": "存活秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "currency.rain",
+    "Name": "原生念珠雨",
+    "Category": "念珠",
+    "Description": "从角色上方随机落下原作可拾取念珠，不直接加钱；拾取后按游戏正常逻辑入账。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "念珠颗数",
+        "Kind": 1,
+        "DefaultValue": "10",
+        "Minimum": 1,
+        "Maximum": 300
+      },
+      {
+        "Key": "spread",
+        "Label": "横向范围",
+        "Kind": 0,
+        "DefaultValue": "6",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "height",
+        "Label": "落下高度",
+        "Kind": 0,
+        "DefaultValue": "5",
+        "Minimum": 1,
+        "Maximum": 12
+      }
+    ]
   }
 ]

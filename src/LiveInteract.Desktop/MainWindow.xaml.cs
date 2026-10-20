@@ -61,7 +61,7 @@ public partial class MainWindow : Window
         if (!preview) { Width = Math.Min(1400, SystemParameters.WorkArea.Width - 40); Height = Math.Min(900, SystemParameters.WorkArea.Height - 40); }
         try { settings = AppSettings.Load(settingsFile); }
         catch (JsonException exception) { runtime.Log("配置错误", "偏好格式损坏，原文件保留：" + exception.Message, false); settings = new(); }
-        try { if (File.Exists(profileFile)) { profile = ProfileStore.Read(File.ReadAllText(profileFile), false); } }
+        try { if (File.Exists(profileFile)) { profile = ProfileStore.Read(File.ReadAllText(profileFile), false); } else { var builtin=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json"); if(File.Exists(builtin)){profile=ProfileStore.Read(File.ReadAllText(builtin),false);settings.SpawnLimit=profile.SpawnLimitOverride??settings.SpawnLimit;ProfileStore.Save(profileFile,profile);} } }
         catch (Exception exception) { runtime.Log("配置错误", "规则文件未载入，原文件保留：" + exception.Message, false); }
         runtime.ApplyProfile(profile);
         LogGrid.ItemsSource = records;
@@ -249,6 +249,26 @@ public partial class MainWindow : Window
     });
 
     /// <summary>从随包文件选择默认配置；原配置备份，总开关仍关闭。</summary>
+    /// <summary>明确确认后采用随包默认方案，不覆盖未备份的用户规则。</summary>
+    private async void UseBuiltinProfileClick(object? sender,RoutedEventArgs e)=>await GuardAsync(async()=>
+    {
+        var file=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json");
+        var candidate=ProfileStore.Read(File.ReadAllText(file),false);
+        if(MessageBox.Show(this,"使用内置最新方案？原规则先备份，互动总开关保持关闭。","内置方案",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
+        runtime.SetEnabled(false);if(File.Exists(profileFile))File.Copy(profileFile,profileFile+".backup-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
+        profile=candidate;if(candidate.SpawnLimitOverride.HasValue){settings.SpawnLimit=candidate.SpawnLimitOverride.Value;SpawnLimitBox.Text=settings.SpawnLimit.ToString();settings.Save(settingsFile);await ApplyGameSettingsAsync();}
+        SaveRules();Navigation.SelectedIndex=1;
+    });
+    /// <summary>礼物名称和实际ID集中改绑；每1份触发一次，不叠加累计门槛。</summary>
+    private void GiftBindingsClick(object? sender,RoutedEventArgs e)
+    {
+        var window=new GiftBindingsWindow(profile.Rules,records.Where(r=>r.SourceEvent?.Type==LiveEventType.Gift).Select(r=>r.SourceEvent!.GiftName)){Owner=this};
+        if(window.ShowDialog()!=true||window.Result==null)return;
+        runtime.SetEnabled(false);if(File.Exists(profileFile))File.Copy(profileFile,profileFile+".backup-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
+        foreach(var rule in profile.Rules.Where(r=>window.Result.ContainsKey(r.Id))){var binding=window.Result[rule.Id];rule.Trigger.GiftName=binding.Name;rule.Trigger.GiftId=binding.Id;rule.Trigger.GiftNameAliases.Clear();rule.Trigger.Threshold=1;rule.Trigger.Counting=TriggerCounting.PerEvent;rule.Enabled=true;}
+        SaveRules();
+    }
+
     private async void LoadDefaultProfileClick(object? sender, RoutedEventArgs e) => await GuardAsync(async () =>
     {
         var directory = Path.Combine(AppContext.BaseDirectory, "profiles");
@@ -450,7 +470,7 @@ public partial class MainWindow : Window
         {
             File.WriteAllText(dialog.FileName, JsonConvert.SerializeObject(new
             {
-                Version = "0.4.0", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
+                Version = "0.6.0", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
                 Bridge = new { runtime.Game.IsConnected, runtime.Game.Status?.GameVersion, runtime.Game.Status?.Scene, runtime.Game.Status?.CanAct, runtime.Game.Status?.Diagnostics },
                 Counts = new { runtime.Received, runtime.Simulated, runtime.Completed, runtime.Failed },
                 RuleCount = profile.Rules.Count, EnabledRules = profile.Rules.Count(item => item.Enabled),

@@ -46,6 +46,10 @@ public sealed class GamePipeServer : IGameAdapter, IAsyncDisposable
         {
             return new ActionResult { RequestId = request.Id, ErrorCode = errors.Count > 0 ? "VALIDATION" : "NOT_CONNECTED", Retryable = errors.Count == 0, Message = errors.Count > 0 ? string.Join("；", errors) : "等待游戏连接 / 新心跳，任务仍保留在队列。" };
         }
+        var needs06=request.ActionId.StartsWith("summon.",StringComparison.Ordinal)||request.ActionId=="currency.rain"||request.ActionId=="ally.native.understore-thrower"||(request.DurationSeconds==0&&request.ActionId is "enemy.growStack" or "enemy.shrinkStack");
+        var required=needs06?new Version(0,6,0):request.ActionId.StartsWith("ally.native.",StringComparison.Ordinal)?new Version(0,5,0):null;
+        if(required!=null&&(!Version.TryParse(Status?.ModVersion,out var installed)||installed<required))
+            return new ActionResult{RequestId=request.Id,ErrorCode="MOD_UPDATE_REQUIRED",Retryable=true,Message="当前游戏Mod版本不支持此效果。请正常退出游戏，在Mod与存档安装/修复"+required+"再启动；本单位尚未发送，仍保留排队。"};
         var completion = new TaskCompletionSource<ActionResult>(TaskCreationOptions.RunContinuationsAsynchronously); // 唯一回执槽。
         if (!pending.TryAdd(request.Id, completion))
         {

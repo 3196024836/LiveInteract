@@ -7,7 +7,7 @@ if (-not $SkipBuild) { & (Join-Path $PSScriptRoot 'build.ps1') }
 # 发布前明确使用非 QA 编译，隔离测试控制入口不得进入用户安装。
 dotnet build src/LiveInteract.Silksong/LiveInteract.Silksong.csproj -c Release -p:QaBuild=false -t:Rebuild --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Production Mod build failed.' }
-$out = Join-Path $root 'dist\LiveInteract-0.4.0-win-x64'
+$out = Join-Path $root 'dist\LiveInteract-0.5.0-win-x64'
 if ((Test-Path -LiteralPath $out) -and (Get-ChildItem -LiteralPath $out -Force | Select-Object -First 1)) { throw 'Preserve the existing distribution and use a new version directory.' }
 dotnet publish src/LiveInteract.Desktop/LiveInteract.Desktop.csproj -c Release -r win-x64 --self-contained true -p:DebugType=None -o $out --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
@@ -35,7 +35,7 @@ $runtime = Get-ChildItem -LiteralPath $fixed -Recurse -File -Filter 'msedgewebvi
 $signature = Get-AuthenticodeSignature -LiteralPath $runtime.FullName
 if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation') { throw 'WebView2 publisher signature verification failed.' }
 Copy-Item -LiteralPath $runtime.Directory.FullName -Destination (Join-Path $out 'WebView2Runtime') -Recurse
-Copy-Item -LiteralPath 'docs\使用说明.md','docs\兼容与验收.md','docs\THIRD_PARTY_NOTICES.md','docs\0.4快速交付说明.md','docs\效果验收清单.csv' -Destination $out
+Copy-Item -LiteralPath 'docs\使用说明.md','docs\兼容与验收.md','docs\THIRD_PARTY_NOTICES.md','docs\0.5默认玩法说明.md','docs\效果验收清单.csv' -Destination $out
 New-Item -ItemType Directory -Path (Join-Path $out '直播素材') -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $root '直播素材\丝之歌-友军整活') -Destination (Join-Path $out '直播素材') -Recurse
 Copy-Item -LiteralPath 'README.md','CHANGELOG.md','docs\快速开始.md' -Destination $out

@@ -98,7 +98,7 @@ internal static class Ui
         if (position.Children.Count > 0) { panel.Children.Add(new Expander { Header = "生成位置（可选）", Content = position, Foreground = Brush("#B5CBD7"), Margin = new(0, 14, 0, 0) }); }
         if (descriptor.IsTemporary)
         {
-            var duration = Field(panel, "持续时间（秒）", step.DurationSeconds.ToString(CultureInfo.InvariantCulture)); duration.Tag = "duration";
+            var duration = Field(panel, step.ActionId is "enemy.growStack" or "enemy.shrinkStack" ? "持续时间（秒，0＝永久外观）" : "持续时间（秒）", step.DurationSeconds.ToString(CultureInfo.InvariantCulture)); duration.Tag = "duration";
             duration.TextChanged += (_, _) => step.DurationSeconds = double.TryParse(duration.Text, CultureInfo.InvariantCulture, out var value) ? value : double.NaN;
             var stacking = Choice(panel, "再次触发", new[] { (EffectStacking.Refresh, "刷新时间"), (EffectStacking.Extend, "延长时间"), (EffectStacking.Stack, "叠加效果") }, step.Stacking);
             stacking.SelectionChanged += (_, _) => step.Stacking = stacking.SelectedValue is EffectStacking value ? value : EffectStacking.Refresh;

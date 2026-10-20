@@ -1,18 +1,22 @@
 {
   "Profile": "profiles/\u4E1D\u4E4B\u6B4C-\u5F39\u5E55\u52A9\u529B.json",
-  "EnabledRules": 20,
+  "EnabledRules": 16,
   "Chat": [
     {
+      "Trigger": "\u5C0F\u5F1F",
+      "Effect": "\u53CB\u65B9\u9885\u6F5C\u866B \u00D71 \u00B7 \u6301\u7EED"
+    },
+    {
+      "Trigger": "\u98DE\u866B",
+      "Effect": "\u53CB\u65B9\u58F3\u6728\u868B\u866B \u00D71 \u00B7 \u6301\u7EED"
+    },
+    {
       "Trigger": "\u56DE\u8840",
-      "Effect": "\u539F\u751F\u56DE\u8840 \u002B2"
+      "Effect": "\u56DE\u8840 \u002B1\u683C"
     },
     {
       "Trigger": "\u56DE\u4E1D",
-      "Effect": "\u8865\u5145\u7075\u4E1D \u002B6"
-    },
-    {
-      "Trigger": "\u5C0F\u5F1F",
-      "Effect": "\u673A\u68B0\u63F4\u519B \u00D71 \u00B7 12\u79D2"
+      "Effect": "\u56DE\u4E1D \u002B1\u70B9"
     },
     {
       "Trigger": "\u602A\u53D8\u5927",
@@ -23,50 +27,42 @@
       "Effect": "\u602A\u7269\u53D8\u5C0F \u00B7 8\u79D2 / \u6761"
     },
     {
-      "Trigger": "\u590D\u5236",
-      "Effect": "\u666E\u901A\u654C\u4EBA \u002B1"
+      "Trigger": "\u5927\u62DB",
+      "Effect": "\u539F\u751F\u7075\u4E1D\u98CE\u66B4"
     },
     {
-      "Trigger": "\u6E05\u573A",
-      "Effect": "\u6E05\u654C\u602A \u00B7 \u4FDD\u7559\u539F\u751F\u63F4\u519B"
+      "Trigger": "\u6BCF50\u8D5E",
+      "Effect": "\u56DE\u4E1D \u002B1\u70B9"
     },
     {
-      "Trigger": "\u6062\u590D",
-      "Effect": "\u6062\u590D\u4F53\u578B \u00B7 \u6E05\u7406\u6574\u6D3B"
+      "Trigger": "\u96F6\u4EF7 / \u672A\u77E5\u793C\u7269",
+      "Effect": "\u968F\u673A\u57FA\u7840\u5C0F\u5F1F \u00D71"
     }
   ],
   "Gifts": [
     {
       "Trigger": "\u5C0F\u5FC3\u5FC3",
-      "Effect": "\u673A\u68B0\u5C0F\u5F1F \u00D71"
+      "Effect": "\u5F3A\u529B\u53CB\u65B9\u6728\u8702 \u00D71"
     },
     {
-      "Trigger": "\u73AB\u7470",
-      "Effect": "\u673A\u68B0\u5C0F\u5F1F \u00D72"
-    },
-    {
-      "Trigger": "\u5176\u4ED6 10\u201399\u94BB",
-      "Effect": "\u539F\u751F\u673A\u68B0\u968F\u4ECE \u00D72"
-    },
-    {
-      "Trigger": "\u5176\u4ED6 100\u2013499\u94BB",
-      "Effect": "\u539F\u751F\u673A\u68B0\u968F\u4ECE \u00D73"
-    },
-    {
-      "Trigger": "\u5176\u4ED6 \u2265500\u94BB",
-      "Effect": "\u539F\u751F\u673A\u68B0\u968F\u4ECE \u00D74"
+      "Trigger": "\u5564\u9152",
+      "Effect": "\u654C\u5BF9\u9885\u6F5C\u866B \u00D71"
     },
     {
       "Trigger": "\u68D2\u68D2\u7CD6",
       "Effect": "\u654C\u5BF9\u6728\u8702 \u00D71"
     },
     {
-      "Trigger": "\u5564\u9152",
-      "Effect": "\u590D\u5236\u666E\u901A\u654C\u4EBA \u002B1"
+      "Trigger": "\u70ED\u6C14\u7403",
+      "Effect": "\u5F3A\u529B\u53CB\u65B9\u72F1\u5352\u8747 \u00D71"
     },
     {
-      "Trigger": "\u5176\u4ED6\u4F4E\u4EF7 / \u672A\u77E5",
-      "Effect": "\u673A\u68B0\u5C0F\u5F1F \u00D71"
+      "Trigger": "\u8DD1\u8F66",
+      "Effect": "\u968F\u673ABoss \u00D71\uFF08\u8BD5\u9A8C\uFF09"
+    },
+    {
+      "Trigger": "\u5176\u4ED6\u6B63\u5355\u4EF7\u793C\u7269",
+      "Effect": "\u53CB\u65B9\u6728\u8702 \u00D71"
     }
   ]
 }

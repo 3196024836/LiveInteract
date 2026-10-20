@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using UnityEngine;
 
 namespace LiveInteract.Silksong;
 
@@ -10,7 +11,8 @@ internal static class EnemyDamageHook
 {
     /// <summary>修改当前命中数据，不永久覆盖武器配置。</summary>
     /// <param name="__0">实际命中结构。</param>
-    private static void Prefix(ref HitInstance __0) => GameActions.Current?.AdjustHit(ref __0);
+    private static bool Prefix(HealthManager __instance,ref HitInstance __0)
+    {if(__instance.GetComponentInParent<OwnedCompanion>()!=null)return false;GameActions.Current?.AdjustHit(ref __0);return true;}
 }
 
 /// <summary>拦截正常角色受伤入口，维护临时免死与承伤倍率。</summary>
@@ -21,8 +23,9 @@ internal static class HeroDamageHook
     /// <param name="__state">是否建立了实际扣血的上下文。</param>
     /// <returns>是否继续原方法。</returns>
     [ThreadStatic] internal static int DamageDepth;
-    private static bool Prefix(out bool __state)
+    private static bool Prefix(GameObject __0,out bool __state)
     {
+        if(NativeAllyExecution.IsFriendly(__0)){__state=false;return false;}
         __state = GameActions.Current != null && !GameActions.Current.Invincible;
         if (GameActions.Current?.Invincible == true) { return false; }
         if (__state) { DamageDepth++; }

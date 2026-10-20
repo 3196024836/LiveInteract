@@ -25,7 +25,7 @@ public static class ActionValidation
             errors.Add("永久修改尚未由主播在本次会话中确认。");
         }
         if (double.IsNaN(request.DurationSeconds) || double.IsInfinity(request.DurationSeconds) ||
-            request.DurationSeconds < 0 || request.DurationSeconds > 3600 || descriptor.IsTemporary && request.DurationSeconds < 0.1)
+            request.DurationSeconds < 0 || request.DurationSeconds > 3600 || descriptor.IsTemporary && request.DurationSeconds < 0.1 && !(request.DurationSeconds == 0 && request.ActionId is "enemy.growStack" or "enemy.shrinkStack"))
         {
             errors.Add("临时效果时间应为 0.1 至 3600 秒。");
         }

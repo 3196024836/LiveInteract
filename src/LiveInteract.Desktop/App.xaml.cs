@@ -47,7 +47,8 @@ public partial class App : Application
                 var environment = GameDetector.Detect(); // 只读游戏环境。
                 var fixedBrowser = Path.Combine(AppContext.BaseDirectory, "WebView2Runtime");
                 string browser; try { browser = CoreWebView2Environment.GetAvailableBrowserVersionString(Directory.Exists(fixedBrowser) ? fixedBrowser : null); } catch (WebView2RuntimeNotFoundException) { browser = "未安装"; }
-                File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { environment, Runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, BrowserRuntime = browser, ActionDefinitions = ActionCatalog.All.Count, PayloadFound = Directory.Exists(PayloadDirectory) }, Formatting.Indented)); Shutdown(); return;
+                var builtin=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json"); var builtinRules=0; string? builtinError=null; try { builtinRules=ProfileStore.Read(File.ReadAllText(builtin),false).Rules.Count; } catch(Exception error) { builtinError=error.Message; }
+                File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { environment, BuiltinRules=builtinRules, BuiltinProfileError=builtinError, Runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, BrowserRuntime = browser, ActionDefinitions = ActionCatalog.All.Count, PayloadFound = Directory.Exists(PayloadDirectory) }, Formatting.Indented)); Shutdown(); return;
             }
             if (e.Args.Length >= 2 && e.Args[0] == "--game-probe")
             {

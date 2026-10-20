@@ -52,7 +52,7 @@ public static class ActionPresentation
         if (descriptor == null) { return request.ActionId; }
         var suffix = descriptor.IsTemporary ? " · " + request.DurationSeconds + "秒" : "";
         var name = descriptor.Name;
-        if (request.ActionId is "enemy.growStack" or "enemy.shrinkStack") { return (request.ActionId == "enemy.growStack" ? "变大" : "变小") + " · " + request.DurationSeconds + "秒（独立叠加）"; }
+        if (request.ActionId is "enemy.growStack" or "enemy.shrinkStack") { return (request.ActionId == "enemy.growStack" ? "变大" : "变小") + " · " + (request.DurationSeconds == 0 ? "永久" : request.DurationSeconds + "秒") + "（叠加）"; }
         if (request.ActionId.StartsWith("pickup.", StringComparison.Ordinal)) { return name + " +" + (request.Arguments.TryGetValue("value", out var amount) ? amount : "2") + "（拾取）"; }
         string Value(string key) => request.Arguments.TryGetValue(key, out var entered) ? entered : descriptor.Parameters.FirstOrDefault(p => p.Key == key)?.DefaultValue ?? "";
         if (descriptor.Parameters.Any(p => p.Key == "count")) { return name + " ×" + Value("count") + (request.ActionId.StartsWith("ally.", StringComparison.Ordinal) ? Value("lifetime") == "0" ? " · 持续跟随" : " · " + Value("lifetime") + "秒" : ""); }

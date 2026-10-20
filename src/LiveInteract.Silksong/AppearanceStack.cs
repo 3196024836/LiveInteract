@@ -33,8 +33,8 @@ internal sealed class AppearanceStack : MonoBehaviour
     }
     public IEnumerable<string> Labels()
     {
-        foreach (var p in pulses.Items.AsEnumerable().Reverse().Take(3)) { yield return p.Who + " · " + (p.Grow ? "变大 " : "变小 ") + Math.Max(0, p.End - Time.realtimeSinceStartup).ToString("0.0") + "秒"; }
-        if (pulses.Count > 3) { yield return "共 " + pulses.Count + " 层 · 各自倒计时"; }
+        foreach (var p in pulses.Items.AsEnumerable().Reverse().Take(3)) { yield return p.Who + " · " + (p.Grow ? "变大 " : "变小 ") + (double.IsPositiveInfinity(p.End) ? "永久" : Math.Max(0, p.End - Time.realtimeSinceStartup).ToString("0.0") + "秒"); }
+        if (pulses.Count > 3) { yield return "共 " + pulses.Count + " 层"; }
     }
     private void LateUpdate()
     {

@@ -16,7 +16,7 @@ public sealed class AppearanceLayers
     public IReadOnlyList<AppearanceLayer> Items => items;
     public int Count => items.Count;
     public double Multiplier => (1 + items.Where(i => i.Grow).Sum(i => i.Amount)) / (1 + items.Where(i => !i.Grow).Sum(i => i.Amount));
-    public void Add(string who, bool grow, double amount, double seconds, double now) => items.Add(new() { Who=who, Grow=grow, Amount=amount, End=now+seconds });
+    public void Add(string who, bool grow, double amount, double seconds, double now) => items.Add(new() { Who=who, Grow=grow, Amount=amount, End=seconds==0?double.PositiveInfinity:now+seconds });
     public void Tick(double now) => items.RemoveAll(i => i.End<=now);
     public void Clear() => items.Clear();
 }

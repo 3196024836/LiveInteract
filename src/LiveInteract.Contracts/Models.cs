@@ -88,6 +88,10 @@ public sealed class TriggerDefinition
     public long MinGiftUnitValue { get; set; }
     /// <summary>礼物最高单价，0不限制。</summary>
     public long MaxGiftUnitValue { get; set; }
+    /// <summary>仅匹配零价或单价未知的礼物；用于无敌怪的基础助力，旧配置默认关闭。</summary>
+    public bool FreeOrUnknownGiftOnly { get; set; }
+    /// <summary>同一种礼物的明确名称别名；不模糊匹配。</summary>
+    public List<string> GiftNameAliases { get; set; } = new();
     /// <summary>允许用户列表；非空时未知用户不匹配。</summary>
     public List<string> AllowedUsers { get; set; } = new();
     /// <summary>拒绝用户列表。</summary>
@@ -270,7 +274,7 @@ public sealed class GameStatus
     /// <summary>游戏版本。</summary>
     public string GameVersion { get; set; } = "";
     /// <summary>专用 Mod 版本。</summary>
-    public string ModVersion { get; set; } = "0.4.0";
+    public string ModVersion { get; set; } = "";
     /// <summary>实际场景名称。</summary>
     public string Scene { get; set; } = "";
     /// <summary>是否可以执行需要角色的动作。</summary>
@@ -339,6 +343,8 @@ public sealed class NumericBinding
 /// <summary>一次规则触发所需的数值上下文，不包含账号凭据。</summary>
 public sealed class ActionContext
 {
+    /// <summary>持久保存原弹幕，供精准召唤解析；旧任务默认空。</summary>
+    public string InputText { get; set; } = "";
     /// <summary>当前事件的新增数量。</summary>
     public long EventCount { get; set; }
     /// <summary>当前连击累计量。</summary>

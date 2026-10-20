@@ -217,7 +217,7 @@ public sealed class InteractionJournal : IDisposable
         foreach (var match in matches)
         {
             var rule = match.Rule;
-            var job = new InteractionJob { Id = Guid.NewGuid().ToString("N"), EventId = Key(input), RuleId = rule.Id, RuleName = rule.Name, Triggerer = input.Nickname, UserId = input.UserId, SourceType = input.Type, At = input.ReceivedAt, Root = rule.Root, Total = match.Count, IsSimulation = input.IsSimulation, CooldownSeconds = rule.CooldownSeconds, UserCooldownSeconds = rule.UserCooldownSeconds, Context = new() { EventCount = input.Count, ComboTotal = input.ComboTotal } };
+            var job = new InteractionJob { Id = Guid.NewGuid().ToString("N"), EventId = Key(input), RuleId = rule.Id, RuleName = rule.Name, Triggerer = input.Nickname, UserId = input.UserId, SourceType = input.Type, At = input.ReceivedAt, Root = rule.Root, Total = match.Count, IsSimulation = input.IsSimulation, CooldownSeconds = rule.CooldownSeconds, UserCooldownSeconds = rule.UserCooldownSeconds, Context = new() { EventCount = input.Count, ComboTotal = input.ComboTotal, InputText = input.Text } };
             Sql("INSERT INTO jobs(id,event_id,rule_id,who,source,json,state,reason,total,simulation) VALUES($i,$e,$r,$w,$s,$j,'Queued','',$n,$sim)", ("$i", job.Id), ("$e", job.EventId), ("$r", job.RuleId), ("$w", job.Triggerer), ("$s", (int)job.SourceType), ("$j", JsonConvert.SerializeObject(job)), ("$n", job.Total), ("$sim", job.IsSimulation));
         }
         Sql("UPDATE events SET state=$s,reason=$r,normalized=$j WHERE id=$id", ("$s", matches.Count > 0 ? "Queued" : "Unmatched"), ("$r", reason), ("$j", JsonConvert.SerializeObject(input)), ("$id", Key(input)));

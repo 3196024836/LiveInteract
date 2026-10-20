@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-20",
+  "sourcePage": "https://developer.open-douyin.com/docs/resource/zh-CN/live-interactive-tools/development/tutorial/live-tool-guide",
+  "note": "只用已核对的官方小心心、玫瑰原图；棒棒糖、给到夯在当前图中使用文字，不仿造图标。不标未经核实的金额。",
+  "gifts": [
+    {
+      "name": "小心心",
+      "coins": 1,
+      "url": "https://p9-arcosite.byteimg.com/tos-cn-i-goo7wpa0wc/2c283ea334dc4337a1e5c21e6965bfab~tplv-goo7wpa0wc-quality:q75.image",
+      "original": "https://sf1-cdn-tos.huoshanstatic.com/obj/webcast/154c9946db73cba98529ab66792e5385.png",
+      "file": "heart.png",
+      "rule": "v06-heart"
+    },
+    {
+      "name": "玫瑰",
+      "coins": 1,
+      "url": "https://p9-arcosite.byteimg.com/tos-cn-i-goo7wpa0wc/f3997682afb04d29a1a8e8ecff4afec7~tplv-goo7wpa0wc-quality:q75.image",
+      "original": "https://sf1-cdn-tos.huoshanstatic.com/obj/webcast/4ebf31ca09f2f3d80895bf034fa79d14.png",
+      "file": "rose.png",
+      "rule": "v06-note"
+    }
+  ],
+  "unresolvedIconNames": [
+    "棒棒糖",
+    "给到夯"
+  ]
+}

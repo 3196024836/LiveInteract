@@ -74,6 +74,11 @@ public sealed class ActionExecutor
                     ActionId = step.ActionId, Arguments = new(step.Arguments), DurationSeconds = step.DurationSeconds,
                     Stacking = step.Stacking, AllowPersistent = allowPersistent && (persistentPermission?.Invoke() ?? true), DisplayText = displayText
                 };
+                if (step.ActionId is "summon.named.enemy" or "summon.named.ally" && context?.SourceType == LiveEventType.Chat)
+                {
+                    try { request.Arguments["name"] = SummonCommands.Extract(context.InputText, step.ActionId == "summon.named.enemy" ? "生成怪物" : "生成小弟"); }
+                    catch (ArgumentException error) { return Reject(request, error.Message); }
+                }
                 foreach (var pair in step.ParameterBindings)
                 {
                     if (context == null) { return Reject(request, "此动作使用观众数量联动，请从模拟输入或直播事件测试。"); }

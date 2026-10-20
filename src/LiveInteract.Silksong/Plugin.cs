@@ -15,7 +15,7 @@ using LiveInteract.Contracts;
 namespace LiveInteract.Silksong;
 
 /// <summary>主线程执行、可核对回执和简洁的渐隐触发提示。</summary>
-[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.4.0")]
+[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.6.0")]
 [BepInProcess("Hollow Knight Silksong.exe")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -60,7 +60,7 @@ public sealed class Plugin : BaseUnityPlugin
         harmony = new Harmony("cn.liveinteract.silksong"); harmony.PatchAll(typeof(Plugin).Assembly);
         Application.logMessageReceived += OnUnityMessage;
         menuInfoUntil = Time.realtimeSinceStartup + 6;
-        Logger.LogInfo("直播互动 Mod 0.4.0 已加载；待游戏与直播实际验证。");
+        Logger.LogInfo("直播互动 Mod 0.6.0 已加载；待游戏与直播实际验证。");
     }
 
     private void Update()
@@ -165,7 +165,7 @@ public sealed class Plugin : BaseUnityPlugin
     private void OnDestroy()
     {
         Application.logMessageReceived -= OnUnityMessage;
-        stopping = true; actions?.DisposeResources(); bridge?.Dispose(); harmony?.UnpatchSelf();
+        stopping = true; actions?.DisposeResources(); bridge?.Dispose(); harmony?.UnpatchSelf(); NativeAllyExecution.Dispose();
     }
 
     /// <summary>原生货币队列在 Update 才到账；等完整一帧后再判断，不能提前误报无变化。</summary>

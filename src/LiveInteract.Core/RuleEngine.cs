@@ -208,10 +208,11 @@ public sealed class RuleEngine
         {
             return false;
         }
-        if (value.Type == LiveEventType.Gift && (trigger.GiftId.Length > 0 ? trigger.GiftId != value.GiftId : trigger.GiftName.Length > 0 && trigger.GiftName != value.GiftName))
+        if (value.Type == LiveEventType.Gift && (trigger.GiftId.Length > 0 ? trigger.GiftId != value.GiftId : trigger.GiftName.Length > 0 && trigger.GiftName != value.GiftName && !trigger.GiftNameAliases.Contains(value.GiftName)))
         {
             return false;
         }
+        if (value.Type == LiveEventType.Gift && trigger.FreeOrUnknownGiftOnly && value.GiftUnitValue > 0) { return false; }
         if (value.Type == LiveEventType.Gift && (value.GiftUnitValue < trigger.MinGiftUnitValue || trigger.MaxGiftUnitValue > 0 && value.GiftUnitValue > trigger.MaxGiftUnitValue)) { return false; }
         if (trigger.Keywords.Count == 0)
         {

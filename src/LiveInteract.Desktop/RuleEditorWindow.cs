@@ -22,7 +22,7 @@ internal sealed class RuleEditorWindow : Window
     private readonly TextBox name, keywords, giftId, giftName, giftMinimum, giftMaximum, threshold, cooldown, userCooldown, perEvent;
     private readonly TextBox effectSearch = new() { ToolTip = "搜索怪物、回血、Boss、丝技……" };
     private readonly ComboBox type, category;
-    private readonly CheckBox enabled;
+    private readonly CheckBox enabled, freeGift;
     private readonly ListBox effectChoice = new() { DisplayMemberPath = "Name", SelectedValuePath = "Id", Height = 180 };
     private bool rebuilding;
 
@@ -44,7 +44,7 @@ internal sealed class RuleEditorWindow : Window
             rule.Id = Guid.NewGuid().ToString("N"); rule.Name += " · 单效果"; rule.Enabled = false;
             rule.Root = new() { ActionId = "spawn.bone-goomba" };
         }
-        Title = "设置互动效果 · LiveInteract 0.4";
+        Title = "设置互动效果 · LiveInteract 0.6";
         Width = Math.Min(1160, SystemParameters.WorkArea.Width - 40);
         Height = Math.Min(850, SystemParameters.WorkArea.Height - 40);
         MinWidth = 940; MinHeight = 620; WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -70,6 +70,8 @@ internal sealed class RuleEditorWindow : Window
         gifts.Children.Add(new TextBlock { Text = "例如：小心心。也可以从运行记录直接选择收到的礼物。", Foreground = Ui.Brush("#91AEBE"), TextWrapping = TextWrapping.Wrap, Margin = new(0, 7, 0, 0) });
         giftMinimum = Ui.Field(gifts, "礼物单价下限（钻，0 不限）", rule.Trigger.MinGiftUnitValue.ToString(CultureInfo.InvariantCulture));
         giftMaximum = Ui.Field(gifts, "礼物单价上限（钻，0 不限）", rule.Trigger.MaxGiftUnitValue.ToString(CultureInfo.InvariantCulture));
+        freeGift = new CheckBox { Content = "仅零价 / 单价未知礼物", IsChecked = rule.Trigger.FreeOrUnknownGiftOnly, Margin = new(0, 10, 0, 4) }; gifts.Children.Add(freeGift);
+        freeGift.Click += (_, _) => UpdatePreview();
         threshold = Ui.Field(left, "每多少个 / 次触发一次", rule.Trigger.Threshold.ToString(CultureInfo.InvariantCulture));
         left.Children.Add(sourceHint);
         enabled = new CheckBox { Content = "启用这条规则", IsChecked = rule.Enabled, Margin = new(0, 5, 0, 14) }; left.Children.Add(enabled);
@@ -161,7 +163,7 @@ internal sealed class RuleEditorWindow : Window
     private void UpdatePreview()
     {
         if (type.SelectedValue is not LiveEventType selected) { return; }
-        var draft = new TriggerDefinition { Type = selected, GiftName = giftName.Text.Trim(), GiftId = giftId.Text.Trim(), MinGiftUnitValue = long.TryParse(giftMinimum.Text, out var min) ? min : 0, MaxGiftUnitValue = long.TryParse(giftMaximum.Text, out var max) ? max : 0, Threshold = int.TryParse(threshold.Text, out var n) && n > 0 ? n : 1, Keywords = SplitKeywords() };
+        var draft = new TriggerDefinition { Type = selected, GiftName = giftName.Text.Trim(), GiftId = giftId.Text.Trim(), FreeOrUnknownGiftOnly = freeGift.IsChecked == true, MinGiftUnitValue = long.TryParse(giftMinimum.Text, out var min) ? min : 0, MaxGiftUnitValue = long.TryParse(giftMaximum.Text, out var max) ? max : 0, Threshold = int.TryParse(threshold.Text, out var n) && n > 0 ? n : 1, Keywords = SplitKeywords() };
         error.Text = "";
         summary.Text = RuleDisplay.Trigger(draft) + " → " + RuleDisplay.Effect(rule.Root);
     }
@@ -176,6 +178,7 @@ internal sealed class RuleEditorWindow : Window
         {
             rule.Trigger.Type = (LiveEventType)type.SelectedValue;
             rule.Trigger.Keywords = SplitKeywords(); rule.Trigger.GiftName = giftName.Text.Trim(); rule.Trigger.GiftId = giftId.Text.Trim();
+            rule.Trigger.FreeOrUnknownGiftOnly = freeGift.IsChecked == true;
             rule.Trigger.MinGiftUnitValue = long.Parse(giftMinimum.Text, CultureInfo.InvariantCulture);
             rule.Trigger.MaxGiftUnitValue = long.Parse(giftMaximum.Text, CultureInfo.InvariantCulture);
             rule.Trigger.Threshold = int.Parse(threshold.Text, CultureInfo.InvariantCulture);

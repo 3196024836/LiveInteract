@@ -18,12 +18,13 @@ public static class RuleDisplay
         {
             name += " " + Value("value") + (step.ActionId == "health.blue" ? " 点" : step.ActionId.StartsWith("health.") ? " 格" : step.ActionId.StartsWith("silk.") || step.ActionId is "boss.heal" or "boss.damage" or "enemy.heal" or "enemy.damage" ? " 点" : "");
         }
+        if (step.ActionId is "summon.random.ally" or "summon.random.enemy") { name += Value("pool") == "all" ? " · 含Boss池" : " · 普通怪池"; if(double.TryParse(Value("power"),System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out var strength) && strength>1)name += " · 强力"; }
         if (step.ActionId.StartsWith("ally.", StringComparison.Ordinal)) { name += Value("lifetime") == "0" ? " · 持续跟随" : " · " + Value("lifetime") + " 秒"; }
-        if (descriptor?.IsTemporary == true) { name += " · " + step.DurationSeconds + " 秒"; }
+        if (descriptor?.IsTemporary == true) { name += step.DurationSeconds == 0 ? " · 永久" : " · " + step.DurationSeconds + " 秒"; }
         return name;
     }
 
-    private static string GiftRange(TriggerDefinition t) => t.MinGiftUnitValue == 0 && t.MaxGiftUnitValue == 0 ? "" : "（" + (t.MaxGiftUnitValue == 0 ? "≥" + t.MinGiftUnitValue : t.MinGiftUnitValue + "–" + t.MaxGiftUnitValue) + "钻）";
+    private static string GiftRange(TriggerDefinition t) => t.FreeOrUnknownGiftOnly ? "（零价 / 单价未知）" : t.MinGiftUnitValue == 0 && t.MaxGiftUnitValue == 0 ? "" : "（" + (t.MaxGiftUnitValue == 0 ? "≥" + t.MinGiftUnitValue : t.MinGiftUnitValue + "–" + t.MaxGiftUnitValue) + "钻）";
 
     /// <summary>描述一个触发来源与单位。</summary>
     /// <param name="trigger">触发配置。</param>

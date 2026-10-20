@@ -20,6 +20,7 @@ internal sealed class DouyinWindow : Window
     private readonly CheckBox consent;
     private readonly TextBlock status;
     private readonly Button connect;
+    private readonly Button installRuntime;
     private readonly string userData;
     private readonly LiveRuntime runtime;
     private readonly DispatcherTimer statusTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
@@ -49,6 +50,8 @@ internal sealed class DouyinWindow : Window
         panel.Children.Add(new TextBlock { Text = "连接你的直播间", FontSize = 23, FontWeight = FontWeights.SemiBold });
         panel.Children.Add(new TextBlock { Text = "非官方本地接入：可能因平台变化、消息缺失或风控而失效。登录及验证由你本人完成。", Foreground = Ui.Brush("#EDBC88"), FontSize = 13, Margin = new(0, 9, 0, 5) });
         consent = new CheckBox { Content = "我了解上述风险，同意本次打开本人直播间并验证接入" }; panel.Children.Add(consent);
+        installRuntime=new Button{Content="安装微软WebView2组件",Visibility=Visibility.Collapsed,HorizontalAlignment=HorizontalAlignment.Left,Margin=new(0,8,0,0)};
+        installRuntime.Click+=(_,_)=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://developer.microsoft.com/microsoft-edge/webview2/"){UseShellExecute=true});panel.Children.Add(installRuntime);
         var row = new DockPanel { Margin = new(0, 9, 0, 0) }; // 地址栏与显式连接按钮。
         connect = new Button { Content = "打开并监听", Style = (Style)FindResource("PrimaryButton"), Margin = new(10, 0, 0, 0) }; DockPanel.SetDock(connect, Dock.Right); row.Children.Add(connect);
         address = new TextBox { Text = room, ToolTip = "直播间短号、电脑端地址或 v.douyin.com 分享链接" }; row.Children.Add(address); panel.Children.Add(row);
@@ -124,7 +127,7 @@ internal sealed class DouyinWindow : Window
             browser.CoreWebView2.Navigate(url.AbsoluteUri); RoomChanged?.Invoke(url.GetLeftPart(UriPartial.Path));
             SetStatus("正在打开网页，尚未收到实际互动。礼物、点赞与弹幕会分别记录验证状态。");
         }
-        catch (WebView2RuntimeNotFoundException) { SetStatus("缺少 WebView2 运行时。请使用包含 WebView2Runtime 的完整便携包，或安装微软 WebView2 Runtime。"); }
+        catch (WebView2RuntimeNotFoundException) { installRuntime.Visibility=Visibility.Visible; SetStatus("精简包复用系统浏览器组件；本机缺少WebView2，请点上方按钮到微软官网安装后重新连接。"); }
         catch (Exception exception) { SetStatus("连接未完成：" + exception.Message); runtime.Log("接入错误", exception.GetType().Name + "：" + exception.Message, false); }
         finally { connect.IsEnabled = true; }
     }

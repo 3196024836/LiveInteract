@@ -74,6 +74,9 @@ public static class ProfileStore
         {
             errors.Add("概率、冷却或触发次数超出有效范围。");
         }
+        if (rule.Trigger.FreeOrUnknownGiftOnly && (rule.Root.ActionId.StartsWith("spawn.", StringComparison.Ordinal) || rule.Root.ActionId.StartsWith("boss.", StringComparison.Ordinal) || rule.Root.ActionId is "enemy.clone" or "enemy.cloneSafe")) { errors.Add("零价/未知礼物不能绑定敌怪、复制敌人或Boss，请改为助力效果。"); }
+        if (rule.Trigger.FreeOrUnknownGiftOnly && (rule.Trigger.Type != LiveEventType.Gift || rule.Trigger.MinGiftUnitValue > 0)) { errors.Add("零价/未知礼物筛选不能同时要求付费或用于非礼物来源。"); }
+        if (rule.Trigger.GiftNameAliases == null || rule.Trigger.GiftNameAliases.Count > 32 || rule.Trigger.GiftNameAliases.Any(n=>n==null || n.Length>128)) { errors.Add("礼物名称别名无效。"); }
         if (rule.Trigger.MinGiftUnitValue < 0 || rule.Trigger.MaxGiftUnitValue < 0 || rule.Trigger.MaxGiftUnitValue > 0 && rule.Trigger.MaxGiftUnitValue < rule.Trigger.MinGiftUnitValue) { errors.Add("礼物单价档位范围无效。"); }
         if (!Enum.IsDefined(rule.Trigger.Type) || !Enum.IsDefined(rule.Trigger.Counting) || !Enum.IsDefined(rule.Trigger.TextMatching) || rule.Trigger.MinimumFanLevel < 0 || rule.Trigger.MinimumFanLevel > 10000 || rule.Trigger.AllowedUsers == null || rule.Trigger.BlockedUsers == null || rule.Trigger.Keywords == null) { errors.Add("触发类型或身份筛选格式无效。"); }
         var count = 0; // 限制图形配置产生的动作树大小。

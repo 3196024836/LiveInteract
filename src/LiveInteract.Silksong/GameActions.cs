@@ -28,6 +28,7 @@ internal sealed class GameActions
     private readonly List<GameObject> spawned = new();
     private readonly Dictionary<int, string> spawnedOwners = new();
     private readonly List<CompanionLease> companions = new();
+    private readonly List<CompanionLease> enemyTimers = new();
     private GameObject? companionRoot;
     private readonly List<SupportPickup> pickups = new();
     private readonly List<AppearanceStack> appearanceStacks = new();
@@ -47,7 +48,12 @@ internal sealed class GameActions
     private string lastScene = "";
     private GameObject? staging;
     private int generation;
+    private int stopEpoch;
+    private readonly List<GameObject> rainCoins = new();
     private float nextRefill;
+    private float nextHostileScan;
+    private HealthManager[] hostileCache = Array.Empty<HealthManager>();
+    internal HealthManager? FindHostile(Vector3 position,float radius)=>hostileCache.Where(e=>e!=null && !e.isDead && e.hp>0 && e.gameObject.activeInHierarchy && Vector3.Distance(e.transform.position,position)<=radius).OrderBy(e=>Vector3.SqrMagnitude(e.transform.position-position)).FirstOrDefault();
     private float nextCapture;
     private bool infiniteSilk;
     private bool infiniteTools;
@@ -111,16 +117,21 @@ internal sealed class GameActions
         effects.Tick(Time.realtimeSinceStartup);
         appearanceStacks.RemoveAll(item => item == null);
         TickPickups();
-        for (var index = companions.Count - 1; index >= 0; index--)
+        if(CanAct && Time.realtimeSinceStartup>=nextHostileScan){nextHostileScan=Time.realtimeSinceStartup+.25f;hostileCache=Enemies();}
+        for (var index=companions.Count-1;index>=0;index--)
         {
-            var lease = companions[index];
-            if (lease.Object != null && Time.realtimeSinceStartup < lease.ExpiresAt)
-            {
-                if (!lease.Object.activeSelf && CanAct) { lease.Object.transform.position = ExistingHero()!.transform.position + Vector3.up * 1.5f; lease.Object.SetActive(true); }
-                continue;
-            }
-            if (lease.Object != null) { Object.Destroy(lease.Object); }
-            spawnedOwners.Remove(lease.Id); companions.RemoveAt(index);
+            var lease=companions[index];
+            if(lease.Object==null){spawnedOwners.Remove(lease.Id);companions.RemoveAt(index);continue;}
+            if(CanAct && !float.IsPositiveInfinity(lease.RemainingSeconds))lease.RemainingSeconds-=Time.unscaledDeltaTime;
+            if(lease.RemainingSeconds<=0){Object.Destroy(lease.Object);spawnedOwners.Remove(lease.Id);companions.RemoveAt(index);continue;}
+            if(lease.Object.GetComponent<NativeEnemyAlly>()!=null && !CanAct){lease.Object.SetActive(false);continue;}
+            if(!lease.Object.activeSelf && CanAct){lease.Object.transform.position=ExistingHero()!.transform.position+Vector3.up*1.5f;lease.Object.SetActive(true);}
+        }
+        for(var index=enemyTimers.Count-1;index>=0;index--)
+        {
+            var lease=enemyTimers[index];if(lease.Object==null){enemyTimers.RemoveAt(index);continue;}
+            if(CanAct)lease.RemainingSeconds-=Time.unscaledDeltaTime;
+            if(lease.RemainingSeconds<=0){spawned.Remove(lease.Object);spawnedOwners.Remove(lease.Id);Object.Destroy(lease.Object);enemyTimers.RemoveAt(index);}
         }
         spawned.RemoveAll(item => item == null);
         if (CanAct && Time.realtimeSinceStartup >= nextRefill)
@@ -199,6 +210,17 @@ internal sealed class GameActions
             case "silk.max": data.IsSilkSpoolBroken = false; data.silkMax = whole; hero.RefreshSilk(); break;
             case "silk.infinite": Temporary(request, "无限丝线", 1, false, () => infiniteSilk ? 1 : 0, x => infiniteSilk = x > 0); break;
             case "ally.clockwork": return await SpawnCompanionsAsync(request);
+            case "ally.native.free-random": return await SpawnNativeAllyAsync(NativeSummons.FreeAlly(request.Id), request);
+            case "ally.native.bone-goomba": case "ally.native.understore-thrower": case "ally.native.shellwood-gnat": case "ally.native.shellwood-wasp": case "ally.native.slab-fly-large":
+                return await SpawnNativeAllyAsync(NativeSummons.Find(request.ActionId)!,request);
+            case "summon.named.enemy": case "summon.named.ally":
+                var namedMonster=SummonCommands.Resolve(Text(request,"name"));
+                return await SpawnResolvedGroupAsync(new[]{namedMonster},request,request.ActionId.EndsWith(".ally",StringComparison.Ordinal),1);
+            case "summon.random.enemy": case "summon.random.ally":
+                var choices=Enumerable.Range(0,(int)Number(request,"count",1)).Select(i=>NativeSummons.RandomMonster(request.Id+"-"+i,Text(request,"pool")=="all")).ToArray();
+                return await SpawnResolvedGroupAsync(choices,request,request.ActionId.EndsWith(".ally",StringComparison.Ordinal),Number(request,"power",1));
+            case "boss.random":
+                var selectedBoss=NativeSummons.Boss(request.Id);request.EffectText="随机Boss · "+selectedBoss.Name+" ×1";return await SpawnNamedAsync(selectedBoss,request);
             case "enemy.growStack": case "enemy.shrinkStack":
                 var growTarget = SelectEnemy(Text(request, "enemy"));
                 var layers = growTarget.GetComponents<AppearanceStack>().FirstOrDefault(item => !item.Retired) ?? growTarget.gameObject.AddComponent<AppearanceStack>();
@@ -335,6 +357,7 @@ internal sealed class GameActions
                 break;
             case "enemy.killAll": foreach (var enemy in Enemies()) { enemy.Die(null, AttackTypes.Generic, true); } break;
             case "enemy.clearSpawned": ClearSpawned(); break;
+            case "currency.rain": return await RainCoinsAsync(request);
             case "currency.rosaries": if (whole >= 0) { hero.AddGeo(whole); } else { hero.TakeGeo(Math.Min(-whole, data.geo)); } break;
             case "currency.shards": if (whole >= 0) { hero.AddShards(whole); } else { hero.TakeShards(Math.Min(-whole, data.ShellShards)); } break;
             case "needle.upgrade": data.nailUpgrades = whole; break;
@@ -402,10 +425,91 @@ internal sealed class GameActions
             clone.SetActive(true);
             var id = clone.GetInstanceID(); spawned.Add(clone);
             spawnedOwners[id] = DisplayNames.Clean(request.Triggerer.Length > 0 ? request.Triggerer : "主播");
-            companions.Add(new CompanionLease { Object = clone, Id = id, ExpiresAt = lifetime <= 0 ? float.PositiveInfinity : Time.realtimeSinceStartup + lifetime });
+            companions.Add(new CompanionLease { Object = clone, Id = id, RemainingSeconds = lifetime <= 0 ? float.PositiveInfinity : lifetime });
         }
         exercised.Add(request.ActionId);
         return Task.FromResult("已召唤原生机械友军 ×" + count + (lifetime <= 0 ? "，持续跟随并跨场景保留" : "，持续" + lifetime.ToString(CultureInfo.InvariantCulture) + "秒"));
+    }
+
+    /// <summary>先完成整批资源加载再创建；任何同步创建失败都撤销本次新对象，避免重试重复赠送。</summary>
+    private async Task<string> SpawnResolvedGroupAsync(MonsterDefinition[] monsters,ActionRequest request,bool friendly,double power)
+    {
+        var started=generation;var handles=new List<AsyncOperationHandle<GameObject>>();
+        foreach(var monster in monsters)
+        {if(!namedPrefabHandles.TryGetValue(monster.Id,out var h)||!h.IsValid()){h=Addressables.LoadAssetAsync<GameObject>(monsterAssets.Locate(monster));namedPrefabHandles[monster.Id]=h;}handles.Add(h);}
+        var load=Task.WhenAll(handles.Select(h=>h.Task));
+        if(await Task.WhenAny(load,Task.Delay(6500))!=load)throw new DeferredActionException("ASSET_LOADING","整组原生资源仍在加载，尚未创建任何单位，继续等待");
+        GameObject[] prefabs;
+        try{prefabs=await load;}
+        catch{foreach(var m in monsters.Distinct())if(namedPrefabHandles.TryGetValue(m.Id,out var h)&&h.IsValid()&&h.Status==AsyncOperationStatus.Failed){namedPrefabHandles.Remove(m.Id);Addressables.Release(h);}throw;}
+        if(started!=generation||!CanAct)throw new DeferredActionException("SCENE_CHANGED","加载时场景改变，整组尚未创建，继续排队");
+        if(prefabs.Any(p=>p==null||p.GetComponentInChildren<HealthManager>(true)==null))throw new InvalidOperationException("本组包含无效原生单位，没有创建替代怪物");
+        if(!friendly && SpawnLimit>0 && spawned.Count(p=>p!=null&&p.GetComponent<OwnedCompanion>()==null)+monsters.Length>SpawnLimit)throw new DeferredActionException("SPAWN_LIMIT","等待敌对生成数量低于上限，整组未创建");
+        if(friendly)foreach(var prefab in prefabs)NativeAllyExecution.Register(prefab);
+        var before=new HashSet<int>(spawned.Where(p=>p!=null).Select(p=>p.GetInstanceID()));
+        try
+        {
+            for(var i=0;i<monsters.Length;i++)
+            {
+                var args=new Dictionary<string,string>(request.Arguments){["count"]="1",["value"]=power.ToString(CultureInfo.InvariantCulture)};
+                var part=new ActionRequest{Id=request.Id,ActionId=request.ActionId,Arguments=args,Triggerer=request.Triggerer,AllowPersistent=request.AllowPersistent};
+                Spawn(prefabs[i],part,friendly?NativeSummons.Convert(monsters[i],power):null);
+                if(!friendly && power>1 && !monsters[i].IsBoss)
+                {
+                    var created=spawned.Last();foreach(var hm in created.GetComponentsInChildren<HealthManager>(true))hm.hp=(int)Math.Min(100000,Math.Ceiling(hm.hp*power));
+                    foreach(var damage in created.GetComponentsInChildren<DamageHero>(true))damage.damageDealt=Math.Min(2,Math.Max(1,(int)Math.Ceiling(damage.damageDealt*power)));
+                }
+            }
+        }
+        catch
+        {
+            var added=spawned.Where(p=>p!=null&&!before.Contains(p.GetInstanceID())).ToArray();var ids=new HashSet<int>(added.Select(p=>p.GetInstanceID()));
+            foreach(var obj in added){spawnedOwners.Remove(obj.GetInstanceID());spawned.Remove(obj);Object.Destroy(obj);}companions.RemoveAll(l=>ids.Contains(l.Id));enemyTimers.RemoveAll(l=>ids.Contains(l.Id));throw;
+        }
+        var names=string.Join("、",monsters.GroupBy(m=>m.Id).Select(group=>group.First().Name+" ×"+group.Count()));var ttl=Number(request,"lifetime",0);
+        request.EffectText=(power>1?"强力":"")+(friendly?"友军 ":"敌军 ")+names+(ttl>0?" · "+ttl+"秒":"");
+        return "已召唤"+(friendly?"友方":"敌方")+names+"，数量"+monsters.Length;
+    }
+
+    /// <summary>实际落下GeoControl原生拾取物，分批生成避免一帧挤出整场金币雨。</summary>
+    private async Task<string> RainCoinsAsync(ActionRequest request)
+    {
+        var candidates=Resources.FindObjectsOfTypeAll<GeoControl>().Where(c=>c!=null&&!c.name.Contains("[LiveInteract"));
+        var template=candidates.Select(c=>new{Coin=c,Cost=AccessTools.Field(typeof(GeoControl),"valueReference").GetValue(c) as CostReference}).Where(x=>x.Cost!=null&&x.Cost.Value>0).OrderBy(x=>x.Coin.gameObject.scene.IsValid()?1:0).ThenBy(x=>x.Cost!.Value).FirstOrDefault();
+        if(template==null)throw new DeferredActionException("COIN_RESOURCE","等待游戏原生念珠拾取物资源；未生成虚构金币，也没有直接加钱");
+        var amount=(int)Number(request,"count",10);var spread=(float)Number(request,"spread",6);var height=(float)Number(request,"height",5);var epoch=stopEpoch;
+        var random=new System.Random(NativeSummons.Choice(request.Id,int.MaxValue));
+        for(var i=0;i<amount;i++)
+        {
+            while(!CanAct || !(bool)AccessTools.Property(typeof(CurrencyObjectBase),"CanPickupExist").GetValue(null,null)){if(epoch!=stopEpoch)throw new InvalidOperationException("金币雨已由主播停止，未落下部分取消");await Task.Delay(100);}
+            if(epoch!=stopEpoch)throw new InvalidOperationException("金币雨已由主播停止，未落下部分取消");
+            if(staging==null){staging=new GameObject("LiveInteract inactive spawn staging");staging.SetActive(false);}
+            var hero=ExistingHero()!;var x=hero.transform.position.x+((float)random.NextDouble()-.5f)*spread;
+            var origin=new Vector2(x,hero.transform.position.y+.7f);var y=hero.transform.position.y+height;
+            var terrain=Physics2D.Raycast(origin,Vector2.up,height,LayerMask.GetMask("Terrain"));if(terrain.collider!=null)y=Math.Max(origin.y+.3f,terrain.point.y-.4f);
+            var clone=Object.Instantiate(template.Coin.gameObject,staging.transform);clone.name="念珠 [LiveInteract Coin]";clone.AddComponent<OwnedRainPickup>();
+            foreach(var persistent in clone.GetComponentsInChildren<Component>(true).Where(c=>c!=null&&(c.GetType().Name is "PersistentBoolItem" or "PersistentIntItem")))Object.DestroyImmediate(persistent);
+            clone.transform.position=new Vector3(x,y,0);clone.transform.SetParent(null,true);clone.SetActive(true);
+            var body=clone.GetComponent<Rigidbody2D>();if(body!=null)body.linearVelocity=new Vector2(((float)random.NextDouble()-.5f)*2,-1);
+            rainCoins.Add(clone);await Task.Delay(25);
+        }
+        rainCoins.RemoveAll(c=>c==null||c.GetComponent<OwnedRainPickup>()?.StillOwned!=true);request.EffectText="原生念珠雨 ×"+amount;
+        return "已落下"+amount+"颗原生念珠（每颗"+template.Cost!.Value+"），触碰拾取后由原作入账";
+    }
+
+    private async Task<string> SpawnNativeAllyAsync(NativeAllyDefinition ally,ActionRequest request)
+    {
+        var monster=MonsterCatalog.Find(ally.MonsterId)!;var started=generation;
+        if(!namedPrefabHandles.TryGetValue(monster.Id,out var handle)||!handle.IsValid())
+        {handle=Addressables.LoadAssetAsync<GameObject>(monsterAssets.Locate(monster));namedPrefabHandles[monster.Id]=handle;}
+        if(await Task.WhenAny(handle.Task,Task.Delay(6500))!=handle.Task)throw new DeferredActionException("ASSET_LOADING","原生友军资源加载中，未生成的单位保留等待");
+        GameObject prefab;
+        try{prefab=await handle.Task;}
+        catch{if(handle.IsValid()){Addressables.Release(handle);namedPrefabHandles.Remove(monster.Id);}throw;}
+        if(started!=generation||!CanAct)throw new DeferredActionException("SCENE_CHANGED","加载期间切场景，本单位尚未创建，继续排队");
+        if(prefab==null||prefab.GetComponentInChildren<HealthManager>(true)==null)throw new InvalidOperationException("原生友军资源未包含有效生命组件");
+        Spawn(prefab,request,ally);exercised.Add(request.ActionId);request.EffectText=ally.Name+" ×"+request.Arguments["count"]+" · 持续跟随";
+        return "已生成"+ally.Name+"，使用原生外观/状态机/攻击碰撞；转友方战斗兼容仍待实机确认";
     }
 
     /// <summary>具名和旧版资源入口共用正确的预制体加载与回执路径。</summary>
@@ -448,6 +552,8 @@ internal sealed class GameActions
     /// <summary>恢复临时属性并清除仅本工具创建的对象，不撤销永久修改。</summary>
     public void Reset()
     {
+        stopEpoch++;
+        foreach(var coin in rainCoins)if(coin!=null&&coin.GetComponent<OwnedRainPickup>()?.StillOwned==true)Object.Destroy(coin);rainCoins.Clear();
         generation++;
         effects.RestoreAll(); animationSpeeds.Clear(); shieldPoints = 0;
         foreach (var layer in appearanceStacks.ToArray()) { if (layer != null) { layer.Restore(); Object.Destroy(layer); } }
@@ -496,7 +602,7 @@ internal sealed class GameActions
         var data = ExistingPlayerData(); // 只读已有数据，禁止为心跳创建单例。
         var status = new GameStatus
         {
-            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, CanAct = CanAct,
+            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.6.0", CanAct = CanAct,
             Health = data?.health ?? 0, BlueHealth = data?.healthBlue ?? 0, ShieldPoints = shieldPoints, CompanionCount = CompanionCount, PickupCount = pickups.Count, SizeLayerCount = appearanceStacks.Where(a => a != null).Sum(a => a.Count), Silk = data?.silk ?? 0,
             ActiveEffects = effects.Describe(Time.realtimeSinceStartup).ToList(),
             SpawnableMonsterIds = monsterAssets.AvailableIds,
@@ -598,7 +704,7 @@ internal sealed class GameActions
             var collider = obj.GetComponentInChildren<Collider2D>();
             var visible = obj.GetComponentsInChildren<MeshRenderer>().Where(r => r.enabled && !r.forceRenderingOff).ToArray();
             var point = visible.Length > 0 ? new Vector3(obj.transform.position.x, visible.Max(r => r.bounds.max.y) + .35f, obj.transform.position.z) : collider != null ? new Vector3(collider.bounds.center.x, collider.bounds.max.y + .35f, obj.transform.position.z) : obj.transform.position + Vector3.up * 1.5f;
-            yield return new SpawnLabel { Name = name, Position = point, IsFriendly = obj.GetComponent<ClockworkHatchling>() != null };
+            yield return new SpawnLabel { Name = name, Position = point, IsFriendly = obj.GetComponent<OwnedCompanion>() != null };
         }
         foreach (var layer in appearanceStacks.Where(item => item != null))
         {
@@ -672,7 +778,7 @@ internal sealed class GameActions
 
     /// <summary>找到当前场景有效且非玩家的生命组件。</summary>
     /// <returns>当前场景敌人。</returns>
-    private static HealthManager[] Enemies() => Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None).Where(item => item != null && !item.isDead && item.hp > 0 && !item.IsPartOfSendToTarget && item.gameObject.scene.IsValid() && item.GetComponentInParent<HeroController>() == null).ToArray();
+    private static HealthManager[] Enemies() => Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None).Where(item => item != null && !item.isDead && item.hp > 0 && !item.IsPartOfSendToTarget && item.gameObject.scene.IsValid() && item.GetComponentInParent<HeroController>() == null && item.GetComponentInParent<OwnedCompanion>() == null).ToArray();
 
     /// <summary>选择指定对象或最近敌人。</summary>
     /// <param name="name">内部名称或名称加实例号。</param>
@@ -714,11 +820,11 @@ internal sealed class GameActions
     /// <summary>在非激活父物体下准备克隆，移除独立存档组件后再启用。</summary>
     /// <param name="source">场景对象或已加载预制体。</param>
     /// <param name="request">生成参数。</param>
-    private void Spawn(GameObject source, ActionRequest request)
+    private void Spawn(GameObject source, ActionRequest request, NativeAllyDefinition? ally = null)
     {
         spawned.RemoveAll(item => item == null);
         var count = (int)Number(request, "count", 1); // 本次生成数量。
-        if (SpawnLimit > 0 && spawned.Count(item => item.GetComponent<OwnedCompanion>() == null) + count > SpawnLimit)
+        if (ally == null && SpawnLimit > 0 && spawned.Count(item => item.GetComponent<OwnedCompanion>() == null) + count > SpawnLimit)
         {
             throw new DeferredActionException("SPAWN_LIMIT", "等待已有生成怪物被击败 / 清理，当前同时生成上限 " + SpawnLimit);
         }
@@ -727,10 +833,11 @@ internal sealed class GameActions
             staging = new GameObject("LiveInteract inactive spawn staging");
             staging.SetActive(false);
         }
+        NativeAllyExecution.Register(source);
         for (var index = 0; index < count; index++)
         {
-            var clone = Object.Instantiate(source, staging.transform); // 未激活时先清理持久化组件。
-            clone.name = source.name + " [LiveInteract]";
+            var clone = Object.Instantiate(source, staging.transform); spawned.Add(clone); // 未激活时先清理持久化组件。
+            clone.name = source.name + " [LiveInteract]"; clone.AddComponent<OwnedSummon>();
             foreach (var component in clone.GetComponentsInChildren<Component>(true).Where(item => item != null && (item.GetType().Name == "PersistentBoolItem" || item.GetType().Name == "PersistentIntItem")))
             {
                 Object.DestroyImmediate(component);
@@ -749,9 +856,18 @@ internal sealed class GameActions
                 AccessTools.Field(typeof(EnemyDeathEffects), "journalRecord").SetValue(death, null);
             }
             clone.transform.position = HeroController.SilentInstance.transform.position + new Vector3((float)Number(request, "offsetX", 3) + index * 1.2f, (float)Number(request, "offsetY", 1), 0);
-            clone.transform.SetParent(null, true);
+            if(ally!=null)
+            {
+                if(companionRoot==null){companionRoot=new GameObject("LiveInteract companions");Object.DontDestroyOnLoad(companionRoot);}
+                clone.name=ally.Name+" [LiveInteract]";clone.AddComponent<OwnedCompanion>();
+                NativeAllyExecution.Register(source);
+                var controller=clone.AddComponent<NativeEnemyAlly>();controller.PreserveNativeMovement=MonsterCatalog.Find(ally.MonsterId)?.IsBoss==true;controller.Flying=ally.Flying;controller.DamageMultiplier=(float)Number(request,"value",ally.DamageMultiplier);
+                clone.transform.SetParent(companionRoot.transform,true);
+                var lifetime=(float)Number(request,"lifetime",0);companions.Add(new CompanionLease{Object=clone,Id=clone.GetInstanceID(),RemainingSeconds=lifetime<=0?float.PositiveInfinity:lifetime});
+            }
+            else clone.transform.SetParent(null, true);
+            if(ally==null && Number(request,"lifetime",0)>0)enemyTimers.Add(new CompanionLease{Object=clone,Id=clone.GetInstanceID(),RemainingSeconds=(float)Number(request,"lifetime",0)});
             clone.SetActive(true);
-            spawned.Add(clone);
             spawnedOwners[clone.GetInstanceID()] = DisplayNames.Clean(request.Triggerer.Length > 0 ? request.Triggerer : "主播");
         }
     }
@@ -763,7 +879,7 @@ internal sealed class GameActions
         {
             if (item != null) { Object.Destroy(item); }
         }
-        spawned.Clear(); spawnedOwners.Clear(); companions.Clear();
+        spawned.Clear(); spawnedOwners.Clear(); companions.Clear(); enemyTimers.Clear();
         if (companionRoot != null) { Object.Destroy(companionRoot); companionRoot = null; }
         foreach (var handle in assetHandles)
         {
@@ -843,7 +959,7 @@ internal sealed class CompanionLease
 {
     public GameObject Object { get; set; } = null!;
     public int Id { get; set; }
-    public float ExpiresAt { get; set; }
+    public float RemainingSeconds { get; set; }
 }
 
 /// <summary>可见、可拾取且可跨场景保留的应援补给。</summary>
@@ -851,3 +967,13 @@ internal sealed class SupportPickup
 {
     public string Kind = "", Who = ""; public int Amount; public Vector3 Position; public float Born;
 }
+
+/// <summary>原生拾取物首次回收后放弃所有权，避免紧急恢复误删已被原生对象池复用的金币。</summary>
+internal sealed class OwnedRainPickup : MonoBehaviour
+{
+    public bool StillOwned=true;
+    private void OnDisable()=>StillOwned=false;
+}
+
+/// <summary>仅标记本工具生成的原生单位，用于阻止召唤物的剧情状态写回，不改变原场景敌人。</summary>
+internal sealed class OwnedSummon : MonoBehaviour { }
