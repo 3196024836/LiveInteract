@@ -528,14 +528,13 @@
     },
     {
       "Id": "v06-storm",
-      "Name": "大招 · 原生灵丝风暴",
+      "Name": "技能 · 苍白之爪",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
         "Type": 0,
         "Keywords": [
-          "大招",
-          "灵丝风暴"
+          "技能"
         ],
         "TextMatching": 1,
         "GiftId": "",
@@ -560,7 +559,7 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "cast.threadstorm",
+        "ActionId": "cast.palenails",
         "Arguments": {},
         "ParameterBindings": {},
         "DurationSeconds": 8,

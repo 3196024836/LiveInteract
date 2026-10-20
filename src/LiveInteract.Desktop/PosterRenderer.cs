@@ -93,6 +93,7 @@ internal static class PosterRenderer
         var cut = effect.IndexOf(" · ", StringComparison.Ordinal);
         if (cut > 0) { effect = effect[..cut]; }
         effect = effect.Replace("原生", "");
+        if (effect.StartsWith("施放", StringComparison.Ordinal)) { effect = effect[2..]; } // 丝技只显示技能名
         effect = System.Text.RegularExpressions.Regex.Replace(effect, "（[^）]*）", "").Trim();
         effect = System.Text.RegularExpressions.Regex.Replace(effect, @"\s*\d+\.\d+\s*$", "").Trim();
         return effect;

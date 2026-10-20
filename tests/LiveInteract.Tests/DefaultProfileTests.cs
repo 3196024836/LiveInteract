@@ -16,9 +16,19 @@ public sealed class DefaultProfileTests
     [InlineData("小怪","spawn.bone-goomba")][InlineData("远程小怪","spawn.understore-thrower")]
     [InlineData("回血","health.add")][InlineData("回蓝","silk.add")][InlineData("回丝","silk.add")]
     [InlineData("怪变大","enemy.growStack")][InlineData("怪变小","enemy.shrinkStack")]
-    [InlineData("金币","currency.rain")][InlineData("大招","cast.threadstorm")][InlineData("灵丝风暴","cast.threadstorm")]
+    [InlineData("金币","currency.rain")][InlineData("技能","cast.palenails")]
     public void ChatCommandsMapToApprovedEffects(string text,string action)
     {var m=Assert.Single(Evaluate(new(){Id="c",Type=LiveEventType.Chat,Text=text}));Assert.Equal(action,m.Rule.Root.ActionId);}
+
+    [Fact] public void SkillCommandUsesPaleClawAndOldStormKeywordsAreGone()
+    {
+        // 技能口令现在是苍白之爪；旧的大招 / 灵丝风暴关键词不再命中。
+        Assert.Empty(Evaluate(new(){Id="a",Type=LiveEventType.Chat,Text="大招"}));
+        Assert.Empty(Evaluate(new(){Id="b",Type=LiveEventType.Chat,Text="灵丝风暴"}));
+        Assert.NotNull(SkillCatalog.Find("cast.palenails"));
+        Assert.Equal("苍白之爪",SkillCatalog.Find("cast.palenails")!.Name);
+        Assert.Contains(ActionCatalog.All,a=>a.Id=="cast.palenails");
+    }
 
     [Fact] public void LongKeywordsWinOverTheirSubstring()
     {
