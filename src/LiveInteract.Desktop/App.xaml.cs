@@ -50,6 +50,14 @@ public partial class App : Application
                 var builtin=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json"); var builtinRules=0; string? builtinError=null; try { builtinRules=ProfileStore.Read(File.ReadAllText(builtin),false).Rules.Count; } catch(Exception error) { builtinError=error.Message; }
                 File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { environment, BuiltinRules=builtinRules, BuiltinProfileError=builtinError, Runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, BrowserRuntime = browser, ActionDefinitions = ActionCatalog.All.Count, PayloadFound = Directory.Exists(PayloadDirectory) }, Formatting.Indented)); Shutdown(); return;
             }
+            if (e.Args.Length >= 2 && e.Args[0] == "--poster")
+            {
+                // 按当前规则直接生成透明直播图，便于脚本或外部工具复用同一套排版。
+                var profileFile = e.Args.Length >= 3 ? Path.GetFullPath(e.Args[2]) : Path.Combine(AppContext.BaseDirectory, "profiles", "丝之歌-弹幕助力.json");
+                var model = ProfileStore.Read(File.ReadAllText(profileFile), false);
+                PosterRenderer.Render(model, e.Args[1]);
+                Shutdown(); return;
+            }
             if (e.Args.Length >= 2 && e.Args[0] == "--game-probe")
             {
                 await using var bridge = new GamePipeServer(); bridge.Start();

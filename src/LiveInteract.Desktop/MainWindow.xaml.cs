@@ -466,6 +466,19 @@ public partial class MainWindow : Window
     /// <param name="e">事件。</param>
     private void OpenOverlayClick(object? sender, RoutedEventArgs e) { if (overlay.Url.Length > 0) { OpenPath(overlay.Url); } }
 
+    /// <summary>按当前规则生成透明直播图；路径由主播选择，文件只写本地。</summary>
+    /// <param name="sender">按钮。</param>
+    /// <param name="e">事件。</param>
+    private async void GeneratePosterClick(object? sender, RoutedEventArgs e) => await GuardAsync(() =>
+    {
+        var dialog = new SaveFileDialog { Filter = "PNG 图片 (*.png)|*.png", FileName = "直播互动说明-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".png" };
+        if (dialog.ShowDialog(this) != true) { return Task.CompletedTask; }
+        var file = PosterRenderer.Render(profile, dialog.FileName);
+        SettingsResultText.Text = "已按当前规则生成直播图：" + file;
+        runtime.Log("直播图", "已生成 " + file);
+        return Task.CompletedTask;
+    });
+
     /// <summary>导出技术状态，不附带账号、观众消息或原始协议包。</summary>
     /// <param name="sender">按钮。</param>
     /// <param name="e">事件。</param>
@@ -476,7 +489,7 @@ public partial class MainWindow : Window
         {
             File.WriteAllText(dialog.FileName, JsonConvert.SerializeObject(new
             {
-                Version = "0.7.1", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
+                Version = "0.7.2", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
                 Bridge = new { runtime.Game.IsConnected, runtime.Game.Status?.GameVersion, runtime.Game.Status?.Scene, runtime.Game.Status?.CanAct, runtime.Game.Status?.Diagnostics },
                 Counts = new { runtime.Received, runtime.Simulated, runtime.Completed, runtime.Failed },
                 RuleCount = profile.Rules.Count, EnabledRules = profile.Rules.Count(item => item.Enabled),
