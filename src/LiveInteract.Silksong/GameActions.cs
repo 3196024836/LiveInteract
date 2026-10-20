@@ -65,6 +65,11 @@ internal sealed class GameActions
     private bool infiniteTools;
     private bool invincible;
     private int shieldPoints;
+    // 满血后回血转成临时额外血量上限：每次刷新时长，上限受 BonusHealthCap 限制。
+    private const int BonusHealthCap = 5;
+    private const float BonusHealthSeconds = 30f;
+    private int bonusHealth;
+    private float bonusHealthUntil;
     private bool survive;
     private double allDamage = 1, needleDamage = 1, toolDamage = 1, silkDamage = 1, incomingDamage = 1, knockback = 1, attackSpeed = 1;
 
@@ -155,6 +160,7 @@ internal sealed class GameActions
         }
         spawned.RemoveAll(item => item == null);
         DrainPending();
+        TickBonusHealth();
         if (CanAct && Time.realtimeSinceStartup >= nextRefill)
         {
             nextRefill = Time.realtimeSinceStartup + 0.25f;
@@ -215,13 +221,13 @@ internal sealed class GameActions
                 var contrast = ExistingCameras()?.brightnessEffect ?? throw new InvalidOperationException("对比度组件尚未创建。");
                 Temporary(request, "画面对比:" + contrast.GetInstanceID(), value, false, () => contrast._Contrast, x => contrast.SetContrast((float)x), () => contrast != null);
                 break;
-            case "health.add": hero.AddHealth(whole); break;
+            case "health.add": Heal(whole); break;
             case "health.set": SetHealth(Math.Min(whole, data.CurrentMaxHealth)); break;
             case "health.full": hero.MaxHealth(); break;
             case "health.damage": hero.TakeDamage(hero.gameObject, GlobalEnums.CollisionSide.other, whole, GlobalEnums.HazardType.NON_HAZARD, default); break;
             case "health.kill": hero.TakeDamage(hero.gameObject, GlobalEnums.CollisionSide.other, Math.Max(9999, data.health + data.healthBlue + 100), GlobalEnums.HazardType.NON_HAZARD, default); break;
             case "health.blue": shieldPoints = Math.Min(999, shieldPoints + whole); return "已增加 " + whole + " 点临时护盾，当前 " + shieldPoints + " 点";
-            case "health.max": data.maxHealthBase = whole; data.maxHealth = whole; SetHealth(Math.Min(data.health, data.CurrentMaxHealth)); break;
+            case "health.max": DropBonusHealth(); data.maxHealthBase = whole; data.maxHealth = whole; SetHealth(Math.Min(data.health, data.CurrentMaxHealth)); break;
             case "health.invincible": Temporary(request, "无敌", 1, false, () => invincible ? 1 : 0, x => invincible = x > 0); break;
             case "health.survive": Temporary(request, "免死", 1, false, () => survive ? 1 : 0, x => survive = x > 0); break;
             case "silk.add": hero.AddSilk(whole, true); break;
@@ -577,6 +583,7 @@ internal sealed class GameActions
     {
         stopEpoch++;
         pending.Clear();
+        DropBonusHealth();
         foreach(var coin in rainCoins)if(coin!=null&&coin.GetComponent<OwnedRainPickup>()?.StillOwned==true)Object.Destroy(coin);rainCoins.Clear();
         generation++;
         effects.RestoreAll(); animationSpeeds.Clear(); shieldPoints = 0;
@@ -588,6 +595,7 @@ internal sealed class GameActions
     public void ResetForScene()
     {
         generation++; effects.RestoreAll(); animationSpeeds.Clear(); shieldPoints = 0;
+        DropBonusHealth(); // 死亡/切场景前收回临时上限，重生不会带着额外血格。
         foreach (var layer in appearanceStacks.ToArray()) { if (layer != null) { layer.Restore(); Object.Destroy(layer); } }
         appearanceStacks.Clear(); ClearHostiles(); relocatePickups = true;
     }
@@ -626,13 +634,14 @@ internal sealed class GameActions
         var data = ExistingPlayerData(); // 只读已有数据，禁止为心跳创建单例。
         var status = new GameStatus
         {
-            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.7.0", CanAct = CanAct,
+            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.7.1", CanAct = CanAct,
             Health = data?.health ?? 0, BlueHealth = data?.healthBlue ?? 0, ShieldPoints = shieldPoints, CompanionCount = CompanionCount, PickupCount = pickups.Count, SizeLayerCount = appearanceStacks.Where(a => a != null).Sum(a => a.Count), Silk = data?.silk ?? 0,
             ActiveEffects = effects.Describe(Time.realtimeSinceStartup).ToList(),
             SpawnableMonsterIds = monsterAssets.AvailableIds,
             Diagnostics = diagnostics.Concat(exercised.Select(item => "已执行：" + item)).ToList()
         };
         if (CompanionCount > 0) { status.ActiveEffects.Add("跟随援军 ×" + CompanionCount); }
+        if (bonusHealth > 0) { status.ActiveEffects.Add("临时上限 +" + bonusHealth + " · " + Math.Max(0, (int)Math.Ceiling(bonusHealthUntil - Time.realtimeSinceStartup)) + "秒"); }
         if (CanAct)
         {
             if (!indexedResources)
@@ -753,6 +762,45 @@ internal sealed class GameActions
                 target.localScale = scale;
             }, () => target != null);
         }
+    }
+
+    /// <summary>回血先补当前缺口，满血后溢出的部分转成临时额外血量上限。</summary>
+    private void Heal(int amount)
+    {
+        if (amount <= 0) { return; }
+        var data = ExistingPlayerData(); var hero = ExistingHero();
+        if (data == null || hero == null) { return; }
+        var missing = Math.Max(0, data.CurrentMaxHealth - data.health);
+        var filled = Math.Min(amount, missing);
+        if (filled > 0) { hero.AddHealth(filled); }
+        var overflow = amount - filled;
+        if (overflow <= 0) { return; }
+        var added = Math.Min(overflow, Math.Max(0, BonusHealthCap - bonusHealth)); // 上限封顶，避免血条无限拉长。
+        if (added <= 0) { return; }
+        bonusHealth += added;
+        data.maxHealth += added; // 只抬 maxHealth，不动 maxHealthBase，到期直接还原。
+        hero.AddHealth(added);   // 同步补上对应当前血量并让血条刷新。
+        bonusHealthUntil = Time.realtimeSinceStartup + BonusHealthSeconds;
+    }
+
+    /// <summary>到期的临时上限收回；先还原上限再压回当前血量，避免血条显示比上限多。</summary>
+    private void TickBonusHealth()
+    {
+        if (bonusHealth <= 0 || Time.realtimeSinceStartup < bonusHealthUntil) { return; }
+        DropBonusHealth();
+    }
+
+    private void DropBonusHealth()
+    {
+        if (bonusHealth <= 0) { return; }
+        var data = ExistingPlayerData(); var hero = ExistingHero();
+        if (data != null)
+        {
+            data.maxHealth = Math.Max(1, data.maxHealth - bonusHealth);
+            if (data.health > data.maxHealth) { data.health = data.maxHealth; }
+        }
+        bonusHealth = 0;
+        if (data != null) { EventRegister.SendEvent(EventRegisterEvents.HeroHealed); } // 让 HUD 按新的上限重画血格，不走受伤表现。
     }
 
     /// <summary>调用角色更新接口设置生命。</summary>
