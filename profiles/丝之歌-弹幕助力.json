@@ -53,7 +53,7 @@
     },
     {
       "Id": "v06-friend-ranged",
-      "Name": "远程小弟 · 圣厂投掷工",
+      "Name": "远程小弟 · 壳木蚋虫",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -84,7 +84,7 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "ally.native.understore-thrower",
+        "ActionId": "ally.native.shellwood-gnat",
         "Arguments": {
           "count": "1",
           "value": "1",

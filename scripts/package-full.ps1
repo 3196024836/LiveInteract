@@ -1,8 +1,9 @@
-﻿param([switch]$SkipBuild)
+﻿# 本文件必须以 UTF-8 BOM 保存：PowerShell 5.1 无 BOM 时按 ANSI 读取，中文路径会乱码。
+param([switch]$SkipBuild)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
-$out=Join-Path $root 'dist\LiveInteract-0.7.9-win-x64'
+$out=Join-Path $root 'dist\LiveInteract-0.7.10-win-x64'
 if(Test-Path -LiteralPath $out){throw 'Preserve the existing distribution; use a new output directory.'}
 dotnet build src/LiveInteract.Silksong/LiveInteract.Silksong.csproj -c Release -p:QaBuild=false -t:Rebuild --nologo
 if($LASTEXITCODE -ne 0){throw 'Production Mod build failed'}

@@ -12,7 +12,7 @@ public sealed class DefaultProfileTests
     {var p=Read();Assert.Equal(0,p.SpawnLimitOverride);Assert.Equal(17,p.Rules.Count);Assert.All(p.Rules,r=>{Assert.True(r.Enabled);Assert.Empty(ProfileStore.ValidateRule(r));Assert.Equal(StepKind.Action,r.Root.Kind);Assert.Equal(1,r.Probability);Assert.Equal(0,r.CooldownSeconds);Assert.False(ActionCatalog.All.Single(a=>a.Id==r.Root.ActionId).IsPersistent);});}
 
     [Theory]
-    [InlineData("小弟","ally.native.bone-goomba")][InlineData("远程小弟","ally.native.understore-thrower")]
+    [InlineData("小弟","ally.native.bone-goomba")][InlineData("远程小弟","ally.native.shellwood-gnat")]
     [InlineData("小怪","spawn.bone-goomba")][InlineData("远程小怪","spawn.understore-thrower")]
     [InlineData("回血","health.add")][InlineData("回蓝","silk.add")][InlineData("回丝","silk.add")]
     [InlineData("怪变大","enemy.growStack")][InlineData("怪变小","enemy.shrinkStack")]
@@ -33,7 +33,7 @@ public sealed class DefaultProfileTests
     [Fact] public void LongKeywordsWinOverTheirSubstring()
     {
         // 「远程小弟」包含「小弟」；规则顺序必须让更长的关键词先命中，否则远程小弟永远打不出来。
-        Assert.Equal("ally.native.understore-thrower",Assert.Single(Evaluate(new(){Id="a",Type=LiveEventType.Chat,Text="远程小弟"})).Rule.Root.ActionId);
+        Assert.Equal("ally.native.shellwood-gnat",Assert.Single(Evaluate(new(){Id="a",Type=LiveEventType.Chat,Text="远程小弟"})).Rule.Root.ActionId);
         Assert.Equal("spawn.understore-thrower",Assert.Single(Evaluate(new(){Id="b",Type=LiveEventType.Chat,Text="远程小怪"})).Rule.Root.ActionId);
     }
 

@@ -1,7 +1,7 @@
 ﻿{
-    "version":  "0.7.9",
-    "notes":  "远程友军伤害链路再加固：友军身上每 0.5 秒扫描一次新出现的原生伤害组件并关闭（飞行道具、特效子物体也收编），投射物创建时、池化复用时、每帧都会保持关闭；万一仍命中主播，会拦截并在游戏日志里记一条“已拦截友军对主播的伤害：来源名”，方便实机核对是否还有漏网来源。",
-    "url":  "https://github.com/3196024836/LiveInteract/releases/download/v0.7.9/LiveInteract-0.7.9-slim-win-x64.zip",
-    "sha256":  "0681b1ae87622a2f3423536c664712809e468a8c3a27b476c0d8aa1524926160",
-    "size":  3724667
+    "version":  "0.7.10",
+    "notes":  "「远程小弟」换成飞行友军壳木蚋虫（`ally.native.shellwood-gnat`），不再召唤会朝人扔东西的圣厂投掷工；口令「远程小弟」不变，默认配置、直播图与说明同步更新。想继续测试投掷类友军时，仍可在规则编辑器里手动选回圣厂投掷工。",
+    "url":  "https://github.com/3196024836/LiveInteract/releases/download/v0.7.10/LiveInteract-0.7.10-slim-win-x64.zip",
+    "sha256":  "8dd79a236ca7344a59a1792986f086e158402d25b1dd734c96a6880f7932c6af",
+    "size":  3723498
 }
