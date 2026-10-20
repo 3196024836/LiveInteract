@@ -1,0 +1,72 @@
+{
+  "Profile": "profiles/\u4E1D\u4E4B\u6B4C-\u5F39\u5E55\u52A9\u529B.json",
+  "EnabledRules": 20,
+  "Chat": [
+    {
+      "Trigger": "\u56DE\u8840",
+      "Effect": "\u539F\u751F\u56DE\u8840 \u002B2"
+    },
+    {
+      "Trigger": "\u56DE\u4E1D",
+      "Effect": "\u8865\u5145\u7075\u4E1D \u002B6"
+    },
+    {
+      "Trigger": "\u5C0F\u5F1F",
+      "Effect": "\u673A\u68B0\u63F4\u519B \u00D71 \u00B7 12\u79D2"
+    },
+    {
+      "Trigger": "\u602A\u53D8\u5927",
+      "Effect": "\u602A\u7269\u53D8\u5927 \u00B7 8\u79D2 / \u6761"
+    },
+    {
+      "Trigger": "\u602A\u53D8\u5C0F",
+      "Effect": "\u602A\u7269\u53D8\u5C0F \u00B7 8\u79D2 / \u6761"
+    },
+    {
+      "Trigger": "\u590D\u5236",
+      "Effect": "\u666E\u901A\u654C\u4EBA \u002B1"
+    },
+    {
+      "Trigger": "\u6E05\u573A",
+      "Effect": "\u6E05\u654C\u602A \u00B7 \u4FDD\u7559\u539F\u751F\u63F4\u519B"
+    },
+    {
+      "Trigger": "\u6062\u590D",
+      "Effect": "\u6062\u590D\u4F53\u578B \u00B7 \u6E05\u7406\u6574\u6D3B"
+    }
+  ],
+  "Gifts": [
+    {
+      "Trigger": "\u5C0F\u5FC3\u5FC3",
+      "Effect": "\u673A\u68B0\u5C0F\u5F1F \u00D71"
+    },
+    {
+      "Trigger": "\u73AB\u7470",
+      "Effect": "\u673A\u68B0\u5C0F\u5F1F \u00D72"
+    },
+    {
+      "Trigger": "\u5176\u4ED6 10\u201399\u94BB",
+      "Effect": "\u539F\u751F\u673A\u68B0\u968F\u4ECE \u00D72"
+    },
+    {
+      "Trigger": "\u5176\u4ED6 100\u2013499\u94BB",
+      "Effect": "\u539F\u751F\u673A\u68B0\u968F\u4ECE \u00D73"
+    },
+    {
+      "Trigger": "\u5176\u4ED6 \u2265500\u94BB",
+      "Effect": "\u539F\u751F\u673A\u68B0\u968F\u4ECE \u00D74"
+    },
+    {
+      "Trigger": "\u68D2\u68D2\u7CD6",
+      "Effect": "\u654C\u5BF9\u6728\u8702 \u00D71"
+    },
+    {
+      "Trigger": "\u5564\u9152",
+      "Effect": "\u590D\u5236\u666E\u901A\u654C\u4EBA \u002B1"
+    },
+    {
+      "Trigger": "\u5176\u4ED6\u4F4E\u4EF7 / \u672A\u77E5",
+      "Effect": "\u673A\u68B0\u5C0F\u5F1F \u00D71"
+    }
+  ]
+}

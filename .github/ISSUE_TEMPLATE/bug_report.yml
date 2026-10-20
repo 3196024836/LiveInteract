@@ -1,0 +1,25 @@
+name: 问题反馈
+description: 报告接入、规则、队列或游戏效果的问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "请勿上传 Cookie、登录态、完整原始直播帧或个人存档。发布版为预发布，请区分未收到输入、规则未命中、等待与游戏执行失败。"
+  - type: input
+    id: version
+    attributes:
+      label: 工具与游戏版本
+      placeholder: "LiveInteract 0.4.0 / 丝之歌 1.0.30000"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤、预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: 去除个人信息的错误原文与队列状态
+      render: text

@@ -1,0 +1,28 @@
+# Build and private runtime data
+**/bin/
+**/obj/
+artifacts/
+dist/
+_work/
+.local/
+.vs/
+*.user
+*.suo
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.log
+# Local implementation diaries; user data and evidence stay on this machine.
+docs/IMPLEMENTATION.md
+docs/默认配置与直播图-v2进度.md
+docs/0.2修改说明.md
+docs/0.3修改与实测.md
+docs/0.3实施与验收.md
+直播素材/丝之歌-直播提示图-20261020.png

@@ -1,0 +1,1575 @@
+[
+  {
+    "Id": "health.add",
+    "Name": "角色回血",
+    "Category": "生命",
+    "Description": "补充指定格数，不超过当前生命上限。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "回复格数",
+        "Kind": 1,
+        "DefaultValue": "2",
+        "Minimum": 1,
+        "Maximum": 99
+      }
+    ]
+  },
+  {
+    "Id": "health.set",
+    "Name": "设置生命",
+    "Category": "生命",
+    "Description": "将当前生命设置为指定值；不能直接设为零。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "格数",
+        "Kind": 1,
+        "DefaultValue": "5",
+        "Minimum": 1,
+        "Maximum": 99
+      }
+    ]
+  },
+  {
+    "Id": "health.damage",
+    "Name": "角色受到伤害",
+    "Category": "生命",
+    "Description": "通过游戏正常受伤入口扣血，受无敌与承伤倍率影响。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "伤害格数",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 99
+      }
+    ]
+  },
+  {
+    "Id": "health.full",
+    "Name": "生命回满",
+    "Category": "生命",
+    "Description": "补满当前生命并更新 HUD。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "health.kill",
+    "Name": "角色死亡",
+    "Category": "生命",
+    "Description": "通过正常受伤流程造成致命伤害；可能影响当前游戏进度。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "health.invincible",
+    "Name": "临时无敌",
+    "Category": "生命",
+    "Description": "在持续时间内拦截正常伤害；过期或断开控制台后恢复。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "health.survive",
+    "Name": "临时免死",
+    "Category": "生命",
+    "Description": "在持续时间内将致命的正常伤害降至剩余一格；不替代坠落和脚本死亡。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "health.max",
+    "Name": "设置生命上限",
+    "Category": "生命",
+    "Description": "永久改变基础面具数；先备份存档。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "面具数",
+        "Kind": 1,
+        "DefaultValue": "5",
+        "Minimum": 1,
+        "Maximum": 99
+      }
+    ]
+  },
+  {
+    "Id": "health.blue",
+    "Name": "增加临时护盾",
+    "Category": "生命",
+    "Description": "增加本次场景的临时护盾点数，在原生实际扣血时抵消伤害；不写入存档，切场景、死亡或停止时清除。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "护盾点数",
+        "Kind": 1,
+        "DefaultValue": "2",
+        "Minimum": 1,
+        "Maximum": 99
+      }
+    ]
+  },
+  {
+    "Id": "silk.add",
+    "Name": "补充灵丝",
+    "Category": "丝线",
+    "Description": "增加指定丝线，不超过游戏当前上限。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "回复灵丝量",
+        "Kind": 1,
+        "DefaultValue": "5",
+        "Minimum": 1,
+        "Maximum": 999
+      }
+    ]
+  },
+  {
+    "Id": "silk.set",
+    "Name": "设置丝线",
+    "Category": "丝线",
+    "Description": "设置当前丝线量。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "丝线量",
+        "Kind": 1,
+        "DefaultValue": "5",
+        "Minimum": 0,
+        "Maximum": 999
+      }
+    ]
+  },
+  {
+    "Id": "silk.full",
+    "Name": "丝线回满",
+    "Category": "丝线",
+    "Description": "补满当前可用丝线。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "silk.empty",
+    "Name": "清空丝线",
+    "Category": "丝线",
+    "Description": "移除当前所有丝线。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "silk.infinite",
+    "Name": "临时无限丝线",
+    "Category": "丝线",
+    "Description": "在持续时间内持续补满丝线。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "silk.max",
+    "Name": "设置丝线容量",
+    "Category": "丝线",
+    "Description": "永久设置基础灵丝容量并修复断裂丝轴；诅咒状态仍可能暂时限制当前容量。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "容量",
+        "Kind": 1,
+        "DefaultValue": "18",
+        "Minimum": 1,
+        "Maximum": 999
+      }
+    ]
+  },
+  {
+    "Id": "tools.refill",
+    "Name": "补充已解锁工具",
+    "Category": "工具",
+    "Description": "为已解锁的工具补充其基础储量，不解锁新工具。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "tools.infinite",
+    "Name": "临时无限工具",
+    "Category": "工具",
+    "Description": "在持续时间内定期补充已解锁工具。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "tools.give",
+    "Name": "补充指定工具",
+    "Category": "工具",
+    "Description": "按内部工具 ID 补充数量；不会自动解锁未获得的工具。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "tool",
+        "Label": "工具内部 ID",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "补充数量",
+        "Kind": 1,
+        "DefaultValue": "5",
+        "Minimum": 1,
+        "Maximum": 999
+      }
+    ]
+  },
+  {
+    "Id": "tools.unlock",
+    "Name": "解锁指定工具",
+    "Category": "工具",
+    "Description": "永久解锁选中的工具。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "tool",
+        "Label": "工具内部 ID",
+        "Kind": 4,
+        "DefaultValue": ""
+      }
+    ]
+  },
+  {
+    "Id": "tools.unlockAll",
+    "Name": "解锁全部工具",
+    "Category": "工具",
+    "Description": "永久解锁当前游戏资源中的全部工具。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "crest.unlockAll",
+    "Name": "解锁全部纹章",
+    "Category": "纹章",
+    "Description": "永久解锁全部纹章，不修改剧情任务标志。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "crest.equip",
+    "Name": "装备指定纹章",
+    "Category": "纹章",
+    "Description": "装备已解锁纹章；改变会保存。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "crest",
+        "Label": "纹章内部 ID",
+        "Kind": 4,
+        "DefaultValue": ""
+      }
+    ]
+  },
+  {
+    "Id": "damage.all",
+    "Name": "总伤害倍率",
+    "Category": "战斗",
+    "Description": "调整玩家对敌人的总伤害。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": 0.05,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "damage.needle",
+    "Name": "针攻击倍率",
+    "Category": "战斗",
+    "Description": "调整标记为针攻击的伤害。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": 0.05,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "damage.tools",
+    "Name": "工具伤害倍率",
+    "Category": "战斗",
+    "Description": "调整带有工具来源的伤害。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": 0.05,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "damage.silk",
+    "Name": "丝技伤害倍率",
+    "Category": "战斗",
+    "Description": "调整非针、非工具的玩家技能伤害。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": 0.05,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "damage.taken",
+    "Name": "承伤倍率",
+    "Category": "战斗",
+    "Description": "调整正常受伤入口的伤害，零表示免除正常伤害。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": 0,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "damage.knockback",
+    "Name": "击退倍率",
+    "Category": "战斗",
+    "Description": "调整玩家命中敌人时的击退强度。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": 0.05,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "move.speed",
+    "Name": "移动速度倍率",
+    "Category": "角色",
+    "Description": "调整角色行走、跑动和快步速度。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.1,
+        "Maximum": 8
+      }
+    ]
+  },
+  {
+    "Id": "move.jump",
+    "Name": "跳跃高度倍率",
+    "Category": "角色",
+    "Description": "调整起跳速度，不解锁额外跳跃能力。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.1,
+        "Maximum": 5
+      }
+    ]
+  },
+  {
+    "Id": "move.gravity",
+    "Name": "重力倍率",
+    "Category": "角色",
+    "Description": "调整角色重力。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "0.5",
+        "Minimum": 0.05,
+        "Maximum": 5
+      }
+    ]
+  },
+  {
+    "Id": "move.dash",
+    "Name": "冲刺速度倍率",
+    "Category": "角色",
+    "Description": "调整角色冲刺速度。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.1,
+        "Maximum": 5
+      }
+    ]
+  },
+  {
+    "Id": "move.scale",
+    "Name": "角色大小倍率",
+    "Category": "角色",
+    "Description": "调整角色根对象大小，过期恢复。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.2,
+        "Maximum": 4
+      }
+    ]
+  },
+  {
+    "Id": "move.attackSpeed",
+    "Name": "攻击节奏倍率",
+    "Category": "角色",
+    "Description": "缩短或延长实际攻击冷却和持续时间。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.2,
+        "Maximum": 5
+      }
+    ]
+  },
+  {
+    "Id": "move.jumpNow",
+    "Name": "立即起跳",
+    "Category": "角色",
+    "Description": "调用游戏跳跃方法；仅在可操作场景执行。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "move.dashNow",
+    "Name": "立即冲刺",
+    "Category": "角色",
+    "Description": "调用游戏冲刺方法；仍要求对应能力已解锁。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "move.airReset",
+    "Name": "重置空中动作",
+    "Category": "角色",
+    "Description": "重置空中跳跃和冲刺状态，不永久解锁能力。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "move.freeze",
+    "Name": "临时定身",
+    "Category": "角色",
+    "Description": "将角色水平移动与冲刺速度暂时置零，过期恢复。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "skill.cast",
+    "Name": "触发指定丝技事件",
+    "Category": "丝技",
+    "Description": "仅向角色战斗状态机中实际存在的事件发送指令；未发生状态切换会报失败。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "fsm",
+        "Label": "战斗状态机",
+        "Kind": 3,
+        "DefaultValue": "spellControl",
+        "Choices": {
+          "spellControl": "丝技",
+          "silkSpecialFSM": "特殊丝技",
+          "toolsFSM": "工具"
+        }
+      },
+      {
+        "Key": "event",
+        "Label": "实际事件名称",
+        "Kind": 4,
+        "DefaultValue": ""
+      }
+    ]
+  },
+  {
+    "Id": "skill.unlock",
+    "Name": "设置能力解锁",
+    "Category": "丝技",
+    "Description": "只允许白名单中的移动和丝技能力，不接受任意剧情字段。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "ability",
+        "Label": "能力",
+        "Kind": 3,
+        "DefaultValue": "hasDash",
+        "Choices": {
+          "hasDash": "冲刺",
+          "hasWalljump": "蹬墙",
+          "hasDoubleJump": "二段跳",
+          "hasSuperJump": "超级跳跃",
+          "hasHarpoonDash": "鱼叉冲刺",
+          "hasNeedleThrow": "投针",
+          "hasSilkSpecial": "特殊丝技",
+          "hasSilkCharge": "丝线冲锋",
+          "hasSilkBomb": "丝线炸弹",
+          "hasSilkBossNeedle": "针类丝技"
+        }
+      },
+      {
+        "Key": "enabled",
+        "Label": "状态",
+        "Kind": 3,
+        "DefaultValue": "true",
+        "Choices": {
+          "true": "解锁",
+          "false": "移除"
+        }
+      }
+    ]
+  },
+  {
+    "Id": "enemy.spawn",
+    "Name": "生成当前场景敌人",
+    "Category": "敌人",
+    "Description": "从当前场景存活敌人克隆；不伪装成跨场景任意召唤。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人名称（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "enemy.clone",
+    "Name": "克隆最近敌人",
+    "Category": "敌人",
+    "Description": "在角色附近克隆最近的有效敌人。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "boss.clone",
+    "Name": "克隆当前 Boss",
+    "Category": "敌人",
+    "Description": "只克隆当前场景 Boss 类型；各 Boss 的战斗与场景依赖仍需专项验证。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人名称（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "enemy.random",
+    "Name": "随机克隆场景敌人",
+    "Category": "敌人",
+    "Description": "从当前可用敌人中随机选择，不使用其他场景失效对象。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "enemy.health",
+    "Name": "设置敌人生命",
+    "Category": "敌人",
+    "Description": "设置最近或指定敌人的生命，不直接执行死亡流程。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人名称（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "生命值",
+        "Kind": 1,
+        "DefaultValue": "100",
+        "Minimum": 1,
+        "Maximum": 100000
+      }
+    ]
+  },
+  {
+    "Id": "enemy.damage",
+    "Name": "伤害附近敌人",
+    "Category": "敌人",
+    "Description": "通过敌人命中入口施加指定伤害。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人名称（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "伤害值",
+        "Kind": 1,
+        "DefaultValue": "10",
+        "Minimum": 1,
+        "Maximum": 100000
+      }
+    ]
+  },
+  {
+    "Id": "enemy.size",
+    "Name": "敌人大小倍率",
+    "Category": "敌人",
+    "Description": "临时调整指定敌人的大小。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人名称（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.2,
+        "Maximum": 5
+      }
+    ]
+  },
+  {
+    "Id": "enemy.speed",
+    "Name": "敌人动画速度倍率",
+    "Category": "敌人",
+    "Description": "临时改变指定敌人的动画播放速率，支持丝之歌的 tk2d 动画；不承诺改变所有 FSM 位移速度。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人名称（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.5",
+        "Minimum": 0.1,
+        "Maximum": 5
+      }
+    ]
+  },
+  {
+    "Id": "enemy.killAll",
+    "Name": "击杀当前场景敌人",
+    "Category": "敌人",
+    "Description": "调用正常死亡流程；可能推进战斗、掉落与任务进度。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "enemy.clearSpawned",
+    "Name": "清除本工具生成的敌人",
+    "Category": "敌人",
+    "Description": "只删除本工具持有的克隆对象，不删除场景原生对象。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "currency.rosaries",
+    "Name": "增减念珠",
+    "Category": "资源",
+    "Description": "永久增减念珠，负数表示扣除。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "100",
+        "Minimum": -100000,
+        "Maximum": 100000
+      }
+    ]
+  },
+  {
+    "Id": "currency.shards",
+    "Name": "增减甲壳碎片",
+    "Category": "资源",
+    "Description": "永久增减甲壳碎片。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "50",
+        "Minimum": -100000,
+        "Maximum": 100000
+      }
+    ]
+  },
+  {
+    "Id": "needle.upgrade",
+    "Name": "设置针强化等级",
+    "Category": "资源",
+    "Description": "永久设置针升级等级，伤害由游戏自身计算。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "等级",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 0,
+        "Maximum": 4
+      }
+    ]
+  },
+  {
+    "Id": "position.mark",
+    "Name": "记录当前位置",
+    "Category": "场景",
+    "Description": "在本会话记录场景与位置，不写入存档。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "position.return",
+    "Name": "返回记录位置",
+    "Category": "场景",
+    "Description": "只允许返回同一场景中的记录点；不隐式切换场景。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "position.move",
+    "Name": "相对移动角色",
+    "Category": "场景",
+    "Description": "按坐标偏移移动；可能落入危险地形，请自行配置。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "x",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -100,
+        "Maximum": 100
+      },
+      {
+        "Key": "y",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "2",
+        "Minimum": -100,
+        "Maximum": 100
+      }
+    ]
+  },
+  {
+    "Id": "scene.warp",
+    "Name": "传送到指定场景",
+    "Category": "场景",
+    "Description": "使用游戏场景切换入口；要求资源目录中存在目标。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "scene",
+        "Label": "场景内部 ID",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "gate",
+        "Label": "入口名称",
+        "Kind": 4,
+        "DefaultValue": ""
+      }
+    ]
+  },
+  {
+    "Id": "scene.bench",
+    "Name": "返回存档重生场景",
+    "Category": "场景",
+    "Description": "使用当前存档记录的重生场景与入口；可能改变当前进度。",
+    "IsPersistent": true,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "camera.zoom",
+    "Name": "镜头缩放倍率",
+    "Category": "画面与时间",
+    "Description": "临时调整游戏 tk2d 摄像机缩放。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "1.3",
+        "Minimum": 0.3,
+        "Maximum": 3
+      }
+    ]
+  },
+  {
+    "Id": "visual.hideHero",
+    "Name": "临时隐藏角色",
+    "Category": "画面与时间",
+    "Description": "隐藏角色渲染，不关闭碰撞与控制。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "visual.hideHud",
+    "Name": "临时隐藏 HUD",
+    "Category": "画面与时间",
+    "Description": "隐藏 HUD 摄像机；不会禁用游戏逻辑。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "time.scale",
+    "Name": "游戏时间倍率",
+    "Category": "画面与时间",
+    "Description": "调整 Unity 时间速度；到期依据真实时间恢复。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "倍率",
+        "Kind": 0,
+        "DefaultValue": "0.5",
+        "Minimum": 0.1,
+        "Maximum": 3
+      }
+    ]
+  },
+  {
+    "Id": "time.freeze",
+    "Name": "临时冻结游戏时间",
+    "Category": "画面与时间",
+    "Description": "时间速度置零；效果仍按真实时间到期，不会永久冻结。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "effects.reset",
+    "Name": "取消全部临时效果",
+    "Category": "维护",
+    "Description": "恢复仍有效的临时参数，不撤销永久存档修改。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "game.status",
+    "Name": "读取游戏状态",
+    "Category": "维护",
+    "Description": "读取场景、生命与丝线，不改变游戏。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "enemy.asset",
+    "Name": "召唤指定敌人资源",
+    "Category": "敌人",
+    "Description": "从游戏自身资源目录异步加载敌人预制体；跨场景 AI 与资源依赖必须逐项实测。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "asset",
+        "Label": "预制资源内部 ID",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "boss.asset",
+    "Name": "召唤指定 Boss 资源",
+    "Category": "敌人",
+    "Description": "按明确的 Boss 预制资源 ID 召唤；不保证未验证 Boss 脱离原场景仍能正常战斗。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "asset",
+        "Label": "Boss 预制资源内部 ID",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 5
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "5",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "visual.brightness",
+    "Name": "临时调整画面亮度",
+    "Category": "画面与时间",
+    "Description": "通过游戏实际亮度组件调整画面，不写入系统或游戏永久亮度设置。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "亮度",
+        "Kind": 0,
+        "DefaultValue": "0.7",
+        "Minimum": 0.1,
+        "Maximum": 2
+      }
+    ]
+  },
+  {
+    "Id": "visual.contrast",
+    "Name": "临时调整对比度",
+    "Category": "画面与时间",
+    "Description": "暂时调整游戏后处理对比度。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "对比度",
+        "Kind": 0,
+        "DefaultValue": "1.3",
+        "Minimum": 0.1,
+        "Maximum": 3
+      }
+    ]
+  },
+  {
+    "Id": "game.capture",
+    "Name": "保存游戏截图（诊断）",
+    "Category": "维护",
+    "Description": "只保存游戏自己的画面到本用户诊断目录；截图完成需要等待渲染帧。最多每五秒一次。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "boss.heal",
+    "Name": "给当前 Boss 回血",
+    "Category": "Boss互动",
+    "Description": "给当前正在战斗的 Boss 增加指定生命值；没有明确 Boss 时不选择普通敌人。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "回复生命值",
+        "Kind": 1,
+        "DefaultValue": "100",
+        "Minimum": 1,
+        "Maximum": 100000,
+        "Choices": {}
+      }
+    ]
+  },
+  {
+    "Id": "boss.damage",
+    "Name": "伤害当前 Boss",
+    "Category": "Boss互动",
+    "Description": "对当前真实 Boss 直接扣除指定点数，使用原生额外伤害与死亡入口，不受普通招架 / 开场免伤阻挡。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "伤害值",
+        "Kind": 1,
+        "DefaultValue": "100",
+        "Minimum": 1,
+        "Maximum": 100000,
+        "Choices": {}
+      }
+    ]
+  },
+  {
+    "Id": "enemy.heal",
+    "Name": "给附近敌人回血",
+    "Category": "敌人",
+    "Description": "给距离角色最近的存活敌人增加指定生命值。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "value",
+        "Label": "回复生命值",
+        "Kind": 1,
+        "DefaultValue": "100",
+        "Minimum": 1,
+        "Maximum": 100000,
+        "Choices": {}
+      }
+    ]
+  },
+  {
+    "Id": "game.catalog",
+    "Name": "检查具名怪物资源",
+    "Category": "维护",
+    "Description": "只读检查当前游戏是否具备具体怪物所需的原生资源目录，不生成对象。",
+    "RequiresGameplay": false,
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "ally.clockwork",
+    "Name": "召唤机械小弟",
+    "Category": "友军助力",
+    "Description": "召唤游戏原生机械飞行随从，使用原生外观和战斗AI；显示召唤者，可跨场景跟随。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "每次召唤数量（只）",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "value",
+        "Label": "友军单次基础伤害",
+        "Kind": 1,
+        "DefaultValue": "8",
+        "Minimum": 1,
+        "Maximum": 100
+      },
+      {
+        "Key": "lifetime",
+        "Label": "跟随时长（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "enemy.growStack",
+    "Name": "怪物外观变大（逐条叠加）",
+    "Category": "整活叠加",
+    "Description": "每次独立倒计时和记名，不覆盖旧层；只改外观，不动碰撞和玩家操作。层数不限，采用线性比例避免指数炸物理。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "每层幅度（0.2＝20%）",
+        "Kind": 0,
+        "DefaultValue": "0.2",
+        "Minimum": 0.01,
+        "Maximum": 2
+      }
+    ]
+  },
+  {
+    "Id": "enemy.shrinkStack",
+    "Name": "怪物外观变小（逐条叠加）",
+    "Category": "整活叠加",
+    "Description": "每次独立倒计时和记名，不覆盖旧层；只改外观，不动碰撞和玩家操作。层数不限，采用线性比例避免指数炸物理。",
+    "IsPersistent": false,
+    "IsTemporary": true,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "enemy",
+        "Label": "敌人（空白＝最近）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "value",
+        "Label": "每层幅度（0.2＝20%）",
+        "Kind": 0,
+        "DefaultValue": "0.2",
+        "Minimum": 0.01,
+        "Maximum": 2
+      }
+    ]
+  },
+  {
+    "Id": "enemy.cloneSafe",
+    "Name": "复制附近非Boss敌人",
+    "Category": "敌人",
+    "Description": "每次复制指定数量的普通敌人，跳过原生和已知召唤Boss；无目标等待，不夺取操作。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "offsetX",
+        "Label": "水平偏移",
+        "Kind": 0,
+        "DefaultValue": "3",
+        "Minimum": -30,
+        "Maximum": 30
+      },
+      {
+        "Key": "offsetY",
+        "Label": "垂直偏移",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": -20,
+        "Maximum": 20
+      }
+    ]
+  },
+  {
+    "Id": "effects.calm",
+    "Name": "恢复整活（保留原生随从）",
+    "Category": "维护",
+    "Description": "仅清理敌对召唤/整活；不撤回观众送来的援军和待拾取补给。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "enemy.clearHostiles",
+    "Name": "清理敌对召唤（保留友军）",
+    "Category": "维护",
+    "Description": "仅清理敌对召唤/整活；不撤回观众送来的援军和待拾取补给。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  }
+]

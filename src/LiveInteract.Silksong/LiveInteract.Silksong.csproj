@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <DefineConstants Condition="'$(QaBuild)' == 'true'">$(DefineConstants);LIVEINTERACT_QA</DefineConstants>
+    <FileVersion>0.4.0.0</FileVersion>
+    <GameManagedPath Condition="'$(GameManagedPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed</GameManagedPath>
+    <LoaderPath>$(MSBuildThisFileDirectory)..\..\artifacts\loader-package\BepInExPack\BepInEx\core</LoaderPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LiveInteract.Contracts/LiveInteract.Contracts.csproj" />
+    <Reference Include="$(LoaderPath)\BepInEx.dll"><Private>false</Private></Reference>
+    <Reference Include="$(LoaderPath)\0Harmony.dll"><Private>false</Private></Reference>
+    <Reference Include="$(GameManagedPath)\*.dll" Exclude="$(GameManagedPath)\System*.dll;$(GameManagedPath)\mscorlib.dll;$(GameManagedPath)\netstandard.dll;$(GameManagedPath)\Newtonsoft.Json.dll;$(GameManagedPath)\Microsoft*.dll"><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" /><ProjectReference Include="../LiveInteract.Contracts/LiveInteract.Contracts.csproj" /><PackageReference Include="Google.Protobuf" Version="3.32.1" /></ItemGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /><EmbeddedResource Include="overlay.html" /></ItemGroup>
+</Project>

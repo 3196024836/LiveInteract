@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+  <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF>
+  <AssemblyName>LiveInteract</AssemblyName><RootNamespace>LiveInteract.Desktop</RootNamespace>
+  <Version>0.4.0</Version><ApplicationIcon>Assets/LiveInteract.ico</ApplicationIcon><ApplicationManifest>app.manifest</ApplicationManifest>
+ </PropertyGroup>
+ <ItemGroup><ProjectReference Include="../LiveInteract.Core/LiveInteract.Core.csproj" /><PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" /></ItemGroup>
+ <ItemGroup><Resource Include="Assets/LiveInteract.ico" /></ItemGroup>
+ <ItemGroup><Content Include="../../profiles/*"><Link>profiles/%(Filename)%(Extension)</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory><CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory></Content></ItemGroup>
+</Project>
