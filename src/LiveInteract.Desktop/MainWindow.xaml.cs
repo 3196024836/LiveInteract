@@ -470,7 +470,7 @@ public partial class MainWindow : Window
         {
             File.WriteAllText(dialog.FileName, JsonConvert.SerializeObject(new
             {
-                Version = "0.6.1", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
+                Version = "0.6.2", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
                 Bridge = new { runtime.Game.IsConnected, runtime.Game.Status?.GameVersion, runtime.Game.Status?.Scene, runtime.Game.Status?.CanAct, runtime.Game.Status?.Diagnostics },
                 Counts = new { runtime.Received, runtime.Simulated, runtime.Completed, runtime.Failed },
                 RuleCount = profile.Rules.Count, EnabledRules = profile.Rules.Count(item => item.Enabled),

@@ -34,6 +34,8 @@ internal sealed class GameActions
     private readonly List<AppearanceStack> appearanceStacks = new();
     private bool relocatePickups;
     public event Action<string, string>? PickupCollected;
+    /// <summary>排队中的单位补生成成功时的提示。</summary>
+    public event Action<string, string>? PendingSpawned;
     public IReadOnlyList<SupportPickup> Pickups => pickups;
     private readonly Dictionary<int, double> animationSpeeds = new();
     private readonly List<AsyncOperationHandle<GameObject>> assetHandles = new();
@@ -56,6 +58,9 @@ internal sealed class GameActions
     internal HealthManager? FindHostile(Vector3 position,float radius)=>hostileCache.Where(e=>e!=null && !e.isDead && e.hp>0 && e.gameObject.activeInHierarchy && Vector3.Distance(e.transform.position,position)<=radius).OrderBy(e=>Vector3.SqrMagnitude(e.transform.position-position)).FirstOrDefault();
     private float nextCapture;
     private bool hadControl;
+    private readonly List<PendingSpawn> pending = new();
+    private bool pendingRunning;
+    private float nextPendingRetry;
     private bool infiniteSilk;
     private bool infiniteTools;
     private bool invincible;
@@ -75,6 +80,14 @@ internal sealed class GameActions
     public int ShieldPoints => shieldPoints;
     /// <summary>仅本工具当前仍在场的友军。</summary>
     public int CompanionCount => companions.Count(item => item.Object != null && item.Object.activeSelf);
+    /// <summary>等待空位的生成队列长度。</summary>
+    public int PendingCount => pending.Count;
+    /// <summary>游戏内左下角展示：谁的什么还在待生成。</summary>
+    public IEnumerable<string> PendingLabels()
+    {
+        foreach (var item in pending.Take(3)) { yield return item.Who + " · " + item.Label + " · 待生成"; }
+        if (pending.Count > 3) { yield return "另有 " + (pending.Count - 3) + " 个待生成"; }
+    }
     public int AbsorbDamage(int damage)
     {
         var absorbed = Math.Min(shieldPoints, Math.Max(0, damage)); shieldPoints -= absorbed; return Math.Max(0, damage - absorbed);
@@ -141,6 +154,7 @@ internal sealed class GameActions
             if(lease.RemainingSeconds<=0){spawned.Remove(lease.Object);spawnedOwners.Remove(lease.Id);Object.Destroy(lease.Object);enemyTimers.RemoveAt(index);}
         }
         spawned.RemoveAll(item => item == null);
+        DrainPending();
         if (CanAct && Time.realtimeSinceStartup >= nextRefill)
         {
             nextRefill = Time.realtimeSinceStartup + 0.25f;
@@ -238,7 +252,8 @@ internal sealed class GameActions
                 var bossesNow = new HashSet<HealthManager>(BossSceneController.Instance?.bosses ?? Array.Empty<HealthManager>());
                 var safeTarget = Enemies().Where(e => !bossesNow.Contains(e) && !MonsterCatalog.All.Any(m => m.IsBoss && e.name.StartsWith(m.ObjectName, StringComparison.Ordinal))).OrderBy(e => Vector3.Distance(e.transform.position, hero.transform.position)).FirstOrDefault()
                     ?? throw new DeferredActionException("TARGET_MISSING", "等待附近非Boss敌人；单位保留");
-                Spawn(safeTarget.gameObject, request); break;
+                if (!Spawn(safeTarget.gameObject, request)) { return QueueSpawn(request, safeTarget.name + " ×" + Number(request, "count", 1), (int)Number(request, "count", 1)); }
+                break;
             case "effects.calm":
                 foreach (var layer in appearanceStacks.ToArray()) { if (layer != null) { layer.Restore(); Object.Destroy(layer); } }
                 appearanceStacks.Clear(); effects.RestorePrefix("敌人动画:"); animationSpeeds.Clear(); ClearHostiles();
@@ -305,7 +320,7 @@ internal sealed class GameActions
                 {
                     source = SelectEnemy(Text(request, "enemy"));
                 }
-                Spawn(source.gameObject, request);
+                if (!Spawn(source.gameObject, request)) { return QueueSpawn(request, source.name + " ×" + Number(request, "count", 1), (int)Number(request, "count", 1)); }
                 break;
             case "enemy.asset": case "boss.asset":
                 var key = Text(request, "asset");
@@ -327,7 +342,7 @@ internal sealed class GameActions
                     {
                         throw new InvalidOperationException("目标资源不是带生命组件的敌人预制体。");
                     }
-                    Spawn(prefab, request);
+                    if (!Spawn(prefab, request)) { Addressables.Release(handle); return QueueSpawn(request, prefab.name + " ×" + Number(request, "count", 1), (int)Number(request, "count", 1)); }
                     assetHandles.Add(handle);
                 }
                 catch
@@ -451,7 +466,7 @@ internal sealed class GameActions
         catch{foreach(var m in monsters.Distinct())if(namedPrefabHandles.TryGetValue(m.Id,out var h)&&h.IsValid()&&h.Status==AsyncOperationStatus.Failed){namedPrefabHandles.Remove(m.Id);Addressables.Release(h);}throw;}
         if(started!=generation||!CanAct)throw new DeferredActionException("SCENE_CHANGED","加载时场景改变，整组尚未创建，继续排队");
         if(prefabs.Any(p=>p==null||p.GetComponentInChildren<HealthManager>(true)==null))throw new InvalidOperationException("本组包含无效原生单位，没有创建替代怪物");
-        if(!friendly && SpawnLimit>0 && spawned.Count(p=>p!=null&&p.GetComponent<OwnedCompanion>()==null)+monsters.Length>SpawnLimit)throw new DeferredActionException("SPAWN_LIMIT","等待敌对生成数量低于上限，整组未创建");
+        if(!friendly && SpawnLimit>0 && EnemySpawnCount+monsters.Length>SpawnLimit)return QueueSpawn(request,(friendly?"友军 ":"敌军 ")+string.Join("、",monsters.GroupBy(m=>m.Id).Select(group=>group.First().Name+" ×"+group.Count())),monsters.Length);
         if(friendly)foreach(var prefab in prefabs)NativeAllyExecution.Register(prefab);
         var before=new HashSet<int>(spawned.Where(p=>p!=null).Select(p=>p.GetInstanceID()));
         try
@@ -543,7 +558,8 @@ internal sealed class GameActions
                 {
                     throw new InvalidOperationException("当前资源不再是可生成的敌人；未创建对象。");
                 }
-                Spawn(prefab, request); exercised.Add(request.ActionId);
+                if (!Spawn(prefab, request)) { return QueueSpawn(request, monster.Name + " ×" + request.Arguments["count"], (int)Number(request, "count", 1)); }
+                exercised.Add(request.ActionId);
                 return "已生成" + monster.Name + " ×" + request.Arguments["count"];
             }
             catch
@@ -560,6 +576,7 @@ internal sealed class GameActions
     public void Reset()
     {
         stopEpoch++;
+        pending.Clear();
         foreach(var coin in rainCoins)if(coin!=null&&coin.GetComponent<OwnedRainPickup>()?.StillOwned==true)Object.Destroy(coin);rainCoins.Clear();
         generation++;
         effects.RestoreAll(); animationSpeeds.Clear(); shieldPoints = 0;
@@ -609,7 +626,7 @@ internal sealed class GameActions
         var data = ExistingPlayerData(); // 只读已有数据，禁止为心跳创建单例。
         var status = new GameStatus
         {
-            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.6.1", CanAct = CanAct,
+            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.6.2", CanAct = CanAct,
             Health = data?.health ?? 0, BlueHealth = data?.healthBlue ?? 0, ShieldPoints = shieldPoints, CompanionCount = CompanionCount, PickupCount = pickups.Count, SizeLayerCount = appearanceStacks.Where(a => a != null).Sum(a => a.Count), Silk = data?.silk ?? 0,
             ActiveEffects = effects.Describe(Time.realtimeSinceStartup).ToList(),
             SpawnableMonsterIds = monsterAssets.AvailableIds,
@@ -827,13 +844,14 @@ internal sealed class GameActions
     /// <summary>在非激活父物体下准备克隆，移除独立存档组件后再启用。</summary>
     /// <param name="source">场景对象或已加载预制体。</param>
     /// <param name="request">生成参数。</param>
-    private void Spawn(GameObject source, ActionRequest request, NativeAllyDefinition? ally = null)
+    /// <returns>true 表示已创建；false 表示达到同时存在上限，调用方负责排队。</returns>
+    private bool Spawn(GameObject source, ActionRequest request, NativeAllyDefinition? ally = null)
     {
         spawned.RemoveAll(item => item == null);
         var count = (int)Number(request, "count", 1); // 本次生成数量。
-        if (ally == null && SpawnLimit > 0 && spawned.Count(item => item.GetComponent<OwnedCompanion>() == null) + count > SpawnLimit)
+        if (ally == null && SpawnLimit > 0 && EnemySpawnCount + count > SpawnLimit)
         {
-            throw new DeferredActionException("SPAWN_LIMIT", "等待已有生成怪物被击败 / 清理，当前同时生成上限 " + SpawnLimit);
+            return false;
         }
         if (staging == null)
         {
@@ -877,6 +895,44 @@ internal sealed class GameActions
             clone.SetActive(true);
             spawnedOwners[clone.GetInstanceID()] = DisplayNames.Clean(request.Triggerer.Length > 0 ? request.Triggerer : "主播");
         }
+        return true;
+    }
+
+    /// <summary>场上仍存在的本工具敌对单位；达到上限后新单位排队，等单位被击败再补。</summary>
+    private int EnemySpawnCount => spawned.Count(item => item != null && item.GetComponent<OwnedCompanion>() == null);
+
+    /// <summary>达到同时存在上限时入队，返回给主播的说明；有单位消失后由 Tick 自动补生成。</summary>
+    private string QueueSpawn(ActionRequest request, string label, int need)
+    {
+        if (pending.Count >= 200) { throw new InvalidOperationException("等待生成的单位过多，已停止继续入队；请先清理场上单位"); }
+        var who = DisplayNames.Clean(request.Triggerer.Length > 0 ? request.Triggerer : "主播");
+        pending.Add(new PendingSpawn { Request = request, Who = who, Label = label, Need = Math.Max(1, need) });
+        request.EffectText = label;
+        return "已达同时存在上限 " + SpawnLimit + "，已排队（第" + pending.Count + "位）：" + label + "；场上有单位被击败后自动生成";
+    }
+
+    /// <summary>只剩排队单位时，按先进先出补位；一次只放一个，资源加载期间不并发。</summary>
+    private void DrainPending()
+    {
+        if (pending.Count == 0 || pendingRunning || !CanAct || Time.realtimeSinceStartup < nextPendingRetry) { return; }
+        var next = pending[0];
+        if (SpawnLimit > 0 && EnemySpawnCount + next.Need > SpawnLimit) { return; }
+        pending.RemoveAt(0);
+        _ = RunPendingAsync(next);
+    }
+
+    private async Task RunPendingAsync(PendingSpawn item)
+    {
+        pendingRunning = true;
+        try
+        {
+            var message = await ExecuteAsync(item.Request);
+            PendingSpawned?.Invoke(item.Who, item.Label + " · 已补生成");
+            diagnostics.Add("排队补生成：" + item.Who + " · " + item.Label + "（" + message + "）");
+        }
+        catch (DeferredActionException) { pending.Insert(0, item); nextPendingRetry = Time.realtimeSinceStartup + 1.5f; } // 条件又变了，放回队头，稍后再试。
+        catch (Exception exception) { Diagnostic?.Invoke("排队单位生成失败：" + item.Who + " · " + item.Label + "：" + exception.Message); }
+        finally { pendingRunning = false; }
     }
 
     /// <summary>清理只属于本工具的对象与持有资源。</summary>
@@ -962,11 +1018,19 @@ internal sealed class SpawnLabel
 }
 
 /// <summary>原生友军的本次场景租期，不保存到游戏存档。</summary>
-internal sealed class CompanionLease
-{
+internal sealed class CompanionLease{
     public GameObject Object { get; set; } = null!;
     public int Id { get; set; }
     public float RemainingSeconds { get; set; }
+}
+
+/// <summary>达到同时存在上限后等待空位的生成请求；只在内存里排队，不写存档。</summary>
+internal sealed class PendingSpawn
+{
+    public ActionRequest Request { get; set; } = null!;
+    public string Who { get; set; } = "";
+    public string Label { get; set; } = "";
+    public int Need { get; set; } = 1;
 }
 
 /// <summary>可见、可拾取且可跨场景保留的应援补给。</summary>

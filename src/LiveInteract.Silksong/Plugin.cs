@@ -15,7 +15,7 @@ using LiveInteract.Contracts;
 namespace LiveInteract.Silksong;
 
 /// <summary>主线程执行、可核对回执和简洁的渐隐触发提示。</summary>
-[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.6.1")]
+[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.6.2")]
 [BepInProcess("Hollow Knight Silksong.exe")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -54,6 +54,7 @@ public sealed class Plugin : BaseUnityPlugin
         overlayFontSize = Config.Bind("Overlay", "FontSize", 18, "触发提示字号");
         actions = new GameActions(); actions.Diagnostic += text => diagnostics.Enqueue(text);
         actions.PickupCollected += (who, text) => notices.Add(Time.realtimeSinceStartup, who, text, true, noticeSeconds);
+        actions.PendingSpawned += (who, text) => notices.Add(Time.realtimeSinceStartup, who, text, true, noticeSeconds);
         bridge = new ModPipeClient(); bridge.Diagnostic += text => diagnostics.Enqueue(text); bridge.RequestAbandoned += request => abandoned.Enqueue(request);
 #if LIVEINTERACT_QA
         qa = new QaHarness(this, actions, bridge);
@@ -61,7 +62,7 @@ public sealed class Plugin : BaseUnityPlugin
         harmony = new Harmony("cn.liveinteract.silksong"); harmony.PatchAll(typeof(Plugin).Assembly);
         Application.logMessageReceived += OnUnityMessage;
         menuInfoUntil = Time.realtimeSinceStartup + 6;
-        Logger.LogInfo("直播互动 Mod 0.6.1 已加载；待游戏与直播实际验证。");
+        Logger.LogInfo("直播互动 Mod 0.6.2 已加载；待游戏与直播实际验证。");
     }
 
     private void Update()
@@ -137,6 +138,13 @@ public sealed class Plugin : BaseUnityPlugin
         if (!overlayEnabled.Value) { return; }
         var rows = notices.Read(now);
         var lineHeight = overlayFontSize.Value + 12;
+        // 待生成队列固定显示在左下角提示上方，不随时间消失。
+        var pending = actions.PendingLabels().ToList();
+        for (var index = 0; index < pending.Count; index++)
+        {
+            var y = Screen.height - 24 - (rows.Count + pending.Count - index) * lineHeight;
+            DrawText(new Rect(22, y, Math.Min(900, Screen.width - 44), lineHeight + 4), pending[index], new Color(1f, 0.85f, 0.45f), label);
+        }
         for (var index = 0; index < rows.Count; index++)
         {
             var item = rows[index]; var color = item.Success ? textColor : new Color(1, 0.73f, 0.5f); color.a = (float)item.Alpha;
