@@ -25,6 +25,7 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     private readonly List<Collider2D> contacts=new();
     private readonly List<Collider2D> ownColliders=new();
     private HealthManager? enemy;
+    private const float FollowDistance = 3f; // 与主播保持的距离，进入这个范围就停下。
     private HealthManager? health;
     private GameObject? followPoint;
     private Rigidbody2D? body;
@@ -33,7 +34,17 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     private float nearSince;
     private Vector3 lastHeroPosition;
     private string scene="";
-    public GameObject? TargetObject => enemy!=null && !enemy.isDead && enemy.hp>0 ? enemy.gameObject : followPoint!=null ? followPoint : gameObject; // 永不把主播当目标，兜底用自己
+    /// <summary>跟随到位后把目标指回自己：原生移动没有再往前走的方向，小弟就会停在主播身边。</summary>
+    public GameObject? TargetObject
+    {
+        get
+        {
+            if(enemy!=null && !enemy.isDead && enemy.hp>0)return enemy.gameObject;
+            var hero=HeroController.SilentInstance;
+            if(followPoint!=null && hero!=null && Vector2.Distance(transform.position,hero.transform.position)>FollowDistance)return followPoint;
+            return gameObject;
+        }
+    }
     private void Start()
     {
         fsms=GetComponentsInChildren<PlayMakerFSM>(true);weapons.AddRange(GetComponentsInChildren<DamageHero>(true));
@@ -153,11 +164,29 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     private void SteerToTarget()
     {
         if(PreserveNativeMovement)return;
-        var target=TargetObject;var rigidbody=body;if(target==null||rigidbody==null||rigidbody.bodyType!=RigidbodyType2D.Dynamic)return;
+        var rigidbody=body;if(rigidbody==null||rigidbody.bodyType!=RigidbodyType2D.Dynamic)return;
+        var target=TargetObject;
+        if(target==null||target==gameObject)
+        {
+            // 已经到位或没有目标：原地停住，不再往前挤，也不再左右晃。
+            var velocity=rigidbody.linearVelocity;
+            var rest=Flying?Vector2.Lerp(velocity,Vector2.zero,.4f):new Vector2(0,velocity.y);
+            if(Flying&&rest.sqrMagnitude<0.25f)rest=Vector2.zero;
+            rigidbody.linearVelocity=rest;
+            return;
+        }
         if(rigidbody.linearVelocity.magnitude>8)return;
-        var delta=(Vector2)(target.transform.position-transform.position);var desired=Vector2.zero;
-        if(Flying){if(delta.magnitude>1)desired=delta.normalized*3;rigidbody.linearVelocity=Vector2.Lerp(rigidbody.linearVelocity,desired,.25f);}
-        else{var vx=Mathf.Abs(delta.x)>1.2f?Mathf.Sign(delta.x)*2.5f:0;rigidbody.linearVelocity=new Vector2(vx,rigidbody.linearVelocity.y);}
+        var delta=(Vector2)(target.transform.position-transform.position);
+        if(Flying)
+        {
+            var desired=delta.sqrMagnitude>1f?delta.normalized*Mathf.Min(3,delta.magnitude*2):Vector2.zero;
+            rigidbody.linearVelocity=Vector2.Lerp(rigidbody.linearVelocity,desired,.3f);
+        }
+        else
+        {
+            var vx=Mathf.Abs(delta.x)>1.2f?Mathf.Sign(delta.x)*2.5f:0;
+            rigidbody.linearVelocity=new Vector2(vx,rigidbody.linearVelocity.y);
+        }
     }
     private void OnDestroy(){foreach(var p in projectiles)if(p!=null&&p.Owner==this)p.Disarm();if(followPoint!=null)Object.Destroy(followPoint);}
 }
