@@ -39,6 +39,8 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
         fsms=GetComponentsInChildren<PlayMakerFSM>(true);weapons.AddRange(GetComponentsInChildren<DamageHero>(true));
         ownColliders.AddRange(GetComponentsInChildren<Collider2D>(true).Where(item=>item!=null));
         health=GetComponentInChildren<HealthManager>();body=GetComponent<Rigidbody2D>();
+        // 友军本体上的原生伤害组件一律关闭：伤害改由 StrikeEnemies 结算，避免任何路径碰伤主播。
+        foreach(var weapon in weapons)if(weapon!=null)weapon.enabled=false;
         followPoint=new GameObject("LiveInteract friendly follow target");followPoint.transform.SetParent(transform.parent,false);
         scene=SceneManager.GetActiveScene().name;
         lastHeroPosition=transform.position;nearSince=Time.unscaledTime;
@@ -88,18 +90,21 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     }
     private void FixedUpdate()
     {
+        // 原生伤害组件始终保持关闭：不可操作时也要压住，状态机随时可能把它重新打开。
+        for(var index=0;index<weapons.Count;index++){var held=weapons[index];if(held!=null&&held.enabled)held.enabled=false;}
         if(GameActions.Current?.CanAct!=true)return;
         SteerToTarget();
         StrikeEnemies();
         TakeEnemyHits();
     }
-    /// <summary>仅检查原生武器当前实际开启的碰撞。Overlap绕开敌人层不互撞的默认矩阵，不扩大攻击范围。</summary>
+    /// <summary>友军的伤害一律自己结算：原生DamageHero保持关闭，绝不走主角受伤入口，碰撞范围仍按原生实际开启的碰撞。</summary>
     private void StrikeEnemies()
     {
         for(var weaponIndex=0;weaponIndex<weapons.Count;weaponIndex++)
         {
             var weapon=weapons[weaponIndex];
-            if(weapon==null || !weapon.enabled || !weapon.gameObject.activeInHierarchy)continue;
+            if(weapon==null || !weapon.gameObject.activeInHierarchy)continue;
+            if(weapon.enabled)weapon.enabled=false; // 状态机可能重新打开原生开关，每帧再关一次。
             foreach(var box in weapon.GetComponents<Collider2D>())
             {
                 if(!box.enabled)continue;

@@ -634,7 +634,7 @@ internal sealed class GameActions
         var data = ExistingPlayerData(); // 只读已有数据，禁止为心跳创建单例。
         var status = new GameStatus
         {
-            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.7.3", CanAct = CanAct,
+            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.7.4", CanAct = CanAct,
             Health = data?.health ?? 0, BlueHealth = data?.healthBlue ?? 0, ShieldPoints = shieldPoints, CompanionCount = CompanionCount, PickupCount = pickups.Count, SizeLayerCount = appearanceStacks.Where(a => a != null).Sum(a => a.Count), Silk = data?.silk ?? 0,
             ActiveEffects = effects.Describe(Time.realtimeSinceStartup).ToList(),
             SpawnableMonsterIds = monsterAssets.AvailableIds,

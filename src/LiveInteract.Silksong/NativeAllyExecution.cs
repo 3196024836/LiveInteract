@@ -49,24 +49,36 @@ internal static class FriendlyFsmExecutionHook
     private static void Prefix(Fsm __instance,out NativeEnemyAlly? __state){__state=NativeAllyExecution.Current;if(__state==null)NativeAllyExecution.Current=__instance.GameObject?.GetComponentInParent<NativeEnemyAlly>();}
     private static void Finalizer(NativeEnemyAlly? __state){NativeAllyExecution.Current=__state;}
 }
-/// <summary>池化原生投射物每次启用重新归属；离开友军来源时清除旧标记，避免把普通敌人子弹误当友军。</summary>
+/// <summary>友军投射物归属标记；池化复用时保留“不打主播”的属性，直到被明确判定为敌方来源。</summary>
 internal sealed class NativeAllyProjectile : MonoBehaviour
 {
     public NativeEnemyAlly? Owner;
     public bool WasFriendly;
-    public void Assign(NativeEnemyAlly? owner,DamageHero weapon)
-    {if(Owner!=null)Owner.RemoveProjectile(weapon);Owner=owner;WasFriendly=owner!=null;if(owner!=null)owner.AddProjectile(weapon,this);}
-    public void Disarm(){Owner=null;WasFriendly=true;}
+    private DamageHero? weapon;
+    public void Assign(NativeEnemyAlly? owner,DamageHero value)
+    {
+        if(Owner!=null)Owner.RemoveProjectile(value);
+        weapon=value;
+        if(owner==null&&WasFriendly){Owner=null;return;} // 已确认为友军的投射物不因池化复用退回敌方。
+        Owner=owner;WasFriendly=owner!=null;
+        if(owner!=null)owner.AddProjectile(value,this);
+    }
+    public void Disarm(){Owner=null;WasFriendly=true;if(weapon!=null)weapon.enabled=false;}
+    /// <summary>归属友军消失或状态机重新打开时继续压住原生伤害组件。</summary>
+    private void FixedUpdate(){if(WasFriendly&&weapon!=null&&weapon.enabled)weapon.enabled=false;}
 }
+/// <summary>友军本体与其投射物的原生伤害组件一律保持关闭，伤害统一由归属友军结算，绝不进入主播受伤路径。</summary>
 [HarmonyPatch(typeof(DamageHero),"OnEnable")]
 internal static class FriendlyProjectileOriginHook
 {
     private static void Prefix(DamageHero __instance)
     {
-        if(__instance.GetComponentInParent<NativeEnemyAlly>()!=null)return;
-        var marker=__instance.GetComponent<NativeAllyProjectile>();var owner=NativeAllyExecution.Current;
-        if(marker==null&&owner!=null)marker=__instance.gameObject.AddComponent<NativeAllyProjectile>();
-        if(marker!=null)marker.Assign(owner,__instance);
+        var marker=__instance.GetComponent<NativeAllyProjectile>();
+        var owner=__instance.GetComponentInParent<NativeEnemyAlly>() ?? NativeAllyExecution.Current;
+        if(owner==null&&(marker==null||!marker.WasFriendly))return; // 敌方投射物保持原样。
+        if(marker==null)marker=__instance.gameObject.AddComponent<NativeAllyProjectile>();
+        marker.Assign(owner,__instance);
+        __instance.enabled=false;
     }
 }
 
