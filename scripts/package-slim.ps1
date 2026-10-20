@@ -2,7 +2,7 @@
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
-$out=Join-Path $root 'dist\LiveInteract-0.6.2-slim-win-x64'
+$out=Join-Path $root 'dist\LiveInteract-0.7.0-slim-win-x64'
 if(Test-Path -LiteralPath $out){throw 'Preserve the existing distribution; use a new output directory.'}
 dotnet build src/LiveInteract.Silksong/LiveInteract.Silksong.csproj -c Release -p:QaBuild=false -t:Rebuild --nologo
 if($LASTEXITCODE -ne 0){throw 'Production Mod build failed'}
@@ -17,7 +17,7 @@ $source=Join-Path $root 'artifacts\loader-package\BepInExPack'
 Copy-Item -LiteralPath (Join-Path $source 'winhttp.dll'),(Join-Path $source 'doorstop_config.ini') -Destination $loader
 Get-ChildItem -LiteralPath (Join-Path $source 'BepInEx\core') -File -Filter '*.dll' | Copy-Item -Destination (Join-Path $loader 'BepInEx\core')
 Copy-Item -LiteralPath (Join-Path $source 'BepInEx\config\BepInEx.cfg') -Destination (Join-Path $loader 'BepInEx\config')
-Copy-Item -LiteralPath 'docs\0.6精简版使用说明.md' -Destination (Join-Path $out '使用说明.md')
+Copy-Item -LiteralPath 'docs\0.7使用说明.md' -Destination (Join-Path $out '使用说明.md')
 Copy-Item -LiteralPath 'docs\THIRD_PARTY_NOTICES.md' -Destination $out
 $art=Join-Path $out '直播图'
 New-Item -ItemType Directory -Path $art -Force | Out-Null

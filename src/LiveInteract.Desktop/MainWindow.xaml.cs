@@ -33,7 +33,7 @@ public partial class MainWindow : Window
     private AppSettings settings = new();
     private RuleProfile profile = new();
     private GameEnvironment environment = new("", false, false, false, false, false, "", "");
-    private DouyinWindow? source;
+    private LiveSourceWindow? source;
     private ActionStep? manual;
     private object? overlayNotice;
     private int ticks;
@@ -132,9 +132,15 @@ public partial class MainWindow : Window
     private void ConnectRoomClick(object? sender, RoutedEventArgs e)
     {
         if (source != null) { source.Activate(); return; }
-        source = new DouyinWindow(runtime, Path.Combine(dataDirectory, "DouyinBrowser"), settings.Room) { Owner = this };
+        // 沿用原浏览器数据目录，切换版本后不必重新登录。
+        source = new LiveSourceWindow(runtime, Path.Combine(dataDirectory, "DouyinBrowser"), settings.Platform, settings.Room, settings.BilibiliRoom) { Owner = this };
         source.SourceStatusChanged += text => Dispatcher.BeginInvoke(() => { SourceStatusText.Text = text.Length > 32 ? text[..32] + "…" : text; SourceStatusText.ToolTip = text; });
-        source.RoomChanged += room => { settings.Room = room; SavePreferences(); };
+        source.SelectionChanged += (platform, room) =>
+        {
+            settings.Platform = platform;
+            if (platform == LiveSourceWindow.BilibiliKey) { settings.BilibiliRoom = room; } else { settings.Room = room; }
+            SavePreferences();
+        };
         source.Closed += (_, _) => source = null; source.Show();
     }
 
@@ -470,7 +476,7 @@ public partial class MainWindow : Window
         {
             File.WriteAllText(dialog.FileName, JsonConvert.SerializeObject(new
             {
-                Version = "0.6.2", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
+                Version = "0.7.0", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
                 Bridge = new { runtime.Game.IsConnected, runtime.Game.Status?.GameVersion, runtime.Game.Status?.Scene, runtime.Game.Status?.CanAct, runtime.Game.Status?.Diagnostics },
                 Counts = new { runtime.Received, runtime.Simulated, runtime.Completed, runtime.Failed },
                 RuleCount = profile.Rules.Count, EnabledRules = profile.Rules.Count(item => item.Enabled),

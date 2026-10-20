@@ -10,6 +10,10 @@ public sealed class AppSettings
     public string GameDirectory { get; set; } = "";
     /// <summary>直播间公开地址或短号。</summary>
     public string Room { get; set; } = "";
+    /// <summary>上次使用的直播平台：douyin 或 bilibili。</summary>
+    public string Platform { get; set; } = "douyin";
+    /// <summary>哔哩哔哩直播间公开地址或房间号。</summary>
+    public string BilibiliRoom { get; set; } = "";
     /// <summary>是否开启本机透明展示。</summary>
     public bool BrowserOverlay { get; set; } = true;
     /// <summary>是否显示游戏内提示。</summary>

@@ -20,6 +20,7 @@ public sealed class LiveRuntime : IAsyncDisposable
     private readonly ConcurrentBag<CancellationTokenSource> retired = new();
     private readonly RuleEngine engine = new(reliable: true);
     private readonly DouyinPacketDecoder decoder = new();
+    private readonly BilibiliPacketDecoder bilibili = new();
     private readonly ConcurrentDictionary<LiveEventType, long> sourceCounts = new();
     private long capturedFrames, decodedFrames;
     private readonly ActionExecutor executor;
@@ -61,6 +62,7 @@ public sealed class LiveRuntime : IAsyncDisposable
         Journal = new InteractionJournal(dataDirectory == null ? ":memory:" : Path.Combine(dataDirectory, "interactions.db"));
         Journal.RecoverAfterRestart(); engine.LoadState(Journal.EngineState); decoder.LoadState(Journal.DecoderState);
         decoder.Warning += message => Log("协议诊断", message, false);
+        bilibili.Warning += message => Log("协议诊断", message, false);
         Game = new GamePipeServer(); adapter = testAdapter ?? Game;
         executor = new ActionExecutor(adapter, () => AllowPersistent);
         if (dataDirectory != null)
@@ -193,15 +195,21 @@ public sealed class LiveRuntime : IAsyncDisposable
                 if (frame == null) { await Task.Delay(50, shutdown.Token); continue; }
                 try
                 {
-                    var values = decoder.DecodeFrame(frame.Payload, frame.Room, frame.Id.ToString());
-                    var count = Journal.CommitFrame(frame, values, decoder.SaveState());
+                    // 房间标识带平台前缀时按平台选择解析器；原始帧和回执仍然共用同一套账本。
+                    var isBilibili = frame.Room.StartsWith("bili:", StringComparison.Ordinal);
+                    var values = isBilibili
+                        ? bilibili.DecodeFrame(frame.Payload, frame.Room, frame.Id.ToString())
+                        : decoder.DecodeFrame(frame.Payload, frame.Room, frame.Id.ToString());
+                    var state = isBilibili ? Journal.DecoderState : decoder.SaveState();
+                    var count = Journal.CommitFrame(frame, values, state);
                     Interlocked.Add(ref received, count); Interlocked.Increment(ref decodedFrames);
                     foreach (var value in values) { sourceCounts.AddOrUpdate(value.Type, 1, (_, old) => old + 1); }
                     Wake();
                 }
                 catch (Exception exception)
                 {
-                    decoder.LoadState(Journal.DecoderState); Journal.FailFrame(frame.Id, exception.ToString());
+                    if (!frame.Room.StartsWith("bili:", StringComparison.Ordinal)) { decoder.LoadState(Journal.DecoderState); }
+                    Journal.FailFrame(frame.Id, exception.ToString());
                     Log("接入待核对", "帧 " + frame.Id + " 无法解析，原始数据已保留：" + exception.Message, false);
                 }
             }
