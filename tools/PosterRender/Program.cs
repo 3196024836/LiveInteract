@@ -22,7 +22,7 @@ internal static class Program
         var visual=new DrawingVisual();using(var context=visual.RenderOpen())
         {
             dc=context;Text("丝之歌",42,24,55,ink,true);Text("直播互动",44,99,25,green);Section("弹幕",44,164,632);
-            var chat=new (string,string)[]{("小弟","近战友军 ×1"),("远程小弟","远程友军 ×1"),("小怪","近战敌人 ×1"),("远程小怪","远程敌人 ×1"),("回血","生命 +"+Arg("v06-heal","value")),("回蓝 / 回丝","灵丝 +"+Arg("v06-silk","value")),("金币","金币雨 · "+Arg("v06-coins","count")+"颗"),("大招","原作灵丝风暴"),("生成怪物＋名字","指定敌人 ×1 · 5秒"),("生成小弟＋名字","指定友军 ×1 · 5秒"),("怪变大 / 怪变小","最近敌人 · 永久叠加")};
+            var chat=new (string,string)[]{("小弟","近战友军 ×1"),("远程小弟","远程友军 ×1"),("小怪","近战敌人 ×1"),("远程小怪","远程敌人 ×1"),("回血","生命 +"+Arg("v06-heal","value")),("回蓝 / 回丝","灵丝 +"+Arg("v06-silk","value")),("金币","金币雨"),("大招","灵丝风暴"),("生成怪物＋名字","指定敌人 ×1 · 5秒"),("生成小弟＋名字","指定友军 ×1 · 5秒"),("怪变大 / 怪变小","最近敌人 · 永久叠加")};
             for(var i=0;i<chat.Length;i++)Row(chat[i].Item1,chat[i].Item2,220+i*34,23);
             Section("点赞",44,624,632);Row("每100赞","金币雨",680,26);
             Section("礼物",44,748,632);
