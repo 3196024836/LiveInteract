@@ -72,7 +72,7 @@ else {
         $png = $bytes.Length -gt 1024 -and $bytes[0] -eq 0x89 -and $bytes[1] -eq 0x50
         Add-Type -AssemblyName System.Drawing
         $image = [System.Drawing.Image]::FromFile($poster)
-        $posterOk = $png -and $image.Width -ge 720 -and $image.Height -ge 720
+        $posterOk = $png -and $image.Width -ge 400 -and $image.Height -ge 800 -and $image.Height -gt $image.Width # 细长条：高度必须大于宽度。
         $image.Dispose()
     }
     Record 'PosterGenerate' $posterOk ''

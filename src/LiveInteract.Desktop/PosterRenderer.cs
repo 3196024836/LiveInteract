@@ -15,8 +15,11 @@ namespace LiveInteract.Desktop;
 /// <summary>按当前规则生成透明直播说明图：只依赖规则本身与随包内置的官方礼物图标。</summary>
 internal static class PosterRenderer
 {
-    private const double PageWidth = 720, PageHeight = 1190, Left = 52, Right = 656, TriggerX = 56, EffectStart = 300, EffectLimit = 656, RowStep = 33;
-    private const double TriggerWidth = EffectStart - TriggerX - 16;
+    // 细长条 + 单行 + 短文案：触发词在左、效果右对齐，所有「· 后缀」与括号补充都不上图。
+    private const double PageWidth = 300, PageHeight = 760, Left = 22, Right = 278;
+    private const double TriggerX = 24, TriggerMax = 88, EffectLeft = 118, EffectRight = 278;
+    private const double RowStep = 26, GiftStep = 34, GiftIconSize = 24;
+    private const double TriggerSize = 12.5, EffectSize = 11.5, EffectMin = 9.5;
     private static readonly CultureInfo Zh = CultureInfo.GetCultureInfo("zh-CN");
     private static readonly Typeface Font = new("Microsoft YaHei UI");
     private static readonly Brush Ink = ColorBrush("#F4FBFF"), Accent = ColorBrush("#7FE9D0"), Ally = ColorBrush("#9BE8CB"), Enemy = ColorBrush("#FFA69B"), Muted = ColorBrush("#93A8B6"), Faint = ColorBrush("#5B7080");
@@ -59,9 +62,21 @@ internal static class PosterRenderer
         {
             var rows = rules.Select(rule =>
             {
-                var effect = RuleDisplay.Effect(rule.Root);
+                var effect = Short(RuleDisplay.Effect(rule.Root));
+                // 随机召唤：写成“随机(强力)友军/敌人 ×N”，强度直接体现在文案里。
+                if (rule.Root.ActionId is "summon.random.ally" or "summon.random.enemy")
+                {
+                    var power = double.TryParse(rule.Root.Arguments.GetValueOrDefault("power"), NumberStyles.Float, CultureInfo.InvariantCulture, out var strength) ? strength : 1;
+                    var kind = rule.Root.ActionId.EndsWith(".ally", StringComparison.Ordinal) ? "友军" : "敌人";
+                    effect = "随机" + (power > 1 ? "强力" : "") + kind + " ×" + rule.Root.Arguments.GetValueOrDefault("count", "1");
+                }
+                // 精准召唤有存在时限，这条必须留在图上。
+                if (rule.Root.ActionId is "summon.named.enemy" or "summon.named.ally" && rule.Root.Arguments.GetValueOrDefault("lifetime") is { Length: > 0 } lifetime && lifetime != "0")
+                {
+                    effect += " · " + lifetime + "秒";
+                }
                 var icon = rule.Trigger.Type == LiveEventType.Gift && GiftIcons.TryGetValue(rule.Trigger.GiftName, out var file) ? file : null;
-                return new Row(TriggerLabel(rule.Trigger), effect, EffectBrush(effect), icon);
+                return new Row(TriggerLabel(rule), effect, EffectBrush(effect), icon);
             }).ToList();
             if (rows.Count > 0) { sections.Add(new Section { Title = title, Rows = rows }); }
         }
@@ -72,8 +87,26 @@ internal static class PosterRenderer
         return sections;
     }
 
-    /// <summary>触发列只保留主播和观众一眼能对上的短标签。</summary>
-    private static string TriggerLabel(TriggerDefinition trigger) => trigger.Type switch
+    /// <summary>效果列只留主体：去掉「· 持续跟随 / · 普通怪池 / · 永久」这类后缀、括号说明、末尾缩放倍率和“原生”前缀。</summary>
+    private static string Short(string effect)
+    {
+        var cut = effect.IndexOf(" · ", StringComparison.Ordinal);
+        if (cut > 0) { effect = effect[..cut]; }
+        effect = effect.Replace("原生", "");
+        effect = System.Text.RegularExpressions.Regex.Replace(effect, "（[^）]*）", "").Trim();
+        effect = System.Text.RegularExpressions.Regex.Replace(effect, @"\s*\d+\.\d+\s*$", "").Trim();
+        return effect;
+    }
+
+    /// <summary>触发列只保留主播和观众一眼能对上的短标签；精准召唤必须写出“＋名字”才知道怎么触发。</summary>
+    private static string TriggerLabel(RuleDefinition rule)
+    {
+        var trigger = rule.Trigger;
+        if (rule.Root.ActionId is "summon.named.enemy" or "summon.named.ally" && trigger.Type == LiveEventType.Chat)
+        {
+            return (trigger.Keywords.FirstOrDefault() ?? "生成") + "＋名字";
+        }
+        return trigger.Type switch
     {
         LiveEventType.Chat => trigger.Keywords.Count > 0 ? string.Join(" / ", trigger.Keywords) : "任意弹幕",
         LiveEventType.Like => trigger.Threshold > 1 ? "每" + trigger.Threshold + "赞" : "每次点赞",
@@ -83,6 +116,7 @@ internal static class PosterRenderer
         LiveEventType.Share => trigger.Threshold > 1 ? "分享 ×" + trigger.Threshold : "分享",
         _ => "粉丝团"
     };
+    }
 
     /// <summary>友军与敌军用固定两色，其余用正文色。</summary>
     private static Brush EffectBrush(string effect) => effect.Contains("友军", StringComparison.Ordinal) || effect.Contains("友方", StringComparison.Ordinal) ? Ally : effect.Contains("敌人", StringComparison.Ordinal) || effect.Contains("敌方", StringComparison.Ordinal) ? Enemy : Ink;
@@ -93,58 +127,59 @@ internal static class PosterRenderer
     /// <summary>实际内容底部，页脚与左侧竖线都跟着它走。</summary>
     private static double ContentBottom(List<Section> sections)
     {
-        var y = 176.0;
-        foreach (var section in sections) { y += 50 + section.Rows.Count * Step(section) + 26; }
+        var y = 94.0;
+        foreach (var section in sections) { y += 31 + section.Rows.Count * Step(section) + 20; }
         return y;
     }
 
-    /// <summary>带图标的礼物行要留出图标高度，否则相邻图标会叠在一起。</summary>
-    private static double Step(Section section) => section.Rows.Any(row => row.Icon != null) ? 62 : RowStep;
+    /// <summary>礼物行要留出图标高度，其余行保持紧凑单行。</summary>
+    private static double Step(Section section) => section.Rows.Any(row => row.Icon != null) ? GiftStep : RowStep;
 
     private static void Paint(DrawingContext dc, List<Section> sections)
     {
         var rail = new LinearGradientBrush(Color.FromArgb(255, 127, 233, 208), Color.FromArgb(0, 127, 233, 208), 90);
-        dc.DrawRoundedRectangle(rail, null, new Rect(30, 52, 7, 74), 3.5, 3.5);
-        Text(dc, "丝之歌", Left + 4, 42, 48, Ink, true);
-        Text(dc, "L I V E   I N T E R A C T I O N", Left + 6, 110, 12, Alpha("#7FE9D0", 190));
-        dc.DrawRectangle(new LinearGradientBrush(Color.FromArgb(80, 127, 233, 208), Color.FromArgb(0, 127, 233, 208), 0), null, new Rect(Left, 150, Right - Left, 1));
-        dc.DrawRectangle(Alpha("#7FE9D0", 45), null, new Rect(24, 42, 1, ContentBottom(sections) - 60));
+        dc.DrawRoundedRectangle(rail, null, new Rect(12, 20, 4, 42), 2, 2);
+        Text(dc, "丝之歌", 22, 12, 26, Ink, true);
+        Text(dc, "L I V E   I N T E R A C T I O N", 23, 48, 8, Alpha("#7FE9D0", 190));
+        dc.DrawRectangle(new LinearGradientBrush(Color.FromArgb(80, 127, 233, 208), Color.FromArgb(0, 127, 233, 208), 0), null, new Rect(Left, 72, Right - Left, 1));
+        dc.DrawRectangle(Alpha("#7FE9D0", 45), null, new Rect(12, 16, 1, ContentBottom(sections) - 26));
 
-        var y = 176.0;
+        var y = 94.0;
         foreach (var section in sections)
         {
-            dc.DrawEllipse(Alpha("#7FE9D0", 235), null, new Point(Left + 4, y + 9), 3.4, 3.4);
-            Text(dc, section.Title, Left + 18, y, 17, Alpha("#C6D6DF", 225));
-            dc.DrawRectangle(new LinearGradientBrush(Color.FromArgb(70, 127, 233, 208), Color.FromArgb(0, 127, 233, 208), 0), null, new Rect(Left, y + 28, Right - Left, 1));
-            var rowY = y + 50;
+            dc.DrawEllipse(Alpha("#7FE9D0", 235), null, new Point(Left + 2, y + 6), 2.2, 2.2);
+            Text(dc, section.Title, Left + 10, y, 11.5, Alpha("#C6D6DF", 225));
+            dc.DrawRectangle(new LinearGradientBrush(Color.FromArgb(70, 127, 233, 208), Color.FromArgb(0, 127, 233, 208), 0), null, new Rect(Left, y + 18, Right - Left, 1));
+            var rowY = y + 31;
             var step = Step(section);
             foreach (var row in section.Rows)
             {
                 if (row.Icon != null)
                 {
                     Icon(dc, row.Icon, Left, rowY, row.EffectBrush);
-                    Text(dc, Fit(row.Trigger, EffectStart - (Left + 74) - 16, 22, 16, true), Left + 74, rowY + 15, 22, Ink, true);
-                    var (iconSize, iconText) = FitPair(row.Effect, EffectStart, EffectLimit, 21, 16);
-                    TextRight(dc, iconText, EffectLimit, rowY + 15, iconSize, row.EffectBrush);
+                    var nameX = Left + GiftIconSize + 8;
+                    Text(dc, Fit(row.Trigger, EffectLeft - nameX - 6, TriggerSize + 0.5, 10, true), nameX, rowY + 5, TriggerSize + 0.5, Ink, true);
+                    var (giftSize, giftText) = FitPair(row.Effect, EffectLeft, EffectRight, EffectSize, EffectMin);
+                    TextRight(dc, giftText, EffectRight, rowY + 6, giftSize, row.EffectBrush);
                 }
                 else
                 {
-                    Text(dc, Fit(row.Trigger, TriggerWidth, 21, 16, true), TriggerX, rowY, 21, Accent, true);
-                    var (size, text) = FitPair(row.Effect, EffectStart, EffectLimit, 21, 16);
-                    TextRight(dc, text, EffectLimit, rowY, size, row.EffectBrush);
+                    Text(dc, Fit(row.Trigger, TriggerMax, TriggerSize, 10, true), TriggerX, rowY, TriggerSize, Accent, true);
+                    var (effectSize, effectText) = FitPair(row.Effect, EffectLeft, EffectRight, EffectSize, EffectMin);
+                    TextRight(dc, effectText, EffectRight, rowY, effectSize, row.EffectBrush);
                 }
                 rowY += step;
             }
-            y += 50 + section.Rows.Count * step + 26;
+            y += 31 + section.Rows.Count * step + 20;
         }
         var footer = "按当前规则生成 · " + DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
-        Text(dc, footer, Left, y - 8, 14, Faint);
+        Text(dc, footer, Left, y + 2, 9, Faint);
     }
 
     /// <summary>礼物图标放进圆底，外圈跟着效果颜色。</summary>
     private static void Icon(DrawingContext dc, string file, double x, double y, Brush tint)
     {
-        const double size = 52;
+        const double size = GiftIconSize;
         var center = new Point(x + size / 2, y + size / 2);
         dc.DrawEllipse(new RadialGradientBrush(Color.FromArgb(46, 255, 255, 255), Color.FromArgb(0, 255, 255, 255)), null, center, size / 2 + 6, size / 2 + 6);
         var colour = ((SolidColorBrush)tint).Color;
