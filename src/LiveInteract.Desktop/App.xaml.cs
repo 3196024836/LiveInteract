@@ -42,6 +42,30 @@ public partial class App : Application
                 catch (Exception exception) { result.Message = exception.Message; }
                 File.WriteAllText(resultFile, JsonConvert.SerializeObject(result)); Shutdown(result.Success ? 0 : 1); return;
             }
+            if (e.Args.Length >= 2 && e.Args[0] == "--check-update")
+            {
+                // 只查询清单并写出结果，方便脚本与验收核对。
+                var current = typeof(UpdateApplier).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+                UpdateInfo? found = null;
+                string? failure = null;
+                try { found = UpdateService.CheckAsync(UpdateService.DefaultManifest, current, CancellationToken.None).GetAwaiter().GetResult(); }
+                catch (Exception error) { failure = error.Message; }
+                File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { Current = current, Manifest = UpdateService.DefaultManifest, Available = found, Error = failure }, Formatting.Indented));
+                Shutdown(failure == null ? 0 : 1); return;
+            }
+            if (e.Args.Length >= 3 && e.Args[0] == "--apply-update")
+            {
+                // 由临时目录里的副本执行替换：安装目录里的 exe 正被旧进程占用，不能自我覆盖。
+                var staging = Path.GetFullPath(e.Args[1]);
+                var install = Path.GetFullPath(e.Args[2]);
+                var wait = e.Args.Length >= 4 && int.TryParse(e.Args[3], out var pid) ? pid : 0;
+                var exe = UpdateApplier.Apply(staging, install, wait, out var updateError);
+                try { if (File.Exists(exe)) { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe) { WorkingDirectory = install, UseShellExecute = true }); } }
+                catch (Exception restart) { updateError = (updateError == null ? "" : updateError + "；") + "重启失败：" + restart.Message; }
+                UpdateApplier.Cleanup(staging);
+                if (updateError != null) { try { File.WriteAllText(Path.Combine(install, "update-error.txt"), updateError); } catch (IOException) { } }
+                Shutdown(); return;
+            }
             if (e.Args.Length >= 2 && e.Args[0] == "--doctor")
             {
                 var environment = GameDetector.Detect(); // 只读游戏环境。

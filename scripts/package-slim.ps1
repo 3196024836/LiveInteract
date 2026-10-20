@@ -2,7 +2,7 @@
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $root
-$out=Join-Path $root 'dist\LiveInteract-0.7.6-slim-win-x64'
+$out=Join-Path $root 'dist\LiveInteract-0.7.7-slim-win-x64'
 if(Test-Path -LiteralPath $out){throw 'Preserve the existing distribution; use a new output directory.'}
 dotnet build src/LiveInteract.Silksong/LiveInteract.Silksong.csproj -c Release -p:QaBuild=false -t:Rebuild --nologo
 if($LASTEXITCODE -ne 0){throw 'Production Mod build failed'}

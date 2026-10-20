@@ -60,6 +60,8 @@ public sealed class AppSettings
     public string PauseHotkey { get; set; } = "Ctrl+Alt+F10";
     /// <summary>紧急恢复的可修改快捷键。</summary>
     public string EmergencyHotkey { get; set; } = "Ctrl+Alt+F12";
+    /// <summary>启动时自动检查更新。</summary>
+    public bool AutoCheckUpdates { get; set; } = true;
     /// <summary>退出游戏后的待执行维护任务。</summary>
     public string PendingMaintenance { get; set; } = "";
     /// <summary>已由用户确认可维护的游戏目录。</summary>

@@ -75,6 +75,7 @@ public partial class MainWindow : Window
         CornerBox.ItemsSource = new[] { new Ui.Pick<string>("BottomLeft", "左下"), new("BottomRight", "右下"), new("TopLeft", "左上"), new("TopRight", "右上") }; CornerBox.DisplayMemberPath = "Name"; CornerBox.SelectedValuePath = "Value"; CornerBox.SelectedValue = settings.Corner;
         GameCornerBox.ItemsSource = new[] { new Ui.Pick<string>("BottomLeft", "左下"), new("BottomRight", "右下"), new("TopLeft", "左上"), new("TopRight", "右上") }; GameCornerBox.DisplayMemberPath = "Name"; GameCornerBox.SelectedValuePath = "Value"; GameCornerBox.SelectedValue = settings.GameCorner;
         GameFontBox.Text = settings.GameFontSize.ToString(); GameAccentBox.Text = settings.GameAccent; GameDurationBox.Text = settings.GameNoticeSeconds.ToString(CultureInfo.InvariantCulture); BrowserDurationBox.Text = settings.BrowserNoticeSeconds.ToString(CultureInfo.InvariantCulture);
+        AutoUpdateCheck.IsChecked = settings.AutoCheckUpdates;
         BrowserSourceCheck.IsChecked = settings.BrowserShowSource; BrowserResultCheck.IsChecked = settings.BrowserShowResult; BrowserEffectsCheck.IsChecked = settings.BrowserShowEffects; BrowserProgressCheck.IsChecked = settings.BrowserShowProgress;
         GameSourceCheck.IsChecked = settings.GameShowSource; GameResultCheck.IsChecked = settings.GameShowResult; GameEffectsCheck.IsChecked = settings.GameShowEffects; GameProgressCheck.IsChecked = settings.GameShowProgress;
         GamePathBox.Text = settings.GameDirectory; GameOverlayCheck.IsChecked = settings.GameOverlay; BrowserOverlayCheck.IsChecked = settings.BrowserOverlay; HideNamesCheck.IsChecked = settings.HideNicknames;
@@ -93,6 +94,12 @@ public partial class MainWindow : Window
             }
             else { OverlayUrlBox.Text = "http://127.0.0.1:17573/overlay"; }
             FooterStatus.Text = "本地服务已就绪；互动总开关保持关闭。";
+            UpdateStatusText.Text = "当前版本 v" + CurrentVersion() + " · 更新源 GitHub";
+            if (!preview && settings.AutoCheckUpdates)
+            {
+                try { await Task.Delay(2500); await CheckForUpdatesAsync(false); }
+                catch (Exception exception) { runtime.Log("检查更新", exception.Message, false); }
+            }
         };
         Closing += OnClosing;
     }
@@ -491,7 +498,7 @@ public partial class MainWindow : Window
         {
             File.WriteAllText(dialog.FileName, JsonConvert.SerializeObject(new
             {
-                Version = "0.7.6", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
+                Version = "0.7.7", At = DateTimeOffset.Now, Game = new { environment.GameFound, environment.LoaderFound, environment.ModEnabled, environment.ModDisabled, environment.Running, environment.BuildId },
                 Bridge = new { runtime.Game.IsConnected, runtime.Game.Status?.GameVersion, runtime.Game.Status?.Scene, runtime.Game.Status?.CanAct, runtime.Game.Status?.Diagnostics },
                 Counts = new { runtime.Received, runtime.Simulated, runtime.Completed, runtime.Failed },
                 RuleCount = profile.Rules.Count, EnabledRules = profile.Rules.Count(item => item.Enabled),
@@ -705,6 +712,70 @@ public partial class MainWindow : Window
     /// <summary>把操作失败转换为可以处理的界面提示。</summary>
     /// <param name="action">用户操作。</param>
     /// <returns>操作任务。</returns>
+    /// <summary>当前程序版本，用来和远端更新清单比较。</summary>
+    private static string CurrentVersion() => typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+
+    private bool updateBusy;
+
+    /// <summary>手动点击检查更新。</summary>
+    private async void CheckUpdateClick(object? sender, RoutedEventArgs e) => await GuardAsync(() => CheckForUpdatesAsync(true));
+
+    /// <summary>查询远端清单；有更新时询问，确认后下载并在重启时替换。</summary>
+    private async Task CheckForUpdatesAsync(bool manual)
+    {
+        if (updateBusy) { return; }
+        updateBusy = true;
+        try
+        {
+            var current = CurrentVersion();
+            UpdateStatusText.Text = "正在检查更新…";
+            var info = await UpdateService.CheckAsync(UpdateService.DefaultManifest, current, CancellationToken.None);
+            if (info == null)
+            {
+                UpdateStatusText.Text = "已是最新版本 v" + current + "（" + DateTime.Now.ToString("HH:mm") + " 检查）";
+                if (manual) { MessageBox.Show(this, "已是最新版本：v" + current + "。", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information); }
+                return;
+            }
+            UpdateStatusText.Text = "发现新版本 v" + info.Version + "（当前 v" + current + "）";
+            var notes = string.IsNullOrWhiteSpace(info.Notes) ? "" : "\n\n更新说明：\n" + info.Notes;
+            var question = "发现新版本 v" + info.Version + "（当前 v" + current + "）。" + notes + "\n\n是否现在更新？程序会自动关闭，替换完成后重新打开；规则、存档与浏览器登录状态都会保留。";
+            if (MessageBox.Show(this, question, "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                UpdateStatusText.Text = "已跳过 v" + info.Version + "，下次启动仍会提示";
+                return;
+            }
+            await ApplyUpdateAsync(info);
+        }
+        catch (Exception exception)
+        {
+            UpdateStatusText.Text = "检查更新失败：" + exception.Message;
+            if (manual) { MessageBox.Show(this, "检查更新失败：" + exception.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Warning); }
+        }
+        finally { updateBusy = false; }
+    }
+
+    /// <summary>下载校验后交给临时副本进程，替换完成会自动重开。</summary>
+    private async Task ApplyUpdateAsync(UpdateInfo info)
+    {
+        var progress = new Progress<double>(value => UpdateStatusText.Text = "正在下载更新包 " + (int)(value * 100) + "%");
+        var zip = await UpdateService.DownloadAsync(info, progress, CancellationToken.None);
+        UpdateStatusText.Text = "正在解压并准备替换…";
+        var staging = UpdateService.Stage(zip, info.Version, dataDirectory);
+        try { File.Delete(zip); } catch (IOException) { }
+        var helper = Path.Combine(Path.GetTempPath(), "LiveInteract-update-" + info.Version + ".exe");
+        File.Copy(Environment.ProcessPath!, helper, true); // 安装目录里的 exe 正被占用，用临时副本执行替换。
+        Process.Start(new ProcessStartInfo(helper, "--apply-update \"" + staging + "\" \"" + AppContext.BaseDirectory.TrimEnd('\\') + "\" " + Environment.ProcessId) { UseShellExecute = true, WorkingDirectory = Path.GetTempPath() });
+        runtime.Log("更新", "已下载 v" + info.Version + "，正在重启完成更新");
+        Application.Current.Shutdown();
+    }
+
+    private void AutoUpdateChanged(object? sender, RoutedEventArgs e)
+    {
+        settings.AutoCheckUpdates = AutoUpdateCheck.IsChecked == true;
+        SavePreferences();
+    }
+
+    /// <summary>统一处理界面操作的异常，不弹无关的系统错误。</summary>
     private async Task GuardAsync(Func<Task> action)
     {
         try { await action(); }
