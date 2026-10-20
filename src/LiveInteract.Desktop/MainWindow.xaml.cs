@@ -58,6 +58,8 @@ public partial class MainWindow : Window
             LastActionText.Text = title + " · " + result.Message;
         });
         InitializeComponent();
+        // 侧栏版本号跟程序集走，避免和实际发布版本脱节。
+        VersionText.Text = "v" + (typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.0.0") + " · 本地预发布";
         if (!preview) { Width = Math.Min(1400, SystemParameters.WorkArea.Width - 40); Height = Math.Min(900, SystemParameters.WorkArea.Height - 40); }
         try { settings = AppSettings.Load(settingsFile); }
         catch (JsonException exception) { runtime.Log("配置错误", "偏好格式损坏，原文件保留：" + exception.Message, false); settings = new(); }

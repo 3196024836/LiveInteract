@@ -53,7 +53,9 @@ internal static class Program
             var spawn = Edit("spawn", simple, editor =>
             {
                 Field<TextBox>(type, editor, "effectSearch").Text = "木蜂";
-                var list = Field<ListBox>(type, editor, "effectChoice"); Check(list.Items.Count == 1, "搜索没有筛选出具体怪物");
+                var list = Field<ListBox>(type, editor, "effectChoice");
+                // 搜索按名称模糊匹配：具名怪物与同名原生友军都会出现，必须能选中目标项。
+                Check(list.Items.Cast<object>().Any(item => item?.ToString() == "spawn.shellwood-wasp" || (item as ActionDescriptor)?.Id == "spawn.shellwood-wasp"), "搜索没有筛选出具体怪物");
                 list.SelectedValue = "spawn.shellwood-wasp";
                 var fields = Field<StackPanel>(type, editor, "fields");
                 var count = Descendants(fields).OfType<TextBox>().Single(box => box.Tag?.ToString() == "count");
