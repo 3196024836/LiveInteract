@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GameManagedPath Condition="'$(GameManagedPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed</GameManagedPath>
+    <LoaderPath>$(MSBuildThisFileDirectory)..\..\artifacts\loader-package\BepInExPack\BepInEx\core</LoaderPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LiveInteract.Silksong\LiveInteract.Silksong.csproj" />
+    <!-- 本机验收工具：把补丁需要的程序集一并拷到输出目录，方便直接运行。 -->
+    <Reference Include="$(LoaderPath)\BepInEx.dll" />
+    <Reference Include="$(LoaderPath)\0Harmony.dll" />
+    <Reference Include="$(GameManagedPath)\*.dll" Exclude="$(GameManagedPath)\System*.dll;$(GameManagedPath)\mscorlib.dll;$(GameManagedPath)\netstandard.dll;$(GameManagedPath)\Newtonsoft.Json.dll;$(GameManagedPath)\Microsoft*.dll" />
+  </ItemGroup>
+</Project>

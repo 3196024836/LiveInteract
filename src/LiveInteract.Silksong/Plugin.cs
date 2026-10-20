@@ -15,7 +15,7 @@ using LiveInteract.Contracts;
 namespace LiveInteract.Silksong;
 
 /// <summary>主线程执行、可核对回执和简洁的渐隐触发提示。</summary>
-[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.7.4")]
+[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.7.5")]
 [BepInProcess("Hollow Knight Silksong.exe")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -59,10 +59,16 @@ public sealed class Plugin : BaseUnityPlugin
 #if LIVEINTERACT_QA
         qa = new QaHarness(this, actions, bridge);
 #endif
-        harmony = new Harmony("cn.liveinteract.silksong"); harmony.PatchAll(typeof(Plugin).Assembly);
+        harmony = new Harmony("cn.liveinteract.silksong");
+        // 逐个补丁类应用：某个补丁对不上时只记录，不让整个 Mod 加载失败。
+        foreach (var type in typeof(Plugin).Assembly.GetTypes().Where(item => item.GetCustomAttributes(typeof(HarmonyPatch), true).Length > 0))
+        {
+            try { harmony.PatchAll(type); }
+            catch (Exception error) { Logger.LogError("补丁未应用：" + type.Name + "：" + error.Message); }
+        }
         Application.logMessageReceived += OnUnityMessage;
         menuInfoUntil = Time.realtimeSinceStartup + 6;
-        Logger.LogInfo("直播互动 Mod 0.7.4 已加载；待游戏与直播实际验证。");
+        Logger.LogInfo("直播互动 Mod 0.7.5 已加载；待游戏与直播实际验证。");
     }
 
     private void Update()

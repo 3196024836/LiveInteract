@@ -33,7 +33,7 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     private float nearSince;
     private Vector3 lastHeroPosition;
     private string scene="";
-    public GameObject? TargetObject => enemy!=null && !enemy.isDead && enemy.hp>0 ? enemy.gameObject : followPoint != null ? followPoint : HeroController.SilentInstance?.gameObject;
+    public GameObject? TargetObject => enemy!=null && !enemy.isDead && enemy.hp>0 ? enemy.gameObject : followPoint!=null ? followPoint : gameObject; // 永不把主播当目标，兜底用自己
     private void Start()
     {
         fsms=GetComponentsInChildren<PlayMakerFSM>(true);weapons.AddRange(GetComponentsInChildren<DamageHero>(true));
@@ -178,6 +178,37 @@ internal static class FriendlyNativeCollisionHook
     private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
     {yield return AccessTools.Method(typeof(DamageHero),"OnTriggerEnter2D");yield return AccessTools.Method(typeof(DamageHero),"OnCollisionEnter2D");}
     private static bool Prefix(DamageHero __instance)=>!NativeAllyExecution.IsFriendly(__instance.gameObject);
+}
+/// <summary>友军不把主播当攻击目标：原生视野检测对友军恒为“看不见”。</summary>
+[HarmonyPatch]
+internal static class FriendlySeeHeroHook
+{
+    private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+    {
+        yield return AccessTools.Method(typeof(GetCanSeeHero),nameof(GetCanSeeHero.OnEnter));
+        yield return AccessTools.Method(typeof(GetCanSeeHero),nameof(GetCanSeeHero.OnUpdate));
+        yield return AccessTools.Method(typeof(GetCanSeeHeroV2),nameof(GetCanSeeHeroV2.OnEnter));
+        yield return AccessTools.Method(typeof(GetCanSeeHeroV2),nameof(GetCanSeeHeroV2.OnUpdate));
+    }
+    private static bool Prefix(FsmStateAction __instance)
+    {
+        if(__instance.Owner==null||__instance.Owner.GetComponentInParent<NativeEnemyAlly>()==null)return true;
+        if(__instance is GetCanSeeHero first){first.storeResult.Value=false;}
+        else if(__instance is GetCanSeeHeroV2 second){second.storeResult.Value=false;}
+        __instance.Finish(); // 直接结束这一帧，事件不触发。
+        return false;
+    }
+}
+/// <summary>朝向与贴身站位脚本在友军身上不执行，避免朝主播挥击或贴到主播身上。</summary>
+[HarmonyPatch]
+internal static class FriendlyHeroAttachHook
+{
+    private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+    {
+        yield return AccessTools.Method(typeof(MatchHeroFacing),"DoMatch");
+        yield return AccessTools.Method(typeof(PositionToHeroClamped),"Update");
+    }
+    private static bool Prefix(MonoBehaviour __instance)=>__instance.GetComponentInParent<NativeEnemyAlly>()==null;
 }
 /// <summary>友军可以承受敌人伤害；主播与其他友军的命中仍然不计，避免自己人误杀。</summary>
 [HarmonyPatch(typeof(HealthManager),nameof(HealthManager.Hit))]
