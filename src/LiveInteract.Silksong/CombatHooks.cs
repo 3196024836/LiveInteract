@@ -12,7 +12,7 @@ internal static class EnemyDamageHook
     /// <summary>修改当前命中数据，不永久覆盖武器配置。</summary>
     /// <param name="__0">实际命中结构。</param>
     private static bool Prefix(HealthManager __instance,ref HitInstance __0)
-    {if(__instance.GetComponentInParent<OwnedCompanion>()!=null)return false;GameActions.Current?.AdjustHit(ref __0);return true;}
+    {if(__instance.GetComponentInParent<OwnedCompanion>()!=null)return !NativeAllyExecution.IsHeroHit(__0);GameActions.Current?.AdjustHit(ref __0);return true;}
 }
 
 /// <summary>拦截正常角色受伤入口，维护临时免死与承伤倍率。</summary>

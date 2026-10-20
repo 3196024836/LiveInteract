@@ -55,6 +55,7 @@ internal sealed class GameActions
     private HealthManager[] hostileCache = Array.Empty<HealthManager>();
     internal HealthManager? FindHostile(Vector3 position,float radius)=>hostileCache.Where(e=>e!=null && !e.isDead && e.hp>0 && e.gameObject.activeInHierarchy && Vector3.Distance(e.transform.position,position)<=radius).OrderBy(e=>Vector3.SqrMagnitude(e.transform.position-position)).FirstOrDefault();
     private float nextCapture;
+    private bool hadControl;
     private bool infiniteSilk;
     private bool infiniteTools;
     private bool invincible;
@@ -124,8 +125,14 @@ internal sealed class GameActions
             if(lease.Object==null){spawnedOwners.Remove(lease.Id);companions.RemoveAt(index);continue;}
             if(CanAct && !float.IsPositiveInfinity(lease.RemainingSeconds))lease.RemainingSeconds-=Time.unscaledDeltaTime;
             if(lease.RemainingSeconds<=0){Object.Destroy(lease.Object);spawnedOwners.Remove(lease.Id);companions.RemoveAt(index);continue;}
-            if(lease.Object.GetComponent<NativeEnemyAlly>()!=null && !CanAct){lease.Object.SetActive(false);continue;}
-            if(!lease.Object.activeSelf && CanAct){lease.Object.transform.position=ExistingHero()!.transform.position+Vector3.up*1.5f;lease.Object.SetActive(true);}
+            // 死亡与过场不再隐藏友军：隐藏会让原生状态机停在旧一帧，重生后看起来就是“全消失”再卡住。
+            if(!lease.Object.activeSelf){lease.Object.SetActive(true);lease.Object.GetComponent<NativeEnemyAlly>()?.SnapToHero();}
+        }
+        var control=CanAct;
+        if(control!=hadControl)
+        {
+            hadControl=control;
+            if(control)foreach(var lease in companions)lease.Object?.GetComponent<NativeEnemyAlly>()?.SnapToHero();
         }
         for(var index=enemyTimers.Count-1;index>=0;index--)
         {
@@ -602,7 +609,7 @@ internal sealed class GameActions
         var data = ExistingPlayerData(); // 只读已有数据，禁止为心跳创建单例。
         var status = new GameStatus
         {
-            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.6.0", CanAct = CanAct,
+            Scene = SceneManager.GetActiveScene().name, GameVersion = Application.version, ModVersion = "0.6.1", CanAct = CanAct,
             Health = data?.health ?? 0, BlueHealth = data?.healthBlue ?? 0, ShieldPoints = shieldPoints, CompanionCount = CompanionCount, PickupCount = pickups.Count, SizeLayerCount = appearanceStacks.Where(a => a != null).Sum(a => a.Count), Silk = data?.silk ?? 0,
             ActiveEffects = effects.Describe(Time.realtimeSinceStartup).ToList(),
             SpawnableMonsterIds = monsterAssets.AvailableIds,

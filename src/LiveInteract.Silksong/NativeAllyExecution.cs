@@ -35,14 +35,19 @@ internal static class NativeAllyExecution
     {__state=new NativeCallState{Ally=Current,Spawned=InSpawnedFlow};var field=__instance.GetType().GetFields(BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public).OrderBy(f=>f.Name=="<>4__this"?0:1).FirstOrDefault(f=>typeof(MonoBehaviour).IsAssignableFrom(f.FieldType));var owner=field?.GetValue(__instance) as MonoBehaviour;Current=owner?.GetComponentInParent<NativeEnemyAlly>();InSpawnedFlow=InSpawnedFlow||owner?.GetComponentInParent<OwnedSummon>()!=null;}
     private static void After(NativeCallState __state){Current=__state.Ally;InSpawnedFlow=__state.Spawned;}
     public static bool IsFriendly(GameObject? source)=>source!=null&&(source.GetComponentInParent<OwnedCompanion>()!=null||source.GetComponentsInChildren<NativeAllyProjectile>(true).Any(p=>p.WasFriendly)||source.GetComponentInParent<NativeAllyProjectile>()?.WasFriendly==true);
+    /// <summary>来源属于主播或本工具友军；用于让友军只承受敌方伤害。</summary>
+    public static bool IsHeroOwned(GameObject? source)=>source!=null&&(source.GetComponentInParent<HeroController>()!=null||IsFriendly(source));
+    /// <summary>命中来自主播或友军本体时，友军不结算伤害；AttackTypes.Nail 是枚举零值，不能用来判定来源。</summary>
+    public static bool IsHeroHit(HitInstance hit)=>hit.IsHeroDamage||hit.IsNailTag||IsHeroOwned(hit.Source);
     public static void Dispose(){hooks.UnpatchSelf();patched.Clear();Current=null;InSpawnedFlow=false;}
 }
+/// <summary>原生状态机执行时保留真实召唤来源；不再用这个入口封锁全局存档写入，避免影响长椅、重生等原作流程。</summary>
 [HarmonyPatch]
 internal static class FriendlyFsmExecutionHook
 {
     private static IEnumerable<MethodBase> TargetMethods()=>typeof(Fsm).GetMethods(BindingFlags.Public|BindingFlags.Instance).Where(m=>m.DeclaringType==typeof(Fsm)&&(m.Name is "Update" or "FixedUpdate" or "LateUpdate" or "Event"));
-    private static void Prefix(Fsm __instance,out NativeCallState __state){__state=new NativeCallState{Ally=NativeAllyExecution.Current,Spawned=NativeAllyExecution.InSpawnedFlow};NativeAllyExecution.Current=__instance.GameObject?.GetComponentInParent<NativeEnemyAlly>();NativeAllyExecution.InSpawnedFlow=NativeAllyExecution.InSpawnedFlow||__instance.GameObject?.GetComponentInParent<OwnedSummon>()!=null;}
-    private static void Finalizer(NativeCallState __state){NativeAllyExecution.Current=__state.Ally;NativeAllyExecution.InSpawnedFlow=__state.Spawned;}
+    private static void Prefix(Fsm __instance,out NativeEnemyAlly? __state){__state=NativeAllyExecution.Current;if(__state==null)NativeAllyExecution.Current=__instance.GameObject?.GetComponentInParent<NativeEnemyAlly>();}
+    private static void Finalizer(NativeEnemyAlly? __state){NativeAllyExecution.Current=__state;}
 }
 /// <summary>池化原生投射物每次启用重新归属；离开友军来源时清除旧标记，避免把普通敌人子弹误当友军。</summary>
 internal sealed class NativeAllyProjectile : MonoBehaviour
@@ -82,22 +87,21 @@ internal static class FriendlyCoroutineOriginHook
     {
         if(__0==null||__0 is SummonScopedRoutine)return;
         var ally=NativeAllyExecution.Current ?? __instance.GetComponentInParent<NativeEnemyAlly>();
-        var spawned=NativeAllyExecution.InSpawnedFlow||__instance.GetComponentInParent<OwnedSummon>()!=null;
-        if(ally!=null||spawned)__0=new SummonScopedRoutine(__0,ally,spawned);
+        if(ally!=null)__0=new SummonScopedRoutine(__0,ally);
     }
 }
 internal sealed class SummonScopedRoutine : IEnumerator,IDisposable
 {
     private readonly IEnumerator inner;
     private readonly NativeEnemyAlly? ally;
-    private readonly bool hadFriendly,spawned;
-    public SummonScopedRoutine(IEnumerator inner,NativeEnemyAlly? ally,bool spawned){this.inner=inner;this.ally=ally;this.spawned=spawned;hadFriendly=ally!=null;}
-    public object? Current=>inner.Current is IEnumerator nested ? new SummonScopedRoutine(nested,ally,spawned) : inner.Current;
+    private readonly bool hadFriendly;
+    public SummonScopedRoutine(IEnumerator inner,NativeEnemyAlly? ally){this.inner=inner;this.ally=ally;hadFriendly=ally!=null;}
+    public object? Current=>inner.Current is IEnumerator nested ? new SummonScopedRoutine(nested,ally) : inner.Current;
     public bool MoveNext()
     {
         if(hadFriendly&&ally==null)return false;
         var previous=new NativeCallState{Ally=NativeAllyExecution.Current,Spawned=NativeAllyExecution.InSpawnedFlow};
-        NativeAllyExecution.Current=ally;NativeAllyExecution.InSpawnedFlow=spawned;
+        NativeAllyExecution.Current=ally;
         try{return inner.MoveNext();}finally{NativeAllyExecution.Current=previous.Ally;NativeAllyExecution.InSpawnedFlow=previous.Spawned;}
     }
     public void Reset()=>inner.Reset();

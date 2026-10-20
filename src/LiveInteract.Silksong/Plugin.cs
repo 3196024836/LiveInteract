@@ -15,7 +15,7 @@ using LiveInteract.Contracts;
 namespace LiveInteract.Silksong;
 
 /// <summary>主线程执行、可核对回执和简洁的渐隐触发提示。</summary>
-[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.6.0")]
+[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.6.1")]
 [BepInProcess("Hollow Knight Silksong.exe")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -39,6 +39,7 @@ public sealed class Plugin : BaseUnityPlugin
     private GUIStyle? label;
     private GUIStyle? ownerLabel;
     private bool stopping, wasConnected;
+    private int tickFailures;
     private Color textColor = new(0.85f, 0.98f, 0.96f);
     private float noticeSeconds = 5;
     private string lastScene = "";
@@ -60,7 +61,7 @@ public sealed class Plugin : BaseUnityPlugin
         harmony = new Harmony("cn.liveinteract.silksong"); harmony.PatchAll(typeof(Plugin).Assembly);
         Application.logMessageReceived += OnUnityMessage;
         menuInfoUntil = Time.realtimeSinceStartup + 6;
-        Logger.LogInfo("直播互动 Mod 0.6.0 已加载；待游戏与直播实际验证。");
+        Logger.LogInfo("直播互动 Mod 0.6.1 已加载；待游戏与直播实际验证。");
     }
 
     private void Update()
@@ -71,7 +72,9 @@ public sealed class Plugin : BaseUnityPlugin
         {
             Remember(new ActionResult { RequestId = request.Id, ErrorCode = "NOT_APPLIED", Retryable = true, Message = "连接断开前尚未执行，可安全重新排队" });
         }
-        actions.Tick();
+        // 单帧异常不能让整个插件停摆：否则死亡 / 过场后连接、心跳和友军维护都会一起停。
+        try { actions.Tick(); tickFailures = 0; }
+        catch (Exception exception) { if (++tickFailures is 1 or 30 or 300) { Logger.LogError("场景处理失败：" + exception); } }
         for (var n = 0; n < 10 && bridge.TryRead(out var message); n++)
         {
             if (message.Kind == "reset") { actions.Reset(); }
