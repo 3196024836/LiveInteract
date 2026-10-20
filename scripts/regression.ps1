@@ -40,6 +40,12 @@ $load = Join-Path $Output 'load-test.json'
 dotnet run --project tools\LoadTest -c Release -- 20 $load 2>&1 | Out-Null
 Record 'LoadTest' ($LASTEXITCODE -eq 0 -and (Test-Path $load)) ''
 
+Write-Output '== 4b. 热更替换冒烟 =='
+$updateFolder = Join-Path $Output 'update-smoke'
+dotnet run --project tools\UpdateSmoke -c Release -- $updateFolder 2>&1 | Out-Null
+$updateReport = Join-Path $updateFolder 'update-smoke.json'
+Record 'UpdateSmoke' ($LASTEXITCODE -eq 0 -and (Test-Path $updateReport) -and ((Get-Content $updateReport -Raw) -match '"Passed":\s*true')) ''
+
 Write-Output '== 5. 内嵌浏览器收包冒烟 =='
 $runtime = Get-ChildItem 'artifacts\webview2-fixed' -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($runtime -eq $null) { Record 'BrowserSmoke' $false '缺少固定 WebView2' }
