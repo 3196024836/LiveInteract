@@ -44,13 +44,14 @@ public partial class App : Application
             }
             if (e.Args.Length >= 2 && e.Args[0] == "--check-update")
             {
-                // 只查询清单并写出结果，方便脚本与验收核对。
+                // 只查询清单并写出结果，方便脚本与验收核对；可指定清单地址做本地演练。
+                var manifest = e.Args.Length >= 3 ? e.Args[2] : UpdateService.DefaultManifest;
                 var current = typeof(UpdateApplier).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
                 UpdateInfo? found = null;
                 string? failure = null;
-                try { found = UpdateService.CheckAsync(UpdateService.DefaultManifest, current, CancellationToken.None).GetAwaiter().GetResult(); }
+                try { found = await UpdateService.CheckAsync(manifest, current, CancellationToken.None); }
                 catch (Exception error) { failure = error.Message; }
-                File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { Current = current, Manifest = UpdateService.DefaultManifest, Available = found, Error = failure }, Formatting.Indented));
+                File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { Current = current, Manifest = manifest, Available = found, Error = failure }, Formatting.Indented));
                 Shutdown(failure == null ? 0 : 1); return;
             }
             if (e.Args.Length >= 3 && e.Args[0] == "--apply-update")
