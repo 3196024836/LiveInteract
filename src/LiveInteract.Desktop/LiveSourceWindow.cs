@@ -69,8 +69,14 @@ internal sealed class LiveSourceWindow : Window
         platformBox.SelectedItem = this.platform == BilibiliKey ? bilibiliItem : douyinItem; platformBox.SelectionChanged += (_, _) => SwitchPlatform(); platformRow.Children.Add(platformBox);
         panel.Children.Add(platformRow);
         consent = new CheckBox { Content = "我了解上述风险，同意本次打开本人直播间并验证接入" }; panel.Children.Add(consent);
-        installRuntime=new Button{Content="安装微软WebView2组件",Visibility=Visibility.Collapsed,HorizontalAlignment=HorizontalAlignment.Left,Margin=new(0,8,0,0)};
-        installRuntime.Click+=(_,_)=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://developer.microsoft.com/microsoft-edge/webview2/"){UseShellExecute=true});panel.Children.Add(installRuntime);
+        installRuntime=new Button{Content="在软件内准备浏览器组件",Visibility=Visibility.Collapsed,HorizontalAlignment=HorizontalAlignment.Left,Margin=new(0,8,0,0)};
+        installRuntime.Click+=async(_,_)=>
+        {
+            installRuntime.IsEnabled=false;SetStatus("正在通过内置安装器准备浏览器组件…");
+            try{await RuntimeComponents.EnsureWebViewAsync();installRuntime.Visibility=Visibility.Collapsed;await ConnectAsync();}
+            catch(Exception error){SetStatus("组件准备未完成："+error.Message);runtime.Log("组件安装",error.Message,false);}
+            finally{installRuntime.IsEnabled=true;}
+        };panel.Children.Add(installRuntime);
         var row = new DockPanel { Margin = new(0, 9, 0, 0) }; // 地址栏与显式连接按钮。
         connect = new Button { Content = "打开并监听", Style = (Style)FindResource("PrimaryButton"), Margin = new(10, 0, 0, 0) }; DockPanel.SetDock(connect, Dock.Right); row.Children.Add(connect);
         address = new TextBox { Text = rememberedRoom[this.platform], ToolTip = "直播间短号或直播页地址" }; row.Children.Add(address); panel.Children.Add(row);
@@ -111,7 +117,7 @@ internal sealed class LiveSourceWindow : Window
         {
             if (browser.CoreWebView2 == null)
             {
-                var fixedRuntime = Path.Combine(AppContext.BaseDirectory, "WebView2Runtime"); // 发行包可携带固定浏览器运行时。
+                var fixedRuntime = Path.Combine(App.InstallDirectory, "WebView2Runtime"); // 发行包可携带固定浏览器运行时。
                 var folder = Directory.Exists(fixedRuntime) ? fixedRuntime : null; // 否则使用系统已安装的 Evergreen。
                 environment = await CoreWebView2Environment.CreateAsync(folder, userData);
                 await browser.EnsureCoreWebView2Async(environment);
@@ -161,7 +167,7 @@ internal sealed class LiveSourceWindow : Window
             RememberRoom(); SelectionChanged?.Invoke(platform, url.GetLeftPart(UriPartial.Path));
             SetStatus("正在打开网页，尚未收到实际互动。礼物、点赞与弹幕会分别记录验证状态。");
         }
-        catch (WebView2RuntimeNotFoundException) { installRuntime.Visibility=Visibility.Visible; SetStatus("本机缺少WebView2组件，请点上方按钮到微软官网安装后重新连接。"); }
+        catch (WebView2RuntimeNotFoundException) { installRuntime.Visibility=Visibility.Visible; SetStatus("本机缺少WebView2组件，请点上方按钮在软件内自动准备后重新连接。"); }
         catch (Exception exception) { SetStatus("连接未完成：" + exception.Message); runtime.Log("接入错误", exception.GetType().Name + "：" + exception.Message, false); }
         finally { connect.IsEnabled = true; }
     }

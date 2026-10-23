@@ -25,9 +25,38 @@ public static class NativeSummons
     public static int Choice(string executionId,int count)
     { if(count<1)throw new ArgumentOutOfRangeException(nameof(count));var seed=17;foreach(var ch in executionId ?? "")seed=unchecked(seed*31+ch);return new Random(seed).Next(count); }
     public static MonsterDefinition Boss(string executionId)
-    { var pool=MonsterCatalog.All.Where(m=>m.IsBoss).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();return pool[Choice(executionId,pool.Length)]; }
-    public static NativeAllyDefinition FreeAlly(string executionId)=>Allies[Choice(executionId,2)];
-    public static MonsterDefinition RandomMonster(string executionId,bool includeBoss)=>ChooseMonster(executionId,includeBoss);
-    private static MonsterDefinition ChooseMonster(string id,bool bosses) { var pool=MonsterCatalog.All.Where(m=>bosses||!m.IsBoss).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();return pool[Choice(id,pool.Length)]; }
-    public static NativeAllyDefinition Convert(MonsterDefinition m,double power) => new NativeAllyDefinition { Id="ally.convert."+m.Id,MonsterId=m.Id,Name="友方"+m.Name,Flying=!m.IsBoss && new[]{"fly","wasp","gnat","gloom","crow","wraith"}.Any(n=>m.ObjectName.IndexOf(n,StringComparison.OrdinalIgnoreCase)>=0),DamageMultiplier=power };
+    {
+        var pool=MonsterCatalog.All.Where(m=>m.IsBoss&&m.CanFight&&m.SummonEligible&&m.RandomEligible).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();
+        if(pool.Length==0) { throw new InvalidOperationException("Boss池没有本轮批准且具有随机资格的战斗单位。"); }
+        return pool[Choice(executionId,pool.Length)];
+    }
+    public static NativeAllyDefinition FreeAlly(string executionId)
+    {
+        var pool=Allies.Take(2).Where(a=>MonsterCatalog.Find(a.MonsterId) is { CanFight:true, SummonEligible:true, RandomEligible:true }).ToArray();
+        if(pool.Length==0) { throw new InvalidOperationException("旧免费友军池没有本轮批准且具有随机资格的战斗单位。"); }
+        return pool[Choice(executionId,pool.Length)];
+    }
+    /// <summary>旧调用保持含义：false 为非 Boss 战斗单位，true 为全部战斗单位。</summary>
+    public static MonsterDefinition RandomMonster(string executionId,bool includeBoss)=>RandomMonster(executionId,includeBoss?"all":"ordinary");
+
+    /// <summary>新分档池按可攻击、召唤白名单与 Tier 抽取；旧 ordinary/all 另保留 RandomEligible。重试使用同一执行单位 ID。</summary>
+    public static MonsterDefinition RandomMonster(string executionId,string pool)
+    {
+        Func<MonsterDefinition,bool> accepts = pool switch
+        {
+            "weak" => m=>m.Tier==MonsterTier.Weak,
+            "strongBoss" => m=>m.Tier is MonsterTier.Strong or MonsterTier.Boss,
+            "ordinary" => m=>m.RandomEligible&&!m.IsBoss,
+            "all" => m=>m.RandomEligible,
+            _ => throw new ArgumentException("未知怪物随机池："+pool,nameof(pool))
+        };
+        var candidates=MonsterCatalog.All.Where(m=>m.CanFight&&m.SummonEligible&&accepts(m)).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();
+        if(candidates.Length==0) { throw new InvalidOperationException("该怪物随机池没有符合资格的本轮批准战斗单位："+pool); }
+        return candidates[Choice(executionId,candidates.Length)];
+    }
+    public static NativeAllyDefinition Convert(MonsterDefinition m,double power)
+    {
+        SummonEligibility.Require(m);
+        return new NativeAllyDefinition { Id="ally.convert."+m.Id,MonsterId=m.Id,Name="友方"+m.Name,Flying=!m.IsBoss && new[]{"fly","wasp","gnat","gloom","crow","wraith"}.Any(n=>m.ObjectName.IndexOf(n,StringComparison.OrdinalIgnoreCase)>=0),DamageMultiplier=power };
+    }
 }

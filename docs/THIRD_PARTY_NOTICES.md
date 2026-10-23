@@ -22,3 +22,10 @@ BepInEx 与各独立组件的许可文本及对应源码入口随包保留；本
 Windows 图标和界面图形为本项目自绘。
 
 SQLitePCLRaw copyright 2014-2024 SourceGear, LLC；Microsoft.Data.Sqlite copyright Microsoft Corporation / .NET Foundation and Contributors。发行包保留对应许可。
+
+## 本机原作场景对象提取
+
+- AssetHelperLib 0.12.1（MIT）：https://github.com/flibber-hk/AssetHelperLib，场景对象重打包库。
+- AssetsTools.NET 3.0.4（MIT）：https://github.com/nesrak1/AssetsTools.NET，Unity 资源格式读写库。
+
+只从用户自己的游戏安装目录读取原作对象，在 BepInEx/cache/LiveInteract 中生成本机缓存；不会改写原游戏资源，不在软件包中附带这些缓存或游戏素材。

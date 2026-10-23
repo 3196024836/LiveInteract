@@ -69,6 +69,7 @@ public sealed class InteractionJournal : IDisposable
     /// <summary>唯一输入计数；重放不增加。</summary>
     public long ReceivedCount { get { lock (gate) { return Number("SELECT COUNT(*) FROM events"); } } }
     public long PendingFrames { get { lock (gate) { return Number("SELECT COUNT(*) FROM frames WHERE done IN (0,3)"); } } }
+    public long PendingEvents { get { lock (gate) { return Number("SELECT COUNT(*) FROM events WHERE state='Received'"); } } }
     public long ReviewInputs { get { lock (gate) { return Number("SELECT COUNT(*) FROM events WHERE state='NeedsReview'"); } } }
     public long ReviewFrames { get { lock (gate) { return Number("SELECT COUNT(*) FROM frames WHERE done=2"); } } }
     public string DecoderState { get { lock (gate) { return Text("SELECT value FROM meta WHERE id='decoder'") ?? ""; } } }

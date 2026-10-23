@@ -74,10 +74,15 @@ public sealed class ActionExecutor
                     ActionId = step.ActionId, Arguments = new(step.Arguments), DurationSeconds = step.DurationSeconds,
                     Stacking = step.Stacking, AllowPersistent = allowPersistent && (persistentPermission?.Invoke() ?? true), DisplayText = displayText
                 };
-                if (step.ActionId is "summon.named.enemy" or "summon.named.ally" && context?.SourceType == LiveEventType.Chat)
+                if (step.ActionId is "summon.named" or "summon.named.enemy" or "summon.named.ally" && context?.SourceType == LiveEventType.Chat)
                 {
-                    try { request.Arguments["name"] = SummonCommands.Extract(context.InputText, step.ActionId == "summon.named.enemy" ? "生成怪物" : "生成小弟"); }
-                    catch (ArgumentException error) { return Reject(request, error.Message); }
+                    var prefix=new[]{"生成怪物","生成小弟"}.FirstOrDefault(p=>context.InputText.StartsWith(p,StringComparison.Ordinal));
+                    if(prefix!=null)
+                    {
+                        try { request.Arguments["name"]=SummonCommands.Extract(context.InputText,prefix); }
+                        catch(ArgumentException error){return Reject(request,error.Message);}
+                    }
+                    else if(!request.Arguments.TryGetValue("name",out var configured)||string.IsNullOrWhiteSpace(configured))return Reject(request,"请填写准确怪物名，或发送生成怪物＋名称 / 生成小弟＋名称。");
                 }
                 foreach (var pair in step.ParameterBindings)
                 {

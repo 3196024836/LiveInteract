@@ -19,12 +19,25 @@ internal sealed class ModPipeClient : IDisposable
     private volatile bool connected;
     private NamedPipeClientStream? current;
     private int disconnected;
+    private readonly string pipeName="LiveInteract.Silksong.v1";
     public event Action<string>? Diagnostic;
     public event Action<ActionRequest>? RequestAbandoned;
     public bool Connected => connected;
 
     public ModPipeClient()
     {
+#if LIVEINTERACT_QA
+        var qaConfig=Path.Combine(Path.GetDirectoryName(typeof(ModPipeClient).Assembly.Location)!,"liveinteract-qa.json");
+        if(File.Exists(qaConfig))
+        {
+            var privateName=(string?)Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(qaConfig))["PipeName"];
+            if(!string.IsNullOrWhiteSpace(privateName))
+            {
+                if(!privateName.StartsWith("LiveInteract.QA.",StringComparison.Ordinal))throw new InvalidDataException("QA管道必须使用独立前缀");
+                pipeName=privateName;
+            }
+        }
+#endif
         worker = new Thread(Run) { IsBackground = true, Name = "LiveInteract pipe" }; worker.Start();
     }
     public bool TryRead(out BridgeMessage message) => incoming.TryDequeue(out message!);
@@ -44,7 +57,7 @@ internal sealed class ModPipeClient : IDisposable
         {
             try
             {
-                using var pipe = new NamedPipeClientStream(".", "LiveInteract.Silksong.v1", PipeDirection.InOut, PipeOptions.Asynchronous);
+                using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
                 current = pipe; pipe.Connect(1000);
                 using var reader = new StreamReader(pipe);
                 var writer = new StreamWriter(pipe) { AutoFlush = true };

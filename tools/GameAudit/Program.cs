@@ -13,12 +13,14 @@ internal static class Program
     /// <summary>启动命名管道与验收请求文件循环。</summary>
     private static async Task Main(string[] args)
     {
+        var pipeName=args.Length>1?args[1]:"LiveInteract.Silksong.v1";
         folder = Path.GetFullPath(args[0]); Directory.CreateDirectory(folder);
         while (!File.Exists(Path.Combine(folder, "stop")))
         {
-            using var pipe = new NamedPipeServerStream("LiveInteract.Silksong.v1", PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+            using var pipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             Console.WriteLine("Waiting for game; results: " + folder);
             await pipe.WaitForConnectionAsync();
+            latest=new JObject();
             Console.WriteLine("Game connected");
             using var reader = new StreamReader(pipe, leaveOpen: true);
             var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
@@ -29,8 +31,14 @@ internal static class Program
                 {
                     foreach (var file in Directory.GetFiles(folder, "*.request.json").OrderBy(File.GetCreationTimeUtc))
                     {
-                        var command = JObject.Parse(await File.ReadAllTextAsync(file));
                         var id = Path.GetFileName(file)[..^13];
+                        JObject command;
+                        try { command = JObject.Parse(await File.ReadAllTextAsync(file)); }
+                        catch (JsonReaderException error) { await RejectAsync(file,id,"请求不是有效JSON："+error.Message); continue; }
+                        var requestedKind=(string?)command["Kind"]??"action";
+                        if(requestedKind is not ("qa" or "action")||requestedKind=="action"&&command["Request"] is not JObject)
+                        { await RejectAsync(file,id,"Kind必须是qa/action；action必须带Request对象。未向游戏发送。"); continue; }
+                        if(requestedKind!="qa"&&(string?)latest["DiagnosticSession"]!="isolated-QA")continue;
                         command["_Before"] = latest.DeepClone(); commands[id] = command;
                         var kind = (string?)command["Kind"] ?? "action";
                         JObject message;
@@ -55,6 +63,16 @@ internal static class Program
             try { await receive; } catch (Exception exception) { Console.WriteLine(exception.Message); }
             await Task.Delay(200);
         }
+    }
+
+    /// <summary>格式错误返回明确失败且不送游戏，不能让一个坏请求结束整个验收服务。</summary>
+    private static async Task RejectAsync(string file,string id,string error)
+    {
+        var result=new JObject{["At"]=DateTimeOffset.Now,["Result"]=new JObject{["RequestId"]=id,
+            ["Success"]=false,["ErrorCode"]="QA_INVALID_REQUEST",["Message"]=error},["AfterStatus"]=latest.DeepClone()};
+        await AtomicWriteAsync(Path.Combine(folder,id+".result.json"),result.ToString());
+        File.Move(file,file.Replace(".request.json",".rejected.json"));
+        Console.WriteLine(id+" rejected: "+error);
     }
 
     /// <summary>保存游戏实际回执，不能将发出指令当作通过。</summary>

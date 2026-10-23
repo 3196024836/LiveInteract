@@ -13,9 +13,28 @@ internal static class Program
             return 2;
         }
 
+        if(args[0]=="--repack" && args.Length>=4)
+        {
+            var output=Path.GetFullPath(args[2]);Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+            var data=new AssetHelperLib.Repacking.StrippedSceneRepacker().Repack(new(){SceneBundlePath=Path.GetFullPath(args[1]),OutBundlePath=output,ContainerPrefix="liveinteract",ObjectNames=args.Skip(3).ToList()});
+            var json=System.Text.Json.JsonSerializer.Serialize(data,new System.Text.Json.JsonSerializerOptions{WriteIndented=true});
+            File.WriteAllText(output+".json",json);Console.WriteLine(json);return (data.NonRepackedAssets?.Count??0)==0?0:3;
+        }
         // 以元数据方式打开文件，避免触发 Unity 静态初始化。
         using var assembly = AssemblyDefinition.ReadAssembly(args[0]);
         var allTypes = assembly.MainModule.Types.SelectMany(Flatten).ToArray();
+        if(args.Length>=4&&args[1]=="--calls")
+        {
+            foreach(var type in allTypes)foreach(var method in type.Methods.Where(m=>m.HasBody))
+                if(method.Body.Instructions.Any(i=>i.Operand is MethodReference called&&called.DeclaringType.FullName==args[2]&&called.Name==args[3]))Console.WriteLine(method.FullName);
+            return 0;
+        }
+        if(args.Length>=4&&args[1]=="--writes")
+        {
+            foreach(var type in allTypes)foreach(var method in type.Methods.Where(m=>m.HasBody))
+                if(method.Body.Instructions.Any(i=>i.OpCode.Code==Mono.Cecil.Cil.Code.Stfld&&i.Operand is FieldReference field&&field.DeclaringType.FullName==args[2]&&field.Name==args[3]))Console.WriteLine(method.FullName);
+            return 0;
+        }
         if (args.Length >= 4 && args[1] == "--il")
         {
             var type = allTypes.FirstOrDefault(t => t.FullName == args[2]);
@@ -40,7 +59,7 @@ internal static class Program
             Console.WriteLine("\nTYPE " + type.FullName + " : " + type.BaseType);
             foreach (var field in type.Fields)
             {
-                Console.WriteLine("  FIELD " + field.Attributes + " " + field.FieldType + " " + field.Name);
+                Console.WriteLine("  FIELD " + field.Attributes + " " + field.FieldType + " " + field.Name + (field.HasConstant ? " = " + field.Constant : ""));
             }
             foreach (var property in type.Properties)
             {

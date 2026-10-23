@@ -1,0 +1,26 @@
+{
+  "Version": "10.0.13",
+  "MinimumVersion": "10.0.0",
+  "MetadataSource": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json",
+  "Packages": [
+    {
+      "Id": "runtime",
+      "Title": ".NET 核心",
+      "Url": "https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.13/dotnet-runtime-10.0.13-win-x64.zip",
+      "Sha512": "2b98792ce86adc50899764ad2e4d21bd25cfda5432eeb0b4dfe7944f3ea049f9e0570a8f4aee92314d97cdb5f8b7be1363d501fc5012e680371e607af648ef40"
+    },
+    {
+      "Id": "aspnetcore-runtime",
+      "Title": "本机展示服务",
+      "Url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.13/aspnetcore-runtime-10.0.13-win-x64.zip",
+      "Sha512": "cf71f882366ea544beda44c812a7b26bc571fb3f0c5102249e615b9ee953fe5c2c5ee9198cda55f499ad55284bac7748abe35dd4478e528b94b71bc09d9403af"
+    },
+    {
+      "Id": "windowsdesktop",
+      "Title": "桌面界面",
+      "Url": "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.13/windowsdesktop-runtime-10.0.13-win-x64.zip",
+      "Sha512": "7cd78051b34f12239852e3685de57630aaeca0fd36e6ef3b41df3f256cf45a820377f316696c5e11316f0bb6e4e84e07fa99367e71472623b33c5d07405c4568"
+    }
+  ],
+  "WebViewUrl": "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
+}

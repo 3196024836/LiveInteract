@@ -55,11 +55,12 @@ public sealed class SaveBackups
         var recovery = Path.Combine(backups, "recovery-" + DateTime.Now.ToString("yyyyMMdd-HHmmss-fff") + "-" + Guid.NewGuid().ToString("N")[..6]); // 旧存档保留点。
         Directory.CreateDirectory(recovery);
         var hadCurrent = Directory.Exists(saves); // 当前目录是否存在。
-        if (hadCurrent) { Directory.Move(saves, Path.Combine(recovery, "data")); }
-        else { Directory.CreateDirectory(Path.Combine(recovery, "data")); }
-        File.WriteAllText(Path.Combine(recovery, "snapshot.json"), JsonConvert.SerializeObject(new SnapshotInfo { SourceDirectory = saves, SourceExisted = hadCurrent, CreatedAt = DateTimeOffset.Now }, Formatting.Indented));
+        // 恢复信息必须在移动当前存档前成功落盘，写失败时原目录仍在原位。
+        AtomicFile.WriteAllText(Path.Combine(recovery, "snapshot.json"), JsonConvert.SerializeObject(new SnapshotInfo { SourceDirectory = saves, SourceExisted = hadCurrent, CreatedAt = DateTimeOffset.Now }, Formatting.Indented));
         try
         {
+            if (hadCurrent) { Directory.Move(saves, Path.Combine(recovery, "data")); }
+            else { Directory.CreateDirectory(Path.Combine(recovery, "data")); }
             if (info.SourceExisted) { Directory.Move(staged, saves); }
             else { Directory.Delete(staged); }
         }

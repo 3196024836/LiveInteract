@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ using LiveInteract.Contracts;
 namespace LiveInteract.Silksong;
 
 /// <summary>主线程执行、可核对回执和简洁的渐隐触发提示。</summary>
-[BepInPlugin("cn.liveinteract.silksong", "直播互动工具箱", "0.7.10")]
+[BepInPlugin("cn.liveinteract.silksong", "花花直播互动", "0.9.0")]
 [BepInProcess("Hollow Knight Silksong.exe")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -38,6 +38,8 @@ public sealed class Plugin : BaseUnityPlugin
     private Font? font;
     private GUIStyle? label;
     private GUIStyle? ownerLabel;
+    private GUIStyle? clearHintLabel;
+    private string clearSummonsHotkey = "";
     private bool stopping, wasConnected;
     private int tickFailures;
     private Color textColor = new(0.85f, 0.98f, 0.96f);
@@ -52,9 +54,10 @@ public sealed class Plugin : BaseUnityPlugin
         Application.runInBackground = true;
         overlayEnabled = Config.Bind("Overlay", "Enabled", true, "游戏内简洁触发提示与怪物归属名");
         overlayFontSize = Config.Bind("Overlay", "FontSize", 18, "触发提示字号");
-        actions = new GameActions(); actions.Diagnostic += text => diagnostics.Enqueue(text);
+        actions = new GameActions(); actions.HasInFlightActions=()=>executing.Count>0; actions.Diagnostic += text => diagnostics.Enqueue(text);
         actions.PickupCollected += (who, text) => notices.Add(Time.realtimeSinceStartup, who, text, true, noticeSeconds);
         actions.PendingSpawned += (who, text) => notices.Add(Time.realtimeSinceStartup, who, text, true, noticeSeconds);
+        actions.SummonQueueCompleted += Remember;
         bridge = new ModPipeClient(); bridge.Diagnostic += text => diagnostics.Enqueue(text); bridge.RequestAbandoned += request => abandoned.Enqueue(request);
 #if LIVEINTERACT_QA
         qa = new QaHarness(this, actions, bridge);
@@ -64,17 +67,20 @@ public sealed class Plugin : BaseUnityPlugin
         foreach (var type in typeof(Plugin).Assembly.GetTypes().Where(item => item.GetCustomAttributes(typeof(HarmonyPatch), true).Length > 0))
         {
             try { harmony.PatchAll(type); }
-            catch (Exception error) { Logger.LogError("补丁未应用：" + type.Name + "：" + error.Message); }
+            catch (Exception error) { if(type.Name.StartsWith("Friendly",StringComparison.Ordinal)||type==typeof(HeroDamageHook)||type==typeof(ActualHealthDamageHook))NativeAllyExecution.ProtectionFailed(type.Name);if(type==typeof(SummonEndingActionHook)||type==typeof(SummonCinematicEntryHook)||type==typeof(SummonSceneTransitionHook))NativeAllyExecution.StoryProtectionFailed(type.Name);Logger.LogError("补丁未应用：" + type.Name + "：" + error); }
         }
         Application.logMessageReceived += OnUnityMessage;
         menuInfoUntil = Time.realtimeSinceStartup + 6;
-        Logger.LogInfo("直播互动 Mod 0.7.10 已加载；待游戏与直播实际验证。");
+        Logger.LogInfo("花花直播互动 Mod 0.9.0 已加载。");
     }
 
     private void Update()
     {
+#if LIVEINTERACT_QA
+        QaHostileContact.MaintainAll();
+#endif
         while (diagnostics.TryDequeue(out var diagnostic)) { Logger.LogWarning(diagnostic); }
-        if (bridge.ConsumeDisconnect()) { actions.ResetForScene(); }
+        if (bridge.ConsumeDisconnect()) { clearSummonsHotkey=""; actions.ResetForScene(); }
         while (abandoned.TryDequeue(out var request))
         {
             Remember(new ActionResult { RequestId = request.Id, ErrorCode = "NOT_APPLIED", Retryable = true, Message = "连接断开前尚未执行，可安全重新排队" });
@@ -89,11 +95,18 @@ public sealed class Plugin : BaseUnityPlugin
             {
                 var options = JObject.Parse(message.Text);
                 overlayEnabled.Value = (bool?)options["enabled"] ?? overlayEnabled.Value;
+                if(options["clearSummonsHotkey"]!=null){clearSummonsHotkey=DisplayNames.Clean((string?)options["clearSummonsHotkey"]??"");if(clearSummonsHotkey=="观众")clearSummonsHotkey="";}
                 var size = Math.Max(12, Math.Min(36, (int?)options["fontSize"] ?? 18));
-                if (size != overlayFontSize.Value) { overlayFontSize.Value = size; label = null; ownerLabel = null; }
+                if (size != overlayFontSize.Value) { overlayFontSize.Value = size; label = null; ownerLabel = null; clearHintLabel = null; }
                 if (ColorUtility.TryParseHtmlString((string?)options["accent"] ?? "#D9F9EF", out var parsed)) { textColor = parsed; }
                 noticeSeconds = Math.Max(1, Math.Min(30, (float?)options["seconds"] ?? 5));
                 actions.SpawnLimit = Math.Max(0, (int?)options["spawnLimit"] ?? 0);
+                actions.SummonTotalLimit=Math.Max(0,Math.Min(10000,(int?)options["summonTotalLimit"]??40));
+                actions.SummonIntervalSeconds=Math.Max(0,Math.Min(10,(double?)options["summonIntervalSeconds"]??.5));
+                actions.SummonQueueCapacity=Math.Max(1,Math.Min(10000,(int?)options["summonQueueCapacity"]??200));
+                actions.SummonQueuePaused=(bool?)options["summonQueuePaused"]??false;
+                actions.FactionOutlineEnabled=(bool?)options["factionOutlineEnabled"]??true;
+                actions.FactionOutlineWidth=SummonOutlineStyle.NormalizeWidth((double?)options["factionOutlineWidth"]??2);
             }
             else if (message.Kind == "receipt") { ReplyReceipt(message.Text); }
 #if LIVEINTERACT_QA
@@ -141,6 +154,12 @@ public sealed class Plugin : BaseUnityPlugin
             return;
         }
 
+        clearHintLabel ??= new GUIStyle(label) { fontSize=Math.Max(12,overlayFontSize.Value-3),alignment=TextAnchor.LowerRight,wordWrap=false };
+        var clearHint=bridge.Connected
+            ? (clearSummonsHotkey.Length>0?"["+clearSummonsHotkey+"] 清除双方召唤物":"清除召唤物 · 快捷键未启用")
+            : "清除召唤物 · 请连接互动工具";
+        var hintWidth=Math.Min(620,Screen.width-44);
+        DrawText(new Rect(Screen.width-hintWidth-22,Screen.height-42,hintWidth,26),clearHint,new Color(.75f,.85f,.8f),clearHintLabel);
         if (!overlayEnabled.Value) { return; }
         var rows = notices.Read(now);
         var lineHeight = overlayFontSize.Value + 12;
@@ -148,27 +167,25 @@ public sealed class Plugin : BaseUnityPlugin
         var pending = actions.PendingLabels().ToList();
         for (var index = 0; index < pending.Count; index++)
         {
-            var y = Screen.height - 24 - (rows.Count + pending.Count - index) * lineHeight;
+            var y = Screen.height - 54 - (rows.Count + pending.Count - index) * lineHeight;
             DrawText(new Rect(22, y, Math.Min(900, Screen.width - 44), lineHeight + 4), pending[index], new Color(1f, 0.85f, 0.45f), label);
         }
         for (var index = 0; index < rows.Count; index++)
         {
             var item = rows[index]; var color = item.Success ? textColor : new Color(1, 0.73f, 0.5f); color.a = (float)item.Alpha;
-            var y = Screen.height - 24 - (rows.Count - index) * lineHeight;
+            var y = Screen.height - 54 - (rows.Count - index) * lineHeight;
             DrawText(new Rect(22, y, Math.Min(900, Screen.width - 44), lineHeight + 4), item.Triggerer + " · " + item.Effect, color, label);
         }
         var camera = Camera.main;
         if (camera != null)
         {
-            var occupied = new List<Rect>();
             foreach (var item in actions.SpawnLabels())
             {
                 var point = camera.WorldToScreenPoint(item.Position);
                 if (point.z <= 0 || point.x < -100 || point.x > Screen.width + 100 || point.y < 0 || point.y > Screen.height) { continue; }
                 var width = Math.Min(320, Math.Max(60, ownerLabel!.CalcSize(new GUIContent(item.Name)).x + 12));
                 var rect = new Rect(Math.Max(2, Math.Min(Screen.width - width - 2, point.x - width / 2)), Screen.height - point.y - 27, width, 26);
-                while (rect.y > 2 && occupied.Any(previous => previous.Overlaps(rect))) { rect.y -= 26; }
-                occupied.Add(rect); DrawText(rect, item.Name, item.IsFriendly ? new Color(0.65f, 1, 0.84f) : Color.white, ownerLabel);
+                DrawText(rect, item.Name, item.IsFriendly ? new Color(0.72f, 1f, 0.82f) : new Color(1f, 0.36f, 0.36f), ownerLabel);
             }
         }
     }
@@ -176,7 +193,10 @@ public sealed class Plugin : BaseUnityPlugin
     private static void DrawText(Rect rect, string text, Color color, GUIStyle style)
     {
         var previous = GUI.color; GUI.color = new Color(0, 0, 0, color.a * 0.8f);
-        GUI.Label(new Rect(rect.x + 1, rect.y + 1, rect.width, rect.height), text, style);
+        GUI.Label(new Rect(rect.x - 1, rect.y, rect.width, rect.height), text, style);
+        GUI.Label(new Rect(rect.x + 1, rect.y, rect.width, rect.height), text, style);
+        GUI.Label(new Rect(rect.x, rect.y - 1, rect.width, rect.height), text, style);
+        GUI.Label(new Rect(rect.x, rect.y + 1, rect.width, rect.height), text, style);
         GUI.color = color; GUI.Label(rect, text, style); GUI.color = previous;
     }
     private void OnDestroy()
@@ -201,6 +221,7 @@ public sealed class Plugin : BaseUnityPlugin
         if (!executing.Add(request.Id)) { return; }
         lastAction = (request.Triggerer.Length > 0 ? request.Triggerer + " · " : "") + ActionPresentation.Describe(request);
         var watch = Stopwatch.StartNew(); var result = new ActionResult { RequestId = request.Id };
+        var clearEpoch=actions.SummonClearEpoch;
         try
         {
             var before = actions.ResourceEvidence(request.ActionId);
@@ -212,7 +233,13 @@ public sealed class Plugin : BaseUnityPlugin
                 result.ErrorCode = "NO_CHANGE"; result.Message += "（数值没有变化，可能已满或被当前状态抵挡）";
             }
         }
-        catch (DeferredActionException exception) { result.Message = exception.Message; result.ErrorCode = exception.Code; result.Retryable = true; }
+        catch (OperationCanceledException exception) { result.Message=exception.Message;result.ErrorCode="SUMMON_CLEARED";result.Retryable=false; }
+        catch (DeferredActionException exception)
+        {
+            if(SummonCommands.IsSummon(request.ActionId)&&clearEpoch!=actions.SummonClearEpoch)
+            {result.Message="召唤已由主播清除，本次在途请求取消，不再补生成。";result.ErrorCode="SUMMON_CLEARED";result.Retryable=false;}
+            else{result.Message=exception.Message;result.ErrorCode=exception.Code;result.Retryable=true;}
+        }
         catch (Exception exception)
         {
             var actual = exception is System.Reflection.TargetInvocationException invocation && invocation.InnerException != null ? invocation.InnerException : exception;

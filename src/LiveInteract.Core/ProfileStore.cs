@@ -44,7 +44,7 @@ public static class ProfileStore
         }
         foreach (var rule in profile.Rules)
         {
-            var errors = ValidateRule(rule); // 结构性错误。
+            var errors = ValidateRule(rule, false); // 读取保留旧规则，执行资格在实际执行与编辑保存时检查。
             if (errors.Count > 0)
             {
                 throw new InvalidDataException(rule.Name + "：" + string.Join("；", errors));
@@ -60,7 +60,9 @@ public static class ProfileStore
     /// <summary>校验规则和有界动作树，编辑阶段允许配置尚未获许可的永久动作。</summary>
     /// <param name="rule">被编辑的规则。</param>
     /// <returns>错误列表。</returns>
-    public static IReadOnlyList<string> ValidateRule(RuleDefinition rule)
+    public static IReadOnlyList<string> ValidateRule(RuleDefinition rule)=>ValidateRule(rule,true);
+
+    private static IReadOnlyList<string> ValidateRule(RuleDefinition rule,bool enforceSummonEligibility)
     {
         var errors = new List<string>(); // 本次校验错误。
         if (string.IsNullOrWhiteSpace(rule.Id) || string.IsNullOrWhiteSpace(rule.Name) || rule.Name.Length > 120 || rule.Trigger == null || rule.Root == null)
@@ -106,7 +108,8 @@ public static class ProfileStore
                     if (parameter == null || parameter.Kind is not (ParameterKind.Number or ParameterKind.Integer) || pair.Value == null || !Enum.IsDefined(pair.Value.Source) || !double.IsFinite(pair.Value.Multiplier) || !double.IsFinite(pair.Value.Offset)) { errors.Add("无效的数量联动配置。"); }
                     else { arguments[pair.Key] = parameter.DefaultValue; }
                 }
-                errors.AddRange(ActionValidation.Validate(new() { ActionId = step.ActionId, Arguments = arguments, DurationSeconds = step.DurationSeconds, Stacking = step.Stacking, AllowPersistent = true }));
+                var request=new ActionRequest { ActionId = step.ActionId, Arguments = arguments, DurationSeconds = step.DurationSeconds, Stacking = step.Stacking, AllowPersistent = true };
+                errors.AddRange(enforceSummonEligibility?ActionValidation.Validate(request):ActionValidation.ValidateStored(request));
             }
             if (step.Kind is StepKind.Sequence or StepKind.Parallel or StepKind.Repeat or StepKind.Random && step.Children.Count == 0)
             {
@@ -133,9 +136,6 @@ public static class ProfileStore
     {
         var json = JsonConvert.SerializeObject(profile, Formatting.Indented); // 先生成并复查文档。
         Read(json, false);
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(file))!);
-        var temporary = file + ".tmp"; // 同目录原子替换用临时文件。
-        File.WriteAllText(temporary, json);
-        File.Move(temporary, file, true);
+        AtomicFile.WriteAllText(file, json);
     }
 }

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
   <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF>
+  <Product>花花直播互动</Product><Title>花花直播互动</Title><Description>花花的直播游戏互动工具</Description>
   <AssemblyName>LiveInteract</AssemblyName><RootNamespace>LiveInteract.Desktop</RootNamespace>
   <ApplicationIcon>Assets/LiveInteract.ico</ApplicationIcon><ApplicationManifest>app.manifest</ApplicationManifest>
  </PropertyGroup>

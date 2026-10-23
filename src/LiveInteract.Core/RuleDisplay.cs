@@ -1,4 +1,4 @@
-using LiveInteract.Contracts;
+﻿using LiveInteract.Contracts;
 
 namespace LiveInteract.Core;
 
@@ -10,19 +10,44 @@ public static class RuleDisplay
     public static string Effect(ActionStep step)
     {
         if (step.Kind != StepKind.Action) { return "旧版组合 · " + step.Children.Count + " 项（原样保留）"; }
+        if(step.ActionId=="ally.copy-next")return "永久复制下次遇敌为友军 · 无目标保留";
         var descriptor = ActionCatalog.All.FirstOrDefault(item => item.Id == step.ActionId);
         var name = descriptor?.Name ?? step.ActionId;
         string Value(string key) => step.Arguments.GetValueOrDefault(key) ?? descriptor?.Parameters.FirstOrDefault(p => p.Key == key)?.DefaultValue ?? "";
+        if(SummonCommands.IsSummon(step.ActionId) && descriptor?.Parameters.Any(p=>p.Key=="faction")==true)
+            name=(SummonCommands.IsFriendly(step.ActionId,step.Arguments)?"友方 ":"敌方 ")+name.Replace("友方","").Replace("敌方","");
         if (descriptor?.Parameters.Any(p => p.Key == "count") == true) { name += " ×" + Value("count"); }
         else if (descriptor?.Parameters.Any(p => p.Key == "value") == true)
         {
             name += " " + Value("value") + (step.ActionId == "health.blue" ? " 点" : step.ActionId.StartsWith("health.") ? " 格" : step.ActionId.StartsWith("silk.") || step.ActionId is "boss.heal" or "boss.damage" or "enemy.heal" or "enemy.damage" ? " 点" : "");
         }
-        if (step.ActionId is "summon.random.ally" or "summon.random.enemy") { name += Value("pool") == "all" ? " · 含Boss池" : " · 普通怪池"; if(double.TryParse(Value("power"),System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out var strength) && strength>1)name += " · 强力"; }
+        if (step.ActionId is "summon.random" or "summon.random.ally" or "summon.random.enemy")
+        {
+            name += " · " + RandomPool(Value("pool"));
+            if (double.TryParse(Value("power"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var strength) && strength != 1)
+            {
+                name += " · 强度 " + strength.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "×";
+            }
+        }
         if (step.ActionId.StartsWith("ally.", StringComparison.Ordinal)) { name += Value("lifetime") == "0" ? " · 持续跟随" : " · " + Value("lifetime") + " 秒"; }
         if (descriptor?.IsTemporary == true) { name += step.DurationSeconds == 0 ? " · 永久" : " · " + step.DurationSeconds + " 秒"; }
+        var monster=MonsterCatalog.Find(step.ActionId);
+        if(monster==null&&NativeSummons.Find(step.ActionId) is {} ally) { monster=MonsterCatalog.Find(ally.MonsterId); }
+        if(monster==null&&step.ActionId is "summon.named" or "summon.named.ally" or "summon.named.enemy") { monster=SummonCommands.FindSource(Value("name")); }
+        if(monster==null&&step.ActionId is "enemy.spawn" or "boss.clone" or "enemy.asset" or "boss.asset") { monster=SummonCommands.FindSource(Value(step.ActionId is "enemy.asset" or "boss.asset"?"asset":"enemy")); }
+        if(monster!=null&&SummonEligibility.RejectionReason(monster) is { Length:>0 } rejection) { name+=" · "+rejection; }
         return name;
     }
+
+    /// <summary>旧配置的池名必须直接显出其与新分档池的差别。</summary>
+    public static string RandomPool(string pool) => pool switch
+    {
+        "weak" => "弱怪池",
+        "strongBoss" => "强怪 + Boss池",
+        "ordinary" => "旧版普通池（弱怪 + 强怪，无Boss）",
+        "all" => "旧版全池（弱怪 + 强怪 + Boss）",
+        _ => "未知池（" + pool + "）"
+    };
 
     private static string GiftRange(TriggerDefinition t) => t.FreeOrUnknownGiftOnly ? "（零价 / 单价未知）" : t.MinGiftUnitValue == 0 && t.MaxGiftUnitValue == 0 ? "" : "（" + (t.MaxGiftUnitValue == 0 ? "≥" + t.MinGiftUnitValue : t.MinGiftUnitValue + "–" + t.MaxGiftUnitValue) + "钻）";
 

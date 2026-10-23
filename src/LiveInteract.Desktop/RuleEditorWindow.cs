@@ -44,7 +44,8 @@ internal sealed class RuleEditorWindow : Window
             rule.Id = Guid.NewGuid().ToString("N"); rule.Name += " · 单效果"; rule.Enabled = false;
             rule.Root = new() { ActionId = "spawn.bone-goomba" };
         }
-        Title = "设置互动效果 · LiveInteract 0.6";
+        SummonCommands.Canonicalize(rule.Root);
+        Title = "设置互动效果 · 花花直播互动";
         Width = Math.Min(1160, SystemParameters.WorkArea.Width - 40);
         Height = Math.Min(850, SystemParameters.WorkArea.Height - 40);
         MinWidth = 940; MinHeight = 620; WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -134,8 +135,8 @@ internal sealed class RuleEditorWindow : Window
         rebuilding = true;
         var query = effectSearch.Text.Trim(); var group = category.SelectedValue?.ToString() ?? "全部效果";
         var available = ActionCatalog.UserFacing.ToList();
-        if (!available.Any(a => a.Id == rule.Root.ActionId)) { available.Add(ActionCatalog.All.First(a => a.Id == rule.Root.ActionId)); }
-        effectChoice.ItemsSource = available.Where(a => (group == "全部效果" || a.Category == group) && (query.Length == 0 || (a.Name + a.Category).Contains(query, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Category == "生成怪物" ? 0 : a.Category == "生命" ? 1 : a.Category == "丝线" ? 2 : a.Category == "丝技" ? 3 : 4).ThenBy(a => a.Category).ThenBy(a => a.Name).ToList();
+        if (ActionCatalog.IsSummonSelectable(rule.Root.ActionId) && !available.Any(a => a.Id == rule.Root.ActionId) && ActionCatalog.All.FirstOrDefault(a => a.Id == rule.Root.ActionId) is { Support: not "unavailable" } legacy) { available.Add(legacy); }
+        effectChoice.ItemsSource = available.Where(a => (group == "全部效果" || a.Category == group) && (query.Length == 0 || (a.Name + a.Category).Contains(query, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Category == "弱怪" ? 0 : a.Category == "强怪" ? 1 : a.Category == "Boss" ? 2 : a.Category == "生命" ? 3 : a.Category == "丝线" ? 4 : a.Category == "丝技" ? 5 : 6).ThenBy(a => a.Category).ThenBy(a => a.Name).ToList();
         effectChoice.SelectedValue = rule.Root.ActionId;
         if (effectChoice.SelectedItem != null) { effectChoice.ScrollIntoView(effectChoice.SelectedItem); }
         rebuilding = false;
@@ -146,7 +147,11 @@ internal sealed class RuleEditorWindow : Window
     private void SelectEffect()
     {
         if (rebuilding || effectChoice.SelectedItem is not ActionDescriptor selected) { return; }
-        if (rule.Root.ActionId != selected.Id) { rule.Root = new() { ActionId = selected.Id }; }
+        if (rule.Root.ActionId != selected.Id)
+        {
+            rule.Root = new() { ActionId = selected.Id };
+            if (selected.Id == "summon.random") { rule.Root.Arguments["pool"] = "weak"; }
+        }
         ShowEffect(); UpdatePreview();
     }
 
@@ -155,7 +160,8 @@ internal sealed class RuleEditorWindow : Window
     {
         var descriptor = ActionCatalog.All.First(a => a.Id == rule.Root.ActionId);
         effectTitle.Text = descriptor.Name;
-        effectDescription.Text = descriptor.Description + (descriptor.IsPersistent ? " 永久修改：执行前需要本次会话许可。" : "");
+        var blocked=MonsterCatalog.Find(rule.Root.ActionId) is {} monster?SummonEligibility.RejectionReason(monster):"";
+        effectDescription.Text = (blocked.Length>0?blocked:descriptor.Description) + (descriptor.IsPersistent ? " 永久修改：执行前需要本次会话许可。" : "");
         Ui.ActionFields(fields, rule.Root, game);
     }
 

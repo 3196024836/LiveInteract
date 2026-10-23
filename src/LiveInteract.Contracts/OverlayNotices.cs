@@ -52,6 +52,7 @@ public static class ActionPresentation
         if (descriptor == null) { return request.ActionId; }
         var suffix = descriptor.IsTemporary ? " · " + request.DurationSeconds + "秒" : "";
         var name = descriptor.Name;
+        if(descriptor.Parameters.Any(p=>p.Key=="faction"))name=(SummonCommands.IsFriendly(request.ActionId,request.Arguments)?"友方 ":"敌方 ")+name.Replace("友方","").Replace("敌方","");
         if (request.ActionId is "enemy.growStack" or "enemy.shrinkStack") { return (request.ActionId == "enemy.growStack" ? "变大" : "变小") + " · " + (request.DurationSeconds == 0 ? "永久" : request.DurationSeconds + "秒") + "（叠加）"; }
         if (request.ActionId.StartsWith("pickup.", StringComparison.Ordinal)) { return name + " +" + (request.Arguments.TryGetValue("value", out var amount) ? amount : "2") + "（拾取）"; }
         string Value(string key) => request.Arguments.TryGetValue(key, out var entered) ? entered : descriptor.Parameters.FirstOrDefault(p => p.Key == key)?.DefaultValue ?? "";

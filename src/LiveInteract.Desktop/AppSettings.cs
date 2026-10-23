@@ -1,4 +1,6 @@
 using System.IO;
+using LiveInteract.Core;
+using LiveInteract.Contracts;
 using Newtonsoft.Json;
 
 namespace LiveInteract.Desktop;
@@ -18,6 +20,9 @@ public sealed class AppSettings
     public bool BrowserOverlay { get; set; } = true;
     /// <summary>是否显示游戏内提示。</summary>
     public bool GameOverlay { get; set; } = true;
+    /// <summary>召唤物本体的阵营轮廓，与名字/通知显示独立。</summary>
+    public bool FactionOutlineEnabled { get; set; } = true;
+    public double FactionOutlineWidth { get; set; } = SummonOutlineStyle.DefaultWidth;
     /// <summary>昵称隐藏。</summary>
     public bool HideNicknames { get; set; }
     /// <summary>展示字体大小。</summary>
@@ -56,10 +61,20 @@ public sealed class AppSettings
     public int OverlayPort { get; set; } = 17573;
     /// <summary>本工具生成敌人同时存在上限。</summary>
     public int SpawnLimit { get; set; } = 40;
+    /// <summary>同时存在的双方召唤总上限，0为主播显式不限。</summary>
+    public int SummonTotalLimit { get; set; } = 40;
+    /// <summary>生成批次之间的最小秒数，排队时逐只补位。</summary>
+    public double SummonIntervalSeconds { get; set; } = .5;
+    /// <summary>游戏端排队容量，按触发项而非礼物份数计算。</summary>
+    public int SummonQueueCapacity { get; set; } = 200;
+    /// <summary>暂停补位时保留排队，不撤回礼物。</summary>
+    public bool SummonQueuePaused { get; set; }
     /// <summary>暂停新触发的可修改快捷键。</summary>
     public string PauseHotkey { get; set; } = "Ctrl+Alt+F10";
     /// <summary>紧急恢复的可修改快捷键。</summary>
     public string EmergencyHotkey { get; set; } = "Ctrl+Alt+F12";
+    /// <summary>清除双方召唤物的快捷键。</summary>
+    public string ClearSummonsHotkey { get; set; } = "F8";
     /// <summary>启动时自动检查更新。</summary>
     public bool AutoCheckUpdates { get; set; } = true;
     /// <summary>退出游戏后的待执行维护任务。</summary>
@@ -76,8 +91,6 @@ public sealed class AppSettings
     /// <param name="file">偏好路径。</param>
     public void Save(string file)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        File.WriteAllText(file + ".tmp", JsonConvert.SerializeObject(this, Formatting.Indented));
-        File.Move(file + ".tmp", file, true);
+        AtomicFile.WriteAllText(file, JsonConvert.SerializeObject(this, Formatting.Indented));
     }
 }

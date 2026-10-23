@@ -1,0 +1,30 @@
+{
+  "ApprovedIds": [
+    "spawn.bone-goomba",
+    "spawn.bone-spitter",
+    "spawn.dock-flyer",
+    "spawn.shellwood-wasp",
+    "spawn.shellwood-gnat",
+    "spawn.slab-fly-large"
+  ],
+  "ExclusionReasons": {
+    "spawn.surface-scuttler": "原作沙行虫只有警戒、背向逃跑、钻地和隐藏流程；未实例化原始预制体（含停用子物体）无DamageHero、DamageEnemies或ParticleDamageHero，敌方实机仅逃跑，不补造攻击，不开放敌友召唤。",
+    "spawn.bone-worm-blueturret": "生质蠕虫是固定地形体，不适合作为可移动的友敌召唤物。",
+    "spawn.seth": "赛斯原作 Dormant 出生/场景坐标仍待适配；本轮已重新纳入修复和完整实机验收，暂不开放，并非永久排除。",
+    "spawn.lilypad-fly": "原作滑叶虫为惊飞、返航和落水停栖单位，未见攻击链；不适合作为战斗召唤物。",
+    "spawn.lifeblood-fly": "原作生质飞籽为受击后提供蓝血的无意识囊体，非攻击单位；不适合作为战斗召唤物。",
+    "spawn.swamp-shaman": "旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。",
+    "spawn.bone-hunter-chief": "旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。",
+    "spawn.shakra": "旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。",
+    "spawn.arborium-keeper": "旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。",
+    "spawn.lost-lace": "旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。",
+    "spawn.pilgrim-bell-thrower": "朝圣钟卫身体朝向与行走速度的历史反例待重新核对修复；本轮已重新纳入完整实机验收，暂不开放，并非永久排除。",
+    "spawn.bloom-puncher": "原作拳击花为附着地形的固定花体，只有原地攻击/重生链，没有移动链；按固定地形单位排除，不开放敌友召唤。",
+    "spawn.bloom-shooter": "原作射击花为附着地形的固定花体，按出生朝向原地射击，没有移动链；按固定地形单位排除，不开放敌友召唤。",
+    "spawn.swamp-barnacle": "原作悬挂长触须的固定吞噬陷阱，依赖顶挂锚点/吞咽场景链，按固定地形单位排除，不开放敌友召唤。",
+    "spawn.lilypad-trap": "原作水域地形的捕食花攻击子体，依赖父机关回收，没有独立移动本体；按固定地形单位排除，不开放敌友召唤。",
+    "spawn.centipede-trap": "原作蜈蚣突袭依赖原场景墙/顶节点FindClosest，按固定地形机关排除，不开放敌友召唤。",
+    "spawn.fields-flock-flyers": "原作惊叫虫只有FlockFlyer受惊群飞/歌唱反应，没有DamageHero或攻击FSM；属于无攻击环境生物，不补造攻击，不开放敌友召唤。",
+    "spawn.coral-swimmer-small": "原作尤玛为游动装饰性生物；未实例化原始预制体（含全部停用子物体）无伤害组件，Control仅初始化、游动和Burst Out出场流程，无攻击链；按原作无攻击排除，不补造攻击，不开放敌友召唤。"
+  }
+}

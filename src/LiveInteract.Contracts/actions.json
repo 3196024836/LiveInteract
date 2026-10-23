@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "Id": "health.add",
     "Name": "角色回血",
@@ -1896,7 +1896,7 @@
     "Id": "summon.random.enemy",
     "Name": "随机召唤敌人",
     "Category": "召唤",
-    "Description": "从原生已映射名录独立随机选取每一只，可配置普通怪池或含Boss全池。转友方与Boss完整AI仍待实机确认。",
+    "Description": "从原生已映射名录独立随机选取每一只，可选择弱怪池或强怪 + Boss池；旧版普通池和全池保留原义。转友方与Boss完整AI仍待实机确认。",
     "IsPersistent": false,
     "IsTemporary": false,
     "RequiresGameplay": true,
@@ -1916,8 +1916,10 @@
         "Kind": 3,
         "DefaultValue": "ordinary",
         "Choices": {
-          "ordinary": "普通怪（无Boss）",
-          "all": "全池（可能Boss）"
+          "weak": "弱怪",
+          "strongBoss": "强怪 + Boss",
+          "ordinary": "旧版普通池（弱怪 + 强怪，无Boss）",
+          "all": "旧版全池（弱怪 + 强怪 + Boss）"
         }
       },
       {
@@ -1942,7 +1944,7 @@
     "Id": "summon.random.ally",
     "Name": "随机召唤友军",
     "Category": "召唤",
-    "Description": "从原生已映射名录独立随机选取每一只，可配置普通怪池或含Boss全池。转友方与Boss完整AI仍待实机确认。",
+    "Description": "从原生已映射名录独立随机选取每一只，可选择弱怪池或强怪 + Boss池；旧版普通池和全池保留原义。转友方与Boss完整AI仍待实机确认。",
     "IsPersistent": false,
     "IsTemporary": false,
     "RequiresGameplay": true,
@@ -1962,8 +1964,10 @@
         "Kind": 3,
         "DefaultValue": "ordinary",
         "Choices": {
-          "ordinary": "普通怪（无Boss）",
-          "all": "全池（可能Boss）"
+          "weak": "弱怪",
+          "strongBoss": "强怪 + Boss",
+          "ordinary": "旧版普通池（弱怪 + 强怪，无Boss）",
+          "all": "旧版全池（弱怪 + 强怪 + Boss）"
         }
       },
       {
@@ -2019,5 +2023,109 @@
         "Maximum": 12
       }
     ]
+  },
+  {
+    "Id": "summon.random",
+    "Name": "随机召唤怪物",
+    "Category": "召唤",
+    "Description": "先选择阵营，再配置数量、怪物池或准确名称；友方不以主播为攻击目标，敌方正常攻击。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 20
+      },
+      {
+        "Key": "pool",
+        "Label": "随机池",
+        "Kind": 3,
+        "DefaultValue": "ordinary",
+        "Choices": {
+          "weak": "弱怪",
+          "strongBoss": "强怪 + Boss",
+          "ordinary": "旧版普通池（弱怪 + 强怪，无Boss）",
+          "all": "旧版全池（弱怪 + 强怪 + Boss）"
+        }
+      },
+      {
+        "Key": "power",
+        "Label": "强度倍率（敌方Boss保持原生）",
+        "Kind": 0,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 8
+      },
+      {
+        "Key": "lifetime",
+        "Label": "存活秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "0",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "summon.named",
+    "Name": "按准确名称召唤怪物",
+    "Category": "召唤",
+    "Description": "先选择阵营，再配置数量、怪物池或准确名称；友方不以主播为攻击目标，敌方正常攻击。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "experimental",
+    "Parameters": [
+      {
+        "Key": "count",
+        "Label": "数量",
+        "Kind": 1,
+        "DefaultValue": "1",
+        "Minimum": 1,
+        "Maximum": 1
+      },
+      {
+        "Key": "name",
+        "Label": "准确怪名（弹幕自动提取）",
+        "Kind": 4,
+        "DefaultValue": ""
+      },
+      {
+        "Key": "lifetime",
+        "Label": "存活秒数（0＝不自动离场）",
+        "Kind": 0,
+        "DefaultValue": "5",
+        "Minimum": 0,
+        "Maximum": 600
+      }
+    ]
+  },
+  {
+    "Id": "game.clearSummons",
+    "Name": "清除全部召唤物（双方）",
+    "Category": "维护",
+    "Description": "主播清除本工具的友军、敌军、残留攻击及游戏端待生成召唤；不删除原场景怪物，不重置其他互动效果。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": false,
+    "Support": "implemented",
+    "Parameters": []
+  },
+  {
+    "Id": "ally.copy-next",
+    "Name": "永久复制下一只敌人为友军",
+    "Category": "友军",
+    "Description": "等待下一只同屏存活、已批准召唤的敌人，生成同种1倍友军，标注送礼者并描边；没有合适敌人就一直保留。无存续倒计时，仍可受伤、死亡或清场。",
+    "IsPersistent": false,
+    "IsTemporary": false,
+    "RequiresGameplay": true,
+    "Support": "implemented",
+    "Parameters": []
   }
 ]

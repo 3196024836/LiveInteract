@@ -43,7 +43,7 @@ internal static class Maintenance
     public static async Task<string> ElevateAsync(string operation, string directory, string dataDirectory)
     {
         var resultFile = Path.Combine(dataDirectory, "maintenance-result-" + Guid.NewGuid().ToString("N") + ".json"); // 只在当前用户专用目录回传结果。
-        var start = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden }; // 不提升浏览器或主界面。
+        var start = new ProcessStartInfo(File.Exists(App.LauncherPath)?App.LauncherPath:Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden }; // 不提升浏览器或主界面。
         start.ArgumentList.Add("--maintain"); start.ArgumentList.Add(operation); start.ArgumentList.Add(directory); start.ArgumentList.Add(resultFile);
         using var process = Process.Start(start) ?? throw new IOException("无法启动维护辅助进程。"); // 系统 UAC 由用户处理。
         await process.WaitForExitAsync();

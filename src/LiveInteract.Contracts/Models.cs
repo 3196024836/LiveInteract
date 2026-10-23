@@ -222,6 +222,9 @@ public sealed class ActionRequest
 {
     /// <summary>唯一指令标识，用于防止断线或超时重复执行。</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    /// <summary>排队分只时保留原随机种子与下标，避免等待改变已抽到的怪物。</summary>
+    public string SelectionSeed { get; set; } = "";
+    public int SelectionOffset { get; set; }
     /// <summary>目标游戏。</summary>
     public string GameId { get; set; } = "silksong";
     /// <summary>动作目录标识。</summary>
@@ -286,6 +289,17 @@ public sealed class GameStatus
     public int ShieldPoints { get; set; }
     /// <summary>本工具当前在场的原生友军数量。</summary>
     public int CompanionCount { get; set; }
+    /// <summary>怪物本体轮廓的有效开关与像素宽度。</summary>
+    public bool FactionOutlineEnabled { get; set; }
+    public double FactionOutlineWidth { get; set; }
+    /// <summary>仅本工具双方召唤物的实际在场数量。</summary>
+    public int SummonCount { get; set; }
+    /// <summary>游戏端排队的剩余只数和触发项数。</summary>
+    public int PendingSummonCount { get; set; }
+    public int PendingSummonRequests { get; set; }
+    public bool SummonQueuePaused { get; set; }
+    /// <summary>队头结果不明确时保留待核对，不悄悄丢弃或自动重复执行。</summary>
+    public string SummonQueueError { get; set; } = "";
     /// <summary>仍可拾取的应援补给数量。</summary>
     public int PickupCount { get; set; }
     /// <summary>独立倒计时的外观整活层数。</summary>

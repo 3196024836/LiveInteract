@@ -14,18 +14,34 @@ internal static class Program
     private static void Main(string[] args)
     {
         var folder = Path.GetFullPath(args[0]); Directory.CreateDirectory(folder);
-        var app = new App(); app.InitializeComponent(); var result = new Dictionary<string, object?>();
+        var app = new HarnessApp(); app.InitializeComponent(); var result = new Dictionary<string, object?>();
         var main = new MainWindow(Path.Combine(folder, "isolated-ui"), true) { Left = -20000, Top = -20000, WindowStartupLocation = WindowStartupLocation.Manual, ShowInTaskbar = false };
         main.Loaded += async (_, _) =>
         {
             try
             {
                 var runtime = Field<LiveRuntime>(main, "runtime");
+                string? UpdateBlock() => (string?)typeof(MainWindow).GetMethod("UpdateBlockReason", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(main, null);
+                Check(UpdateBlock() == null, "空闲界面被误判为不能更新（请确认当前游戏已关闭）");
+                runtime.SetEnabled(true);
+                Check(UpdateBlock()?.Contains("暂停") == true, "互动开启时没有阻止更新重启");
+                runtime.SetEnabled(false);
+                var frame = runtime.CaptureFrame(new byte[] { 1 }, "isolated");
+                Check(UpdateBlock()?.Contains("未完成") == true, "未解析帧没有阻止更新");
+                runtime.Journal.CompleteFrame(frame);
+                var pending = new LiveEvent { Id = "update-pending", Nickname = "更新保护", Type = LiveEventType.Chat };
+                runtime.Journal.AdmitEvents([pending], false);
+                Check(UpdateBlock()?.Contains("未完成") == true, "未评估事件没有阻止更新");
+                runtime.Journal.CommitDecision(pending, [], "isolated test");
+                Check(UpdateBlock() == null, "已处理输入仍阻止更新");
+                result["UpdateBlockedByLiveSwitchFramesAndEvents"] = true;
                 foreach (var type in new[] { LiveEventType.Chat, LiveEventType.Gift, LiveEventType.Like })
                 {
                     var input = new LiveEvent { Id = type.ToString(), Nickname = type == LiveEventType.Gift ? "礼物观众" : "其他观众", Type = type, Text = "测试输入" };
                     runtime.Journal.AdmitEvents([input], false); runtime.Journal.CommitDecision(input, [new RuleMatch(new() { Name = "界面验证", Root = new() { ActionId = "health.add" } }, 3)], "");
                 }
+                Check(UpdateBlock()?.Contains("未完成") == true, "排队任务没有阻止更新");
+                result["UpdateBlockedByPendingJobs"] = true;
                 Field<CheckBox>(main, "QueueAutoRefresh").IsChecked = false;
                 Field<ComboBox>(main, "QueueSourceFilter").SelectedValue = (int)LiveEventType.Gift;
                 Refresh(main); Check(Field<DataGrid>(main, "QueueGrid").Items.Count == 1, "来源筛选失败"); result["SourceFilter"] = true;
@@ -36,7 +52,17 @@ internal static class Program
                 Field<ComboBox>(main, "QueueViewFilter").SelectedValue = 1; Refresh(main); Check(Field<DataGrid>(main, "LogGrid").Items.Count == 1, "输入消息筛选失败"); result["InputView"] = true;
                 runtime.Log("测试错误", "本机显式故障原因", false);
                 await Task.Delay(450); Check(Field<Border>(main, "ConsoleErrorBanner").Visibility == Visibility.Visible && Field<TextBlock>(main, "ConsoleErrorText").Text.Contains("本机显式故障原因"), "即时错误横幅失败"); result["ImmediateErrorReason"] = true;
-                Check(runtime.Journal.QueryJobs().Sum(job => job.Remaining) == 9, "显示筛选修改了真实队列"); result["FilteringDoesNotConsumeQueue"] = true; result["Passed"] = true;
+                Check(runtime.Journal.QueryJobs().Sum(job => job.Remaining) == 9, "显示筛选修改了真实队列"); result["FilteringDoesNotConsumeQueue"] = true;
+                var settings = Path.Combine(folder, "isolated-ui", "settings.json");
+                File.WriteAllText(settings, "{}");
+                using (File.Open(settings, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+                {
+                    main.Close();
+                    Check(!Field<bool>(main, "closing") && main.IsLoaded, "设置写失败时关闭了主程序");
+                    Check(Field<TextBlock>(main, "FooterStatus").Text.Contains("未保存"), "保存失败没有直接显示原因");
+                }
+                result["SaveFailurePreventsShutdown"] = true;
+                result["Passed"] = true;
             }
             catch (Exception exception) { result["Passed"] = false; result["Error"] = exception.ToString(); }
             finally { File.WriteAllText(Path.Combine(folder, "queue-ui-smoke.json"), JsonConvert.SerializeObject(result, Formatting.Indented)); main.Close(); }

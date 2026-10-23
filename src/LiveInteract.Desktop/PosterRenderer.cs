@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -63,20 +63,35 @@ internal static class PosterRenderer
             var rows = rules.Select(rule =>
             {
                 var effect = Short(RuleDisplay.Effect(rule.Root));
-                // 随机召唤：写成“随机(强力)友军/敌人 ×N”，强度直接体现在文案里。
-                if (rule.Root.ActionId is "summon.random.ally" or "summon.random.enemy")
+                // 分档与倍率分别显示；旧版池不伪装成新分档池。
+                if (rule.Root.ActionId is "summon.random" or "summon.random.ally" or "summon.random.enemy")
                 {
                     var power = double.TryParse(rule.Root.Arguments.GetValueOrDefault("power"), NumberStyles.Float, CultureInfo.InvariantCulture, out var strength) ? strength : 1;
-                    var kind = rule.Root.ActionId.EndsWith(".ally", StringComparison.Ordinal) ? "友军" : "敌人";
-                    effect = "随机" + (power > 1 ? "强力" : "") + kind + " ×" + rule.Root.Arguments.GetValueOrDefault("count", "1");
+                    var kind = SummonCommands.IsFriendly(rule.Root.ActionId,rule.Root.Arguments) ? "友军" : "敌人";
+                    var pool = rule.Root.Arguments.GetValueOrDefault("pool", "ordinary") switch
+                    {
+                        "weak" => "弱怪",
+                        "strongBoss" => "强怪/Boss",
+                        "ordinary" => "旧普通池",
+                        "all" => "旧全池",
+                        _ => "未知池"
+                    };
+                    effect = "随机" + pool + kind + " ×" + rule.Root.Arguments.GetValueOrDefault("count", "1");
+                    if (power != 1) { effect += " · " + power.ToString("0.##", CultureInfo.InvariantCulture) + "×"; }
                 }
+                if(rule.Root.ActionId=="ally.copy-next")effect="下次遇敌复制友军 · 永久";
+                // 未完成验收的默认候选不能在说明图上看起来已开放。
+                if (MonsterCatalog.Find(rule.Root.ActionId) is { SummonEligible: false }) { effect += " · 未开放"; }
                 // 精准召唤有存在时限，这条必须留在图上。
-                if (rule.Root.ActionId is "summon.named.enemy" or "summon.named.ally" && rule.Root.Arguments.GetValueOrDefault("lifetime") is { Length: > 0 } lifetime && lifetime != "0")
+                if (rule.Root.ActionId is "summon.named" or "summon.named.enemy" or "summon.named.ally" && rule.Root.Arguments.GetValueOrDefault("lifetime") is { Length: > 0 } lifetime && lifetime != "0")
                 {
                     effect += " · " + lifetime + "秒";
                 }
                 var icon = rule.Trigger.Type == LiveEventType.Gift && GiftIcons.TryGetValue(rule.Trigger.GiftName, out var file) ? file : null;
-                return new Row(TriggerLabel(rule), effect, EffectBrush(effect), icon);
+                var brush = SummonCommands.IsSummon(rule.Root.ActionId)
+                    ? (SummonCommands.IsFriendly(rule.Root.ActionId, rule.Root.Arguments) ? Ally : Enemy)
+                    : EffectBrush(effect);
+                return new Row(TriggerLabel(rule), effect, brush, icon);
             }).ToList();
             if (rows.Count > 0) { sections.Add(new Section { Title = title, Rows = rows }); }
         }
@@ -103,7 +118,9 @@ internal static class PosterRenderer
     private static string TriggerLabel(RuleDefinition rule)
     {
         var trigger = rule.Trigger;
-        if (rule.Root.ActionId is "summon.named.enemy" or "summon.named.ally" && trigger.Type == LiveEventType.Chat)
+        if(rule.Root.ActionId=="ally.copy-next"&&trigger.Type==LiveEventType.Gift&&trigger.MinGiftUnitValue==trigger.MaxGiftUnitValue&&trigger.MinGiftUnitValue>0)
+            return trigger.GiftName+"（"+trigger.MinGiftUnitValue+"钻）";
+        if (rule.Root.ActionId is "summon.named" or "summon.named.enemy" or "summon.named.ally" && trigger.Type == LiveEventType.Chat)
         {
             return (trigger.Keywords.FirstOrDefault() ?? "生成") + "＋名字";
         }

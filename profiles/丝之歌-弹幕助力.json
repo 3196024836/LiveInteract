@@ -5,7 +5,7 @@
   "Rules": [
     {
       "Id": "v06-friend-melee",
-      "Name": "小弟 · 颅潜虫",
+      "Name": "小弟 → 原作机械随从1只",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -36,10 +36,10 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "ally.native.bone-goomba",
+        "ActionId": "ally.clockwork",
         "Arguments": {
           "count": "1",
-          "value": "1",
+          "value": "8",
           "lifetime": "0"
         },
         "ParameterBindings": {},
@@ -53,7 +53,7 @@
     },
     {
       "Id": "v06-friend-ranged",
-      "Name": "远程小弟 · 壳木蚋虫",
+      "Name": "远程小弟 → 码头飞工1只",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -84,10 +84,11 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "ally.native.shellwood-gnat",
+        "ActionId": "spawn.dock-flyer",
         "Arguments": {
           "count": "1",
-          "value": "1",
+          "faction": "ally",
+          "power": "1",
           "lifetime": "0"
         },
         "ParameterBindings": {},
@@ -135,6 +136,9 @@
         "ActionId": "spawn.bone-goomba",
         "Arguments": {
           "count": "1",
+          "faction": "enemy",
+          "power": "1",
+          "lifetime": "0",
           "offsetX": "5",
           "offsetY": "1"
         },
@@ -149,7 +153,7 @@
     },
     {
       "Id": "v06-enemy-ranged",
-      "Name": "远程小怪 · 圣厂投掷工",
+      "Name": "远程小怪 · 焦油螨",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -180,9 +184,12 @@
       "StopAfterMatch": true,
       "Root": {
         "Kind": 0,
-        "ActionId": "spawn.understore-thrower",
+        "ActionId": "spawn.bone-spitter",
         "Arguments": {
           "count": "1",
+          "faction": "enemy",
+          "power": "1",
+          "lifetime": "0",
           "offsetX": "6",
           "offsetY": "1"
         },
@@ -618,7 +625,7 @@
     },
     {
       "Id": "v06-heart",
-      "Name": "小心心 · 随机普通友军2只",
+      "Name": "小心心 · 随机弱怪友军2只",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -653,7 +660,7 @@
         "ActionId": "summon.random.ally",
         "Arguments": {
           "count": "2",
-          "pool": "ordinary",
+          "pool": "weak",
           "power": "1",
           "lifetime": "0"
         },
@@ -668,7 +675,7 @@
     },
     {
       "Id": "v06-note",
-      "Name": "玫瑰 · 随机普通敌军1只",
+      "Name": "玫瑰 · 随机弱怪敌军1只",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -700,7 +707,7 @@
         "ActionId": "summon.random.enemy",
         "Arguments": {
           "count": "1",
-          "pool": "ordinary",
+          "pool": "weak",
           "power": "1",
           "lifetime": "0"
         },
@@ -715,7 +722,7 @@
     },
     {
       "Id": "v06-strong-friend",
-      "Name": "棒棒糖 · 随机强力友军2只",
+      "Name": "棒棒糖 · 随机强怪/Boss友军2只",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -747,8 +754,8 @@
         "ActionId": "summon.random.ally",
         "Arguments": {
           "count": "2",
-          "pool": "all",
-          "power": "4",
+          "pool": "strongBoss",
+          "power": "1",
           "lifetime": "0"
         },
         "ParameterBindings": {},
@@ -762,7 +769,7 @@
     },
     {
       "Id": "v06-strong-enemy",
-      "Name": "给到夯 · 随机强力敌军1只",
+      "Name": "给到夯 · 随机强怪/Boss敌军1只",
       "Enabled": true,
       "GameId": "silksong",
       "Trigger": {
@@ -794,12 +801,54 @@
         "ActionId": "summon.random.enemy",
         "Arguments": {
           "count": "1",
-          "pool": "all",
-          "power": "2",
+          "pool": "strongBoss",
+          "power": "1",
           "lifetime": "0"
         },
         "ParameterBindings": {},
         "DurationSeconds": 8,
+        "RepeatCount": 1,
+        "DelaySeconds": 0,
+        "Weight": 1,
+        "Stacking": 2,
+        "Children": []
+      }
+    },
+    {
+      "Id": "v09-copy-next",
+      "Name": "大啤酒 → 永久复制下一只敌人为友军",
+      "Enabled": true,
+      "GameId": "silksong",
+      "Trigger": {
+        "Type": 1,
+        "Keywords": [],
+        "TextMatching": 1,
+        "GiftId": "",
+        "GiftName": "大啤酒",
+        "AllowedUsers": [],
+        "BlockedUsers": [],
+        "MinimumFanLevel": 0,
+        "RequireFollower": false,
+        "Counting": 0,
+        "SingleExecution": false,
+        "Threshold": 1,
+        "MinGiftUnitValue": 0,
+        "MaxGiftUnitValue": 0,
+        "FreeOrUnknownGiftOnly": false,
+        "GiftNameAliases": []
+      },
+      "Probability": 1,
+      "CooldownSeconds": 0,
+      "UserCooldownSeconds": 0,
+      "MaximumTriggers": 0,
+      "MaximumPerEvent": 1000,
+      "StopAfterMatch": true,
+      "Root": {
+        "Kind": 0,
+        "ActionId": "ally.copy-next",
+        "Arguments": {},
+        "ParameterBindings": {},
+        "DurationSeconds": 0,
         "RepeatCount": 1,
         "DelaySeconds": 0,
         "Weight": 1,

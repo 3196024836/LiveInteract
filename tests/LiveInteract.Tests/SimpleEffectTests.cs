@@ -5,6 +5,7 @@ using Xunit;
 namespace LiveInteract.Tests;
 
 /// <summary>验证具体效果及一份礼物一次效果的简明合同。</summary>
+[Collection("Monster pools")]
 public sealed class SimpleEffectTests
 {
     /// <summary>怪物要以实际中文名字出现在功能选项，而不是让用户填内部 ID。</summary>
@@ -27,6 +28,7 @@ public sealed class SimpleEffectTests
     [Fact]
     public async Task EachHeartTriggersOneSpawnWithConfiguredQuantity()
     {
+        using var approved = new ApprovedSummonsScope(new[] { "spawn.bone-goomba" });
         var rule = new RuleDefinition
         {
             Name = "小心心生成怪物", Enabled = true,

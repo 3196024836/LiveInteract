@@ -41,6 +41,8 @@ public partial class MainWindow : Window
     private int errorDispatchQueued;
     private bool initializing = true, maintenanceBusy, closing, persistentPrompt;
     private HwndSource? hotkeySource;
+    private HotkeyWindow? activeHotkeyCapture;
+    private bool clearHotkeyRegistered, clearingSummons;
 
     /// <summary>建立一体化工具；预览模式使用隔离数据且不占游戏连接。</summary>
     /// <param name="dataDirectory">本用户数据目录。</param>
@@ -63,7 +65,7 @@ public partial class MainWindow : Window
         if (!preview) { Width = Math.Min(1400, SystemParameters.WorkArea.Width - 40); Height = Math.Min(900, SystemParameters.WorkArea.Height - 40); }
         try { settings = AppSettings.Load(settingsFile); }
         catch (JsonException exception) { runtime.Log("配置错误", "偏好格式损坏，原文件保留：" + exception.Message, false); settings = new(); }
-        try { if (File.Exists(profileFile)) { profile = ProfileStore.Read(File.ReadAllText(profileFile), false); } else { var builtin=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json"); if(File.Exists(builtin)){profile=ProfileStore.Read(File.ReadAllText(builtin),false);settings.SpawnLimit=profile.SpawnLimitOverride??settings.SpawnLimit;ProfileStore.Save(profileFile,profile);} } }
+        try { if (File.Exists(profileFile)) { profile = ProfileStore.Read(File.ReadAllText(profileFile), false); } else { var builtin=Path.Combine(App.InstallDirectory,"profiles","丝之歌-弹幕助力.json"); if(File.Exists(builtin)){profile=ProfileStore.Read(File.ReadAllText(builtin),false);settings.SpawnLimit=profile.SpawnLimitOverride??settings.SpawnLimit;ProfileStore.Save(profileFile,profile);} } }
         catch (Exception exception) { runtime.Log("配置错误", "规则文件未载入，原文件保留：" + exception.Message, false); }
         runtime.ApplyProfile(profile);
         LogGrid.ItemsSource = records;
@@ -78,9 +80,10 @@ public partial class MainWindow : Window
         AutoUpdateCheck.IsChecked = settings.AutoCheckUpdates;
         BrowserSourceCheck.IsChecked = settings.BrowserShowSource; BrowserResultCheck.IsChecked = settings.BrowserShowResult; BrowserEffectsCheck.IsChecked = settings.BrowserShowEffects; BrowserProgressCheck.IsChecked = settings.BrowserShowProgress;
         GameSourceCheck.IsChecked = settings.GameShowSource; GameResultCheck.IsChecked = settings.GameShowResult; GameEffectsCheck.IsChecked = settings.GameShowEffects; GameProgressCheck.IsChecked = settings.GameShowProgress;
-        GamePathBox.Text = settings.GameDirectory; GameOverlayCheck.IsChecked = settings.GameOverlay; BrowserOverlayCheck.IsChecked = settings.BrowserOverlay; HideNamesCheck.IsChecked = settings.HideNicknames;
+        GamePathBox.Text = settings.GameDirectory; GameOverlayCheck.IsChecked = settings.GameOverlay; FactionOutlineCheck.IsChecked=settings.FactionOutlineEnabled;FactionOutlineWidthBox.Text=settings.FactionOutlineWidth.ToString(CultureInfo.InvariantCulture); BrowserOverlayCheck.IsChecked = settings.BrowserOverlay; HideNamesCheck.IsChecked = settings.HideNicknames;
         OverlayFontBox.Text = settings.FontSize.ToString(); AccentBox.Text = settings.Accent; PortBox.Text = settings.OverlayPort.ToString(); SpawnLimitBox.Text = settings.SpawnLimit.ToString();
-        PauseHotkeyText.Text = settings.PauseHotkey + " · 暂停 / 恢复新触发"; EmergencyHotkeyText.Text = settings.EmergencyHotkey + " · 紧急停止与恢复";
+        SummonTotalLimitBox.Text=settings.SummonTotalLimit.ToString();SummonIntervalBox.Text=settings.SummonIntervalSeconds.ToString(CultureInfo.InvariantCulture);SummonQueueCapacityBox.Text=settings.SummonQueueCapacity.ToString();SummonQueuePausedCheck.IsChecked=settings.SummonQueuePaused;
+        PauseHotkeyText.Text = settings.PauseHotkey + " · 暂停 / 恢复新触发"; EmergencyHotkeyText.Text = settings.EmergencyHotkey + " · 紧急停止与恢复"; ClearSummonsHotkeyText.Text = settings.ClearSummonsHotkey + " · 清除全部召唤物（双方）";
         runtime.HideNicknames = false; settings.HideNicknames = false; HideNamesCheck.IsChecked = false; CatalogCountText.Text = ActionCatalog.All.Count + " 项动作定义 · 实际效果逐项验收";
         initializing = false; NavigationChanged(null, null); RefreshRules(); FilterActions(null, null); RefreshEnvironment(true); RefreshBackups();
         timer.Tick += async (_, _) => await RefreshUiAsync(); timer.Start();
@@ -94,10 +97,11 @@ public partial class MainWindow : Window
             }
             else { OverlayUrlBox.Text = "http://127.0.0.1:17573/overlay"; }
             FooterStatus.Text = "本地服务已就绪；互动总开关保持关闭。";
-            UpdateStatusText.Text = "当前版本 v" + CurrentVersion() + " · 更新源 GitHub";
+            ShowLastUpdateResult();
             if (!preview && settings.AutoCheckUpdates)
             {
-                try { await Task.Delay(2500); await CheckForUpdatesAsync(false); }
+                try { await Task.Delay(2500, updateShutdown.Token); await CheckForUpdatesAsync(false); }
+                catch (OperationCanceledException) when (closing) { }
                 catch (Exception exception) { runtime.Log("检查更新", exception.Message, false); }
             }
         };
@@ -110,7 +114,7 @@ public partial class MainWindow : Window
     private void NavigationChanged(object? sender, SelectionChangedEventArgs? e)
     {
         if (Pages == null || Navigation == null) { return; }
-        Pages.SelectedIndex = Navigation.SelectedIndex; PageTitle.Text = (Navigation.SelectedItem as ListBoxItem)?.Content?.ToString() ?? "直播互动工具箱";
+        Pages.SelectedIndex = Navigation.SelectedIndex; PageTitle.Text = (Navigation.SelectedItem as ListBoxItem)?.Content?.ToString() ?? "花花直播互动";
     }
 
     /// <summary>开始真实互动前自动检查游戏准备，游戏未就绪时提供明确下一步。</summary>
@@ -267,7 +271,7 @@ public partial class MainWindow : Window
     /// <summary>明确确认后采用随包默认方案，不覆盖未备份的用户规则。</summary>
     private async void UseBuiltinProfileClick(object? sender,RoutedEventArgs e)=>await GuardAsync(async()=>
     {
-        var file=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json");
+        var file=Path.Combine(App.InstallDirectory,"profiles","丝之歌-弹幕助力.json");
         var candidate=ProfileStore.Read(File.ReadAllText(file),false);
         if(MessageBox.Show(this,"使用内置最新方案？原规则先备份，互动总开关保持关闭。","内置方案",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
         runtime.SetEnabled(false);if(File.Exists(profileFile))File.Copy(profileFile,profileFile+".backup-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
@@ -286,7 +290,7 @@ public partial class MainWindow : Window
 
     private async void LoadDefaultProfileClick(object? sender, RoutedEventArgs e) => await GuardAsync(async () =>
     {
-        var directory = Path.Combine(AppContext.BaseDirectory, "profiles");
+        var directory = Path.Combine(App.InstallDirectory, "profiles");
         var dialog = new OpenFileDialog { Filter = "互动规则配置 (*.json)|*.json", Title = "选择默认 / 自定义配置文件", InitialDirectory = Directory.Exists(directory) ? directory : dataDirectory, FileName = "丝之歌-弹幕助力.json" };
         if (dialog.ShowDialog(this) != true) { return; }
         var candidate = ProfileStore.Read(File.ReadAllText(dialog.FileName), false);
@@ -441,19 +445,28 @@ public partial class MainWindow : Window
     {
         if (!int.TryParse(OverlayFontBox.Text, out var size) || size is < 12 or > 48) { throw new InvalidDataException("字号应为 12 至 48。"); }
         if (!int.TryParse(PortBox.Text, out var port) || port is < 1024 or > 65535) { throw new InvalidDataException("本机端口应为 1024 至 65535。"); }
-        if (!int.TryParse(SpawnLimitBox.Text, out var limit) || limit is < 0 or > 10000) { throw new InvalidDataException("生成上限应为0至10000；0表示不设总上限。"); }
+        if (!int.TryParse(SpawnLimitBox.Text, out var limit) || limit is < 0 or > 10000) { throw new InvalidDataException("敌方额外上限应为0至10000；0表示只受双方总上限约束。"); }
         if (!System.Text.RegularExpressions.Regex.IsMatch(AccentBox.Text, "^#[0-9a-fA-F]{6}$")) { throw new InvalidDataException("主色格式应为 #RRGGBB。"); }
         if (!int.TryParse(GameFontBox.Text, out var gameFont) || gameFont is < 12 or > 36) { throw new InvalidDataException("游戏内字号应为 12 至 36。"); }
         if (!double.TryParse(GameDurationBox.Text, CultureInfo.InvariantCulture, out var gameSeconds) || !double.IsFinite(gameSeconds) || gameSeconds is < 1 or > 60 || !double.TryParse(BrowserDurationBox.Text, CultureInfo.InvariantCulture, out var browserSeconds) || !double.IsFinite(browserSeconds) || browserSeconds is < 1 or > 60) { throw new InvalidDataException("提示持续时间应为 1 至 60 秒。"); }
         if (!System.Text.RegularExpressions.Regex.IsMatch(GameAccentBox.Text, "^#[0-9a-fA-F]{6}$")) { throw new InvalidDataException("游戏内主色格式应为 #RRGGBB。"); }
+        if(!int.TryParse(SummonTotalLimitBox.Text,out var totalLimit)||totalLimit is <0 or >10000)throw new InvalidDataException("双方总上限应为0至10000；0表示不限。");
+        if(!double.TryParse(SummonIntervalBox.Text,NumberStyles.Float,CultureInfo.InvariantCulture,out var spawnInterval)||!double.IsFinite(spawnInterval)||spawnInterval is <0 or >10)throw new InvalidDataException("生成间隔应为0至10秒；推荐0.5秒。");
+        if(!int.TryParse(SummonQueueCapacityBox.Text,out var queueCapacity)||queueCapacity is <1 or >10000)throw new InvalidDataException("召唤队列容量应为1至10000次触发。");
+        if(!double.TryParse(FactionOutlineWidthBox.Text,NumberStyles.Float,CultureInfo.InvariantCulture,out var outlineWidth)||!double.IsFinite(outlineWidth)||outlineWidth is <1 or >5)throw new InvalidDataException("怪物描边粗细应为1至5像素。");
+        var previousSettings=JsonConvert.DeserializeObject<AppSettings>(JsonConvert.SerializeObject(settings))!;
+        settings.FactionOutlineEnabled=FactionOutlineCheck.IsChecked==true;settings.FactionOutlineWidth=outlineWidth;
         settings.GameFontSize = gameFont; settings.GameCorner = GameCornerBox.SelectedValue?.ToString() ?? "BottomLeft"; settings.GameAccent = GameAccentBox.Text; settings.GameNoticeSeconds = gameSeconds; settings.BrowserNoticeSeconds = browserSeconds;
         settings.GameShowSource = GameSourceCheck.IsChecked == true; settings.GameShowResult = GameResultCheck.IsChecked == true; settings.GameShowEffects = GameEffectsCheck.IsChecked == true; settings.GameShowProgress = GameProgressCheck.IsChecked == true;
         settings.BrowserShowSource = BrowserSourceCheck.IsChecked == true; settings.BrowserShowResult = BrowserResultCheck.IsChecked == true; settings.BrowserShowEffects = BrowserEffectsCheck.IsChecked == true; settings.BrowserShowProgress = BrowserProgressCheck.IsChecked == true;
         var changedPort = port != settings.OverlayPort; // 服务端口的明确重启条件。
         settings.GameOverlay = GameOverlayCheck.IsChecked == true; settings.BrowserOverlay = BrowserOverlayCheck.IsChecked == true; settings.HideNicknames = HideNamesCheck.IsChecked == true;
+        settings.SummonTotalLimit=totalLimit;settings.SummonIntervalSeconds=spawnInterval;settings.SummonQueueCapacity=queueCapacity;settings.SummonQueuePaused=SummonQueuePausedCheck.IsChecked==true;
         settings.FontSize = size; settings.OverlayPort = port; settings.Corner = CornerBox.SelectedValue?.ToString() ?? "BottomLeft"; settings.Accent = AccentBox.Text; settings.SpawnLimit = limit;
-        runtime.HideNicknames = false; SavePreferences(); await ApplyGameSettingsAsync();
-        SettingsResultText.Text = changedPort ? "设置已保存；本机展示端口将在重启工具后生效。" : "设置已应用。永久修改许可只对当前会话有效。";
+        runtime.HideNicknames = false;
+        try{SavePreferences(true);}catch{settings=previousSettings;throw;}
+        await ApplyGameSettingsAsync();
+        SettingsResultText.Text = changedPort ? "设置已保存；本机展示端口将在重启工具后生效。" : (runtime.Game.IsConnected?"设置已保存并发送；游戏端同步状态见上方。":"设置已保存，连接游戏后自动同步。");
     });
 
     /// <summary>复制只读浏览器源地址。</summary>
@@ -581,7 +594,7 @@ public partial class MainWindow : Window
     /// <returns>安装组件与当前便携包不同则返回真。</returns>
     private bool ModNeedsUpdate()
     {
-        foreach (var name in new[] { "LiveInteract.Silksong.dll", "LiveInteract.Contracts.dll" })
+        foreach (var name in new[] { "LiveInteract.Silksong.dll", "LiveInteract.Contracts.dll", "AssetHelperLib.dll", "AssetsTools.NET.dll" })
         {
             var expected = Path.Combine(App.PayloadDirectory, "mod", name); // 发行包的已知组件。
             var installed = Path.Combine(environment.Directory, GameDetector.EnabledPath, name);
@@ -613,8 +626,15 @@ public partial class MainWindow : Window
         ShowPendingError();
         if (ticks % 2 == 0 && QueueAutoRefresh.IsChecked == true) { RefreshQueueView(); }
         for (var index = 0; index < 80 && inbox.TryDequeue(out var entry); index++) { records.Insert(0, entry); if (records.Count > 1200) { records.RemoveAt(records.Count - 1); } FooterStatus.Text = entry.Message; }
-        SuccessCount.Text = runtime.Completed.ToString(); InputCount.Text = "真实事件 " + runtime.Received + "   ·   模拟 " + runtime.Simulated; FooterQueue.Text = "队列 " + runtime.Pending + "  ·  未执行 " + runtime.Failed;
+        SuccessCount.Text = runtime.Completed.ToString(); InputCount.Text = "真实事件 " + runtime.Received + "   ·   模拟 " + runtime.Simulated; FooterQueue.Text = "控制台队列 " + runtime.Pending + " · 游戏待生成 " + (runtime.Game.Status?.PendingSummonCount??0) + " 只 · 未执行 " + runtime.Failed;
         LiveButton.Content = runtime.Enabled ? "暂停新触发" : "开启互动"; GameDot.Fill = Ui.Brush(runtime.Game.IsConnected ? "#79E0C8" : "#D4A965");
+        var summonStatus=runtime.Game.Status;
+        FactionOutlineStatusText.Text=!runtime.Game.IsConnected?"本体轮廓与名字/队列独立；连接游戏后同步":
+            !Version.TryParse(summonStatus?.ModVersion,out var outlineMod)||outlineMod<new Version(0,8,5)?"怪物本体描边需更新Mod到0.8.5":
+            summonStatus!.FactionOutlineEnabled?"本体轮廓已开启 · 友军绿边 / 敌军红边 · "+summonStatus.FactionOutlineWidth.ToString("0.#",CultureInfo.InvariantCulture)+"像素":"怪物本体描边已关闭";
+        SummonQueueStatusText.Text=!runtime.Game.IsConnected?"游戏未连接 · 设置将在连接后同步":
+            !Version.TryParse(summonStatus?.ModVersion,out var queueMod)||queueMod<new Version(0,8,4)?"请先更新Mod到0.8.4，旧版不支持双方总量与排队设置":
+            "场上 "+summonStatus!.SummonCount+" / "+(settings.SummonTotalLimit==0?"不限":settings.SummonTotalLimit.ToString())+" 只 · 待生成 "+summonStatus.PendingSummonCount+" 只（"+summonStatus.PendingSummonRequests+" 次触发）"+(summonStatus.SummonQueuePaused?" · 已暂停补位":"")+(summonStatus.SummonQueueError.Length>0?" · 队头异常，查看控制台":"");
         GameStatusText.Text = runtime.Game.IsConnected ? (runtime.Game.Status?.CanAct == true ? "游戏已连接 · 可操作" : "游戏已连接 · 等待进入场景") : environment.GameFound ? "游戏未连接 · " + (environment.ModEnabled ? "请启动游戏" : "先准备 Mod") : "未找到游戏";
         if (++ticks % 8 == 0)
         {
@@ -633,7 +653,7 @@ public partial class MainWindow : Window
     private async Task ApplyGameSettingsAsync()
     {
         if (!runtime.Game.IsConnected) { return; }
-        try { await runtime.Game.ConfigureAsync(JsonConvert.SerializeObject(new { enabled = settings.GameOverlay, fontSize = settings.GameFontSize, corner = settings.GameCorner, accent = settings.GameAccent, seconds = settings.GameNoticeSeconds, showSource = settings.GameShowSource, showResult = settings.GameShowResult, showEffects = settings.GameShowEffects, showProgress = settings.GameShowProgress, progress = profile.Rules.Where(item => item.Enabled && item.Trigger.Counting == TriggerCounting.RoomTotal).Take(4).Select(item => item.Name + " · " + runtime.RuleProgress(item.Id).Accumulated + "/" + item.Trigger.Threshold).ToArray(), spawnLimit = settings.SpawnLimit })); }
+        try { await runtime.Game.ConfigureAsync(JsonConvert.SerializeObject(new { enabled = settings.GameOverlay, factionOutlineEnabled=settings.FactionOutlineEnabled, factionOutlineWidth=settings.FactionOutlineWidth, fontSize = settings.GameFontSize, corner = settings.GameCorner, accent = settings.GameAccent, seconds = settings.GameNoticeSeconds, showSource = settings.GameShowSource, showResult = settings.GameShowResult, showEffects = settings.GameShowEffects, showProgress = settings.GameShowProgress, progress = profile.Rules.Where(item => item.Enabled && item.Trigger.Counting == TriggerCounting.RoomTotal).Take(4).Select(item => item.Name + " · " + runtime.RuleProgress(item.Id).Accumulated + "/" + item.Trigger.Threshold).ToArray(), spawnLimit = settings.SpawnLimit, summonTotalLimit=settings.SummonTotalLimit, summonIntervalSeconds=settings.SummonIntervalSeconds, summonQueueCapacity=settings.SummonQueueCapacity, summonQueuePaused=settings.SummonQueuePaused, clearSummonsHotkey = clearHotkeyRegistered ? settings.ClearSummonsHotkey : "" })); }
         catch (IOException exception) { runtime.Log("设置同步", exception.Message, false); }
     }
 
@@ -696,10 +716,10 @@ public partial class MainWindow : Window
     }
 
     /// <summary>保存可恢复的本机设置。</summary>
-    private void SavePreferences()
+    private void SavePreferences(bool requireSuccess = false)
     {
         try { settings.Save(settingsFile); }
-        catch (Exception exception) { runtime.Log("设置保存", exception.Message, false); }
+        catch (Exception exception) { runtime.Log("设置保存", exception.Message, false); if (requireSuccess) { throw; } }
     }
 
     /// <summary>正常通过 Steam 启动，不调用桌面控制。</summary>
@@ -712,69 +732,6 @@ public partial class MainWindow : Window
     /// <summary>把操作失败转换为可以处理的界面提示。</summary>
     /// <param name="action">用户操作。</param>
     /// <returns>操作任务。</returns>
-    /// <summary>当前程序版本，用来和远端更新清单比较。</summary>
-    private static string CurrentVersion() => typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
-
-    private bool updateBusy;
-
-    /// <summary>手动点击检查更新。</summary>
-    private async void CheckUpdateClick(object? sender, RoutedEventArgs e) => await GuardAsync(() => CheckForUpdatesAsync(true));
-
-    /// <summary>查询远端清单；有更新时询问，确认后下载并在重启时替换。</summary>
-    private async Task CheckForUpdatesAsync(bool manual)
-    {
-        if (updateBusy) { return; }
-        updateBusy = true;
-        try
-        {
-            var current = CurrentVersion();
-            UpdateStatusText.Text = "正在检查更新…";
-            var info = await UpdateService.CheckAsync(UpdateService.DefaultManifest, current, CancellationToken.None);
-            if (info == null)
-            {
-                UpdateStatusText.Text = "已是最新版本 v" + current + "（" + DateTime.Now.ToString("HH:mm") + " 检查）";
-                if (manual) { MessageBox.Show(this, "已是最新版本：v" + current + "。", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information); }
-                return;
-            }
-            UpdateStatusText.Text = "发现新版本 v" + info.Version + "（当前 v" + current + "）";
-            var notes = string.IsNullOrWhiteSpace(info.Notes) ? "" : "\n\n更新说明：\n" + info.Notes;
-            var question = "发现新版本 v" + info.Version + "（当前 v" + current + "）。" + notes + "\n\n是否现在更新？程序会自动关闭，替换完成后重新打开；规则、存档与浏览器登录状态都会保留。";
-            if (MessageBox.Show(this, question, "检查更新", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-            {
-                UpdateStatusText.Text = "已跳过 v" + info.Version + "，下次启动仍会提示";
-                return;
-            }
-            await ApplyUpdateAsync(info);
-        }
-        catch (Exception exception)
-        {
-            UpdateStatusText.Text = "检查更新失败：" + exception.Message;
-            if (manual) { MessageBox.Show(this, "检查更新失败：" + exception.Message, "检查更新", MessageBoxButton.OK, MessageBoxImage.Warning); }
-        }
-        finally { updateBusy = false; }
-    }
-
-    /// <summary>下载校验后交给临时副本进程，替换完成会自动重开。</summary>
-    private async Task ApplyUpdateAsync(UpdateInfo info)
-    {
-        var progress = new Progress<double>(value => UpdateStatusText.Text = "正在下载更新包 " + (int)(value * 100) + "%");
-        var zip = await UpdateService.DownloadAsync(info, progress, CancellationToken.None);
-        UpdateStatusText.Text = "正在解压并准备替换…";
-        var staging = UpdateService.Stage(zip, info.Version, dataDirectory);
-        try { File.Delete(zip); } catch (IOException) { }
-        var helper = Path.Combine(Path.GetTempPath(), "LiveInteract-update-" + info.Version + ".exe");
-        File.Copy(Environment.ProcessPath!, helper, true); // 安装目录里的 exe 正被占用，用临时副本执行替换。
-        Process.Start(new ProcessStartInfo(helper, "--apply-update \"" + staging + "\" \"" + AppContext.BaseDirectory.TrimEnd('\\') + "\" " + Environment.ProcessId) { UseShellExecute = true, WorkingDirectory = Path.GetTempPath() });
-        runtime.Log("更新", "已下载 v" + info.Version + "，正在重启完成更新");
-        Application.Current.Shutdown();
-    }
-
-    private void AutoUpdateChanged(object? sender, RoutedEventArgs e)
-    {
-        settings.AutoCheckUpdates = AutoUpdateCheck.IsChecked == true;
-        SavePreferences();
-    }
-
     /// <summary>统一处理界面操作的异常，不弹无关的系统错误。</summary>
     private async Task GuardAsync(Func<Task> action)
     {
@@ -791,6 +748,14 @@ public partial class MainWindow : Window
         var pause = HotkeyWindow.Parse(settings.PauseHotkey); var emergency = HotkeyWindow.Parse(settings.EmergencyHotkey); // 本人已保存的组合键。
         if (!RegisterHotKey(handle, 10, pause.Modifiers, pause.Key)) { runtime.Log("快捷键", "Ctrl+Alt+F10 注册失败，可能被占用；界面暂停按钮仍可使用。", false); }
         if (!RegisterHotKey(handle, 12, emergency.Modifiers, emergency.Key)) { runtime.Log("快捷键", "Ctrl+Alt+F12 注册失败，可能被占用；界面紧急停止仍可使用。", false); }
+        try
+        {
+            var clear=HotkeyWindow.Parse(settings.ClearSummonsHotkey,true);
+            clearHotkeyRegistered=RegisterHotKey(handle,14,clear.Modifiers,clear.Key);
+            if(!clearHotkeyRegistered)runtime.Log("清除快捷键",settings.ClearSummonsHotkey+" 已被占用，请在画面与设置中更换。",false);
+        }
+        catch(FormatException error){runtime.Log("清除快捷键",error.Message,false);}
+
     }
 
     /// <summary>本人设置组合键并立即检查占用，失败时恢复旧绑定。</summary>
@@ -798,22 +763,59 @@ public partial class MainWindow : Window
     /// <param name="e">事件。</param>
     private void ChangeHotkeyClick(object? sender, RoutedEventArgs e)
     {
-        var emergency = (sender as Button)?.Tag?.ToString() == "emergency"; // 要更改的保护操作。
-        var current = emergency ? settings.EmergencyHotkey : settings.PauseHotkey;
-        var dialog = new HotkeyWindow(current) { Owner = this };
-        if (dialog.ShowDialog() != true || dialog.SelectedHotkey == null) { return; }
-        if (dialog.SelectedHotkey == (emergency ? settings.PauseHotkey : settings.EmergencyHotkey)) { MessageBox.Show(this, "两项操作不能使用同一快捷键。", "快捷键冲突"); return; }
-        var id = emergency ? 12 : 10; var handle = new WindowInteropHelper(this).Handle; var next = HotkeyWindow.Parse(dialog.SelectedHotkey); // 当前窗口与新绑定。
-        if (!preview)
+        var operation=(sender as Button)?.Tag?.ToString()??"pause";
+        var clear=operation=="clearSummons";
+        var emergency=operation=="emergency";
+        var current=clear?settings.ClearSummonsHotkey:emergency?settings.EmergencyHotkey:settings.PauseHotkey;
+        var dialog=new HotkeyWindow(current,clear){Owner=this,Title=clear?"修改清除召唤快捷键":"修改快捷键"};
+        bool? accepted;
+        activeHotkeyCapture=dialog;
+        try{accepted=dialog.ShowDialog();}finally{activeHotkeyCapture=null;}
+        if(accepted!=true||dialog.SelectedHotkey==null)return;
+        var others=clear?new[]{settings.PauseHotkey,settings.EmergencyHotkey}:emergency?new[]{settings.PauseHotkey,settings.ClearSummonsHotkey}:new[]{settings.EmergencyHotkey,settings.ClearSummonsHotkey};
+        if(others.Contains(dialog.SelectedHotkey)){MessageBox.Show(this,"三项操作不能使用同一快捷键。","快捷键冲突");return;}
+        var id=clear?14:emergency?12:10;
+        var handle=new WindowInteropHelper(this).Handle;
+        var next=HotkeyWindow.Parse(dialog.SelectedHotkey,clear);
+        if(!preview)
         {
-            UnregisterHotKey(handle, id);
-            if (!RegisterHotKey(handle, id, next.Modifiers, next.Key))
+            UnregisterHotKey(handle,id);
+            if(!RegisterHotKey(handle,id,next.Modifiers,next.Key))
             {
-                var old = HotkeyWindow.Parse(current); RegisterHotKey(handle, id, old.Modifiers, old.Key); MessageBox.Show(this, "该组合键已被占用，已保留原来的快捷键。", "无法注册快捷键"); return;
+                var old=HotkeyWindow.Parse(current,clear);var restored=RegisterHotKey(handle,id,old.Modifiers,old.Key);
+                if(clear)clearHotkeyRegistered=restored;
+                MessageBox.Show(this,"该组合键已被占用，已尝试恢复原快捷键。","无法注册快捷键");return;
             }
         }
-        if (emergency) { settings.EmergencyHotkey = dialog.SelectedHotkey; } else { settings.PauseHotkey = dialog.SelectedHotkey; }
-        PauseHotkeyText.Text = settings.PauseHotkey + " · 暂停 / 恢复新触发"; EmergencyHotkeyText.Text = settings.EmergencyHotkey + " · 紧急停止与恢复"; SavePreferences();
+        if(clear){settings.ClearSummonsHotkey=dialog.SelectedHotkey;clearHotkeyRegistered=!preview;}
+        else if(emergency)settings.EmergencyHotkey=dialog.SelectedHotkey;
+        else settings.PauseHotkey=dialog.SelectedHotkey;
+        try{SavePreferences(true);}
+        catch(Exception error)
+        {
+            if(clear)settings.ClearSummonsHotkey=current;else if(emergency)settings.EmergencyHotkey=current;else settings.PauseHotkey=current;
+            if(!preview){UnregisterHotKey(handle,id);var old=HotkeyWindow.Parse(current,clear);var restored=RegisterHotKey(handle,id,old.Modifiers,old.Key);if(clear)clearHotkeyRegistered=restored;}
+            FooterStatus.Text="快捷键未保存，已保留原设置："+error.Message;return;
+        }
+        PauseHotkeyText.Text=settings.PauseHotkey+" · 暂停 / 恢复新触发";
+        EmergencyHotkeyText.Text=settings.EmergencyHotkey+" · 紧急停止与恢复";
+        ClearSummonsHotkeyText.Text=settings.ClearSummonsHotkey+" · 清除全部召唤物（双方）";
+        _=ApplyGameSettingsAsync();
+    }
+
+    /// <summary>直接向游戏发送独立清场请求，收到回执后才提示完成；不关闭互动。</summary>
+    private async Task ClearAllSummonsAsync()
+    {
+        if(clearingSummons)return;
+        clearingSummons=true;
+        try
+        {
+            var result=await runtime.Game.ExecuteAsync(new(){ActionId="game.clearSummons",Triggerer="主播",EffectText="清除全部召唤物（双方）"},CancellationToken.None);
+            runtime.Log("清除召唤",result.Message,result.Success);
+            FooterStatus.Text=result.Message;
+        }
+        catch(Exception error){runtime.Log("清除召唤",error.Message,false);FooterStatus.Text="清除未完成："+error.Message;}
+        finally{clearingSummons=false;}
     }
 
     /// <summary>只处理本工具注册的保护快捷键。</summary>
@@ -825,21 +827,42 @@ public partial class MainWindow : Window
     /// <returns>默认消息结果。</returns>
     private nint HotkeyMessage(nint hwnd, int message, nint wParam, nint lParam, ref bool handled)
     {
-        if (message == 0x0312) { handled = true; if (wParam == 12) { _ = runtime.EmergencyStopAsync(); } else if (wParam == 10) { if (runtime.Enabled) { runtime.SetEnabled(false); } else { ToggleLive(this, new()); } } }
+        if(message!=0x0312||(wParam!=10&&wParam!=12&&wParam!=14))return 0;
+        handled=true;
+        if(activeHotkeyCapture!=null)
+        {
+            activeHotkeyCapture.RecordRegisteredShortcut(wParam==14?settings.ClearSummonsHotkey:wParam==12?settings.EmergencyHotkey:settings.PauseHotkey);
+            return 0;
+        }
+        if(wParam==12)_=runtime.EmergencyStopAsync();
+        else if(wParam==14)_=ClearAllSummonsAsync();
+        else if(runtime.Enabled)runtime.SetEnabled(false);
+        else ToggleLive(this,new());
         return 0;
     }
 
-    /// <summary>等待临时效果恢复和服务停止后关闭，避免先关闭进程再丢失恢复命令。</summary>
+    /// <summary>先确认偏好已保存，再等待服务停止；保存失败时窗口和直播服务保持运行。</summary>
     /// <param name="sender">窗口。</param>
     /// <param name="e">关闭事件。</param>
     private async void OnClosing(object? sender, CancelEventArgs e)
     {
         if (closing) { return; }
-        e.Cancel = true; closing = true; timer.Stop(); source?.Close();
-        if (!preview) { var handle = new WindowInteropHelper(this).Handle; UnregisterHotKey(handle, 10); UnregisterHotKey(handle, 12); }
-        SavePreferences();
+        e.Cancel = true;
+        try { SavePreferences(true); }
+        catch (Exception error)
+        {
+            runtime.Log("关闭未完成", "设置保存失败，程序保持运行：" + error.Message, false);
+            FooterStatus.Text = "设置未保存，暂未退出：" + error.Message;
+            return;
+        }
+        closing = true; updateShutdown.Cancel(); timer.Stop(); source?.Close();
+        if (!preview) { var handle = new WindowInteropHelper(this).Handle; UnregisterHotKey(handle, 10); UnregisterHotKey(handle, 12); UnregisterHotKey(handle, 14); }
         try { await runtime.DisposeAsync(); await overlay.DisposeAsync(); }
-        catch (Exception exception) { File.WriteAllText(Path.Combine(dataDirectory, "shutdown-error.txt"), exception.ToString()); }
+        catch (Exception exception)
+        {
+            try { AtomicFile.WriteAllText(Path.Combine(dataDirectory, "shutdown-error.txt"), exception.ToString()); }
+            catch (Exception write) when (write is IOException or UnauthorizedAccessException) { }
+        }
         _ = Dispatcher.InvokeAsync(Close, DispatcherPriority.Background);
     }
 

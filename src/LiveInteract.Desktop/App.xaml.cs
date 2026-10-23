@@ -11,6 +11,11 @@ namespace LiveInteract.Desktop;
 /// <summary>原生 Windows 入口，普通界面不请求管理员权限；提供可审计的维护与自检入口。</summary>
 public partial class App : Application
 {
+    /// <summary>发行入口可能把内置主程序释放到缓存，配置/载荷始终从真正安装目录读取。</summary>
+    internal static string InstallDirectory => string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LIVEINTERACT_HOME"))
+        ? AppContext.BaseDirectory : Path.GetFullPath(Environment.GetEnvironmentVariable("LIVEINTERACT_HOME")!);
+    internal static string LauncherPath => Path.Combine(InstallDirectory,"直播互动工具箱.exe");
+
     // 交互主程序单实例保护。
     private Mutex? singleInstance;
 
@@ -19,7 +24,7 @@ public partial class App : Application
     {
         get
         {
-            var packaged = Path.Combine(AppContext.BaseDirectory, "payload"); // 正式便携包位置。
+            var packaged = Path.Combine(InstallDirectory, "payload"); // 正式便携包位置。
             return Directory.Exists(packaged) ? packaged : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../artifacts/payload"));
         }
     }
@@ -60,25 +65,41 @@ public partial class App : Application
                 var staging = Path.GetFullPath(e.Args[1]);
                 var install = Path.GetFullPath(e.Args[2]);
                 var wait = e.Args.Length >= 4 && int.TryParse(e.Args[3], out var pid) ? pid : 0;
-                var exe = UpdateApplier.Apply(staging, install, wait, out var updateError);
-                try { if (File.Exists(exe)) { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe) { WorkingDirectory = install, UseShellExecute = true }); } }
-                catch (Exception restart) { updateError = (updateError == null ? "" : updateError + "；") + "重启失败：" + restart.Message; }
-                UpdateApplier.Cleanup(staging);
-                if (updateError != null) { try { File.WriteAllText(Path.Combine(install, "update-error.txt"), updateError); } catch (IOException) { } }
-                Shutdown(); return;
+                var result = UpdateInstaller.Apply(staging, install, wait);
+                var updateError = result.Error;
+                var restarted = false;
+                if (result.CanRestart)
+                {
+                    try
+                    {
+                        using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(result.Executable)
+                        {
+                            WorkingDirectory = install, UseShellExecute = true
+                        }) ?? throw new IOException("无法重启程序。");
+                        restarted = true;
+                    }
+                    catch (Exception restart) { updateError = (updateError == null ? "" : updateError + "；") + "重启失败：" + restart.Message; }
+                }
+                if (result.Success && restarted) { UpdateApplier.Cleanup(staging); }
+                if (updateError != null)
+                {
+                    try { File.WriteAllText(Path.Combine(install, "update-error.txt"), updateError); }
+                    catch (Exception write) when (write is IOException or UnauthorizedAccessException) { }
+                }
+                Shutdown(updateError == null ? 0 : 1); return;
             }
             if (e.Args.Length >= 2 && e.Args[0] == "--doctor")
             {
                 var environment = GameDetector.Detect(); // 只读游戏环境。
-                var fixedBrowser = Path.Combine(AppContext.BaseDirectory, "WebView2Runtime");
+                var fixedBrowser = Path.Combine(InstallDirectory, "WebView2Runtime");
                 string browser; try { browser = CoreWebView2Environment.GetAvailableBrowserVersionString(Directory.Exists(fixedBrowser) ? fixedBrowser : null); } catch (WebView2RuntimeNotFoundException) { browser = "未安装"; }
-                var builtin=Path.Combine(AppContext.BaseDirectory,"profiles","丝之歌-弹幕助力.json"); var builtinRules=0; string? builtinError=null; try { builtinRules=ProfileStore.Read(File.ReadAllText(builtin),false).Rules.Count; } catch(Exception error) { builtinError=error.Message; }
+                var builtin=Path.Combine(InstallDirectory,"profiles","丝之歌-弹幕助力.json"); var builtinRules=0; string? builtinError=null; try { builtinRules=ProfileStore.Read(File.ReadAllText(builtin),false).Rules.Count; } catch(Exception error) { builtinError=error.Message; }
                 File.WriteAllText(e.Args[1], JsonConvert.SerializeObject(new { environment, BuiltinRules=builtinRules, BuiltinProfileError=builtinError, Runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, BrowserRuntime = browser, ActionDefinitions = ActionCatalog.All.Count, PayloadFound = Directory.Exists(PayloadDirectory) }, Formatting.Indented)); Shutdown(); return;
             }
             if (e.Args.Length >= 2 && e.Args[0] == "--poster")
             {
                 // 按当前规则直接生成透明直播图，便于脚本或外部工具复用同一套排版。
-                var profileFile = e.Args.Length >= 3 ? Path.GetFullPath(e.Args[2]) : Path.Combine(AppContext.BaseDirectory, "profiles", "丝之歌-弹幕助力.json");
+                var profileFile = e.Args.Length >= 3 ? Path.GetFullPath(e.Args[2]) : Path.Combine(InstallDirectory, "profiles", "丝之歌-弹幕助力.json");
                 var model = ProfileStore.Read(File.ReadAllText(profileFile), false);
                 PosterRenderer.Render(model, e.Args[1]);
                 Shutdown(); return;
@@ -99,7 +120,7 @@ public partial class App : Application
             else
             {
                 singleInstance = new Mutex(true, @"Local\LiveInteract.Desktop.v1", out var created);
-                if (!created) { MessageBox.Show("直播互动工具箱已经运行，请使用已打开的窗口。", "LiveInteract"); Shutdown(); return; }
+                if (!created) { MessageBox.Show("花花直播互动已经运行，请使用已打开的窗口。", "LiveInteract"); Shutdown(); return; }
             }
             var window = new MainWindow(data, preview); // 原生控制台。
             if (preview) { window.WindowStartupLocation = WindowStartupLocation.Manual; window.Left = -20000; window.Top = -20000; window.ShowInTaskbar = false; }

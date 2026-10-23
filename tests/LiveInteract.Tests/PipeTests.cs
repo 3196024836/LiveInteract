@@ -1,4 +1,4 @@
-using System.IO.Pipes;
+﻿using System.IO.Pipes;
 using LiveInteract.Contracts;
 using LiveInteract.Core;
 using Newtonsoft.Json;
@@ -47,5 +47,61 @@ public sealed class PipeTests
         var execution = server.ExecuteAsync(new() { ActionId = "game.status" }, default); // 请求已发送但未返回回执。
         Assert.NotNull(await reader.ReadLineAsync()); writer.Dispose(); client.Dispose();
         var result = await execution; Assert.False(result.Success); Assert.Contains("未知", result.Message);
+    }
+    /// <summary>旧Mod明确拒绝新清场指令，不能发出去后误报成功。</summary>
+    [Theory]
+    [InlineData("0.8.2",false)]
+    [InlineData("0.8.3",true)]
+    public async Task ClearSummonsChecksModAndWaitsForReceipt(string version,bool supported)
+    {
+        var name="LiveInteract.Test.Clear."+Guid.NewGuid().ToString("N");
+        await using var server=new GamePipeServer(name);server.Start();
+        using var client=new NamedPipeClientStream(".",name,PipeDirection.InOut,PipeOptions.Asynchronous);
+        await client.ConnectAsync(5000);
+        using var reader=new StreamReader(client,leaveOpen:true);
+        using var writer=new StreamWriter(client){AutoFlush=true};
+        await writer.WriteLineAsync(JsonConvert.SerializeObject(new BridgeMessage{Kind="status",Status=new(){ModVersion=version}}));
+        var deadline=DateTimeOffset.UtcNow.AddSeconds(3);
+        while(!server.IsConnected&&DateTimeOffset.UtcNow<deadline)await Task.Delay(10);
+        var request=new ActionRequest{ActionId="game.clearSummons",Triggerer="主播"};
+        var task=server.ExecuteAsync(request,default);
+        if(!supported)
+        {
+            var rejected=await task.WaitAsync(TimeSpan.FromSeconds(3));
+            Assert.False(rejected.Success);Assert.Equal("MOD_UPDATE_REQUIRED",rejected.ErrorCode);return;
+        }
+        Assert.False(task.IsCompleted);
+        var message=JsonConvert.DeserializeObject<BridgeMessage>((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(3)))!);
+        Assert.Equal("game.clearSummons",message!.Request!.ActionId);
+        await writer.WriteLineAsync(JsonConvert.SerializeObject(new BridgeMessage{Kind="result",Result=new(){RequestId=request.Id,Success=true,Message="已清除友军2只、敌军1只"}}));
+        var result=await task;Assert.True(result.Success);Assert.Equal(request.Id,result.RequestId);
+    }
+    /// <summary>复制必须使用0.9.0 Mod，旧端拒绝并保留单位等待更新。</summary>
+    [Theory]
+    [InlineData("0.8.7",false)]
+    [InlineData("0.9.0",true)]
+    public async Task CopyNextChecksModAndWaitsForReceipt(string version,bool supported)
+    {
+        var name="LiveInteract.Test.Copy."+Guid.NewGuid().ToString("N");
+        await using var server=new GamePipeServer(name);server.Start();
+        using var client=new NamedPipeClientStream(".",name,PipeDirection.InOut,PipeOptions.Asynchronous);
+        await client.ConnectAsync(5000);
+        using var reader=new StreamReader(client,leaveOpen:true);
+        using var writer=new StreamWriter(client){AutoFlush=true};
+        await writer.WriteLineAsync(JsonConvert.SerializeObject(new BridgeMessage{Kind="status",Status=new(){ModVersion=version}}));
+        var deadline=DateTimeOffset.UtcNow.AddSeconds(3);
+        while(!server.IsConnected&&DateTimeOffset.UtcNow<deadline)await Task.Delay(10);
+        var request=new ActionRequest{ActionId="ally.copy-next",Triggerer="主播"};
+        var task=server.ExecuteAsync(request,default);
+        if(!supported)
+        {
+            var rejected=await task.WaitAsync(TimeSpan.FromSeconds(3));
+            Assert.False(rejected.Success);Assert.Equal("MOD_UPDATE_REQUIRED",rejected.ErrorCode);return;
+        }
+        Assert.False(task.IsCompleted);
+        var message=JsonConvert.DeserializeObject<BridgeMessage>((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(3)))!);
+        Assert.Equal("ally.copy-next",message!.Request!.ActionId);
+        await writer.WriteLineAsync(JsonConvert.SerializeObject(new BridgeMessage{Kind="result",Result=new(){RequestId=request.Id,Success=true,Message="已复制下一只合适敌人为友军"}}));
+        var result=await task;Assert.True(result.Success);Assert.Equal(request.Id,result.RequestId);
     }
 }

@@ -56,6 +56,7 @@ public sealed class ModInstaller
         {
             if (!File.Exists(Path.Combine(modPayload, file))) { throw new FileNotFoundException("发行包缺少 Mod 文件：" + file); }
         }
+        modFiles=modFiles.Concat(new[]{"AssetHelperLib.dll","AssetsTools.NET.dll"}.Where(f=>File.Exists(Path.Combine(modPayload,f)))).ToArray();
         var loaderPayload = Path.Combine(payload, "loader"); // 官方社区加载器。
         var shared = new List<(string Source, string Relative)>(); // 本次需要部署的共享文件。
         if (!environment.LoaderFound)
@@ -155,7 +156,7 @@ public sealed class ModInstaller
         foreach (var relative in new[] { GameDetector.EnabledPath, GameDetector.DisabledPath })
         {
             var directory = Inside(root, relative); // 仅删除精确归属的 DLL，不递归删除未知内容。
-            foreach (var file in new[] { "LiveInteract.Silksong.dll", "LiveInteract.Contracts.dll" })
+            foreach (var file in new[] { "LiveInteract.Silksong.dll", "LiveInteract.Contracts.dll", "AssetHelperLib.dll", "AssetsTools.NET.dll" })
             {
                 var target = Inside(root, relative + "/" + file); // 已校验目标。
                 if (File.Exists(target)) { File.Delete(target); }
