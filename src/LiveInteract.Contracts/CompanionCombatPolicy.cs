@@ -45,9 +45,8 @@ public static class CompanionCombatPolicy
     public static bool CanChangeTarget(IEnumerable<(string Fsm, string State)> states, IEnumerable<string> animations, string asset = "")
     {
         var current = states.ToArray();
-        // 原作外层Attack模式持续到子FSM收尾；仅子FSM已回Idle才是已核对的安全边界。
-        var nestedAttackIdle = (asset is "spawn.pilgrim-staffwielder" or "spawn.pilgrim-01" or "spawn.pilgrim-staff-understore" or "spawn.pilgrim-03")
-            && current.Any(s => s.Fsm == "Attack" && s.State == "Idle");
+        // 朝圣者同一双层图：外层Attack模式持续到子FSM收尾；子FSM已回Idle即安全边界（按图结构判断，覆盖全部变体）。
+        var nestedAttackIdle = current.Any(s => s.Fsm == "pilgrim_behaviour") && current.Any(s => s.Fsm == "Attack" && s.State == "Idle");
         return CanChangeTarget(current.Where(s => !(nestedAttackIdle && s.Fsm == "pilgrim_behaviour"
                 && s.State is "Attack" or "Attack Recover"))
             .Select(s => s.State).Concat(animations), asset);
@@ -59,7 +58,8 @@ public static class CompanionCombatPolicy
     /// <param name="state">原生刚进入的状态，不请求或强设状态。</param>
     /// <returns>是否已完成原招且可接收主播点名。</returns>
     public static bool IsRetargetEntryBoundary(string asset, string fsm, string state)
-        => fsm == "Control" && (asset, state) is
+        // 主控图的“Attack End”是原招收尾后的自然出口，连续出招的单位只有这里能接收点名。
+        => fsm == "Control" && state == "Attack End" || fsm == "Control" && (asset, state) is
             ("spawn.flower-drifter", "Idle Start") or
             ("spawn.coral-swimmer-fat", "Check Return") or
             ("spawn.mitefly", "Attack End");

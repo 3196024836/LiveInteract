@@ -41,6 +41,8 @@ public sealed class CompanionCombatPolicyTests
     [InlineData("spawn.flower-drifter", "Control", "Idle Start", true)]
     [InlineData("spawn.coral-swimmer-fat", "Control", "Check Return", true)]
     [InlineData("spawn.mitefly", "Control", "Attack End", true)]
+    [InlineData("spawn.bone-circler-vicious", "Control", "Attack End", true)]
+    [InlineData("spawn.bone-circler-vicious", "Auxiliary", "Attack End", false)]
     [InlineData("spawn.flower-drifter", "Control", "Attack Recover", false)]
     [InlineData("spawn.flower-drifter", "Control", "Attack Burst", false)]
     [InlineData("spawn.coral-swimmer-fat", "Control", "Attack Antic", false)]
@@ -114,7 +116,8 @@ public sealed class CompanionCombatPolicyTests
     [InlineData("spawn.pilgrim-staffwielder", "pilgrim_behaviour", "Attack Recover", "Attack", "Idle", "Stun", false)]
     [InlineData("spawn.pilgrim-staffwielder", "Other Controller", "Attack Recover", "Attack", "Idle", "Walk", false)]
     [InlineData("spawn.pilgrim-staffwielder", "pilgrim_behaviour", "Attack Recover", "Other", "Idle", "Walk", false)]
-    [InlineData("spawn.other", "pilgrim_behaviour", "Attack Recover", "Attack", "Idle", "Walk", false)]
+    [InlineData("spawn.pilgrim-02-song", "pilgrim_behaviour", "Attack Recover", "Attack", "Idle", "Walk", true)]
+    [InlineData("spawn.pilgrim-03-understore", "pilgrim_behaviour", "Attack", "Attack", "Skid", "Attack Land", false)]
     public void VerifiedPilgrimNestedAttackControllerUsesOnlyItsIdleBoundary(string asset, string parentFsm, string parentState,
         string childFsm, string childState, string animation, bool expected)
         => Assert.Equal(expected, CompanionCombatPolicy.CanChangeTarget(
