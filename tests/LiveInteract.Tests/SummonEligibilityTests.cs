@@ -19,11 +19,14 @@ public sealed class SummonEligibilityTests
         var property=typeof(MonsterDefinition).GetProperty("SummonExclusionReason"); Assert.NotNull(property);
         return (string)property.GetValue(m)!;
     }
-    [Fact] public void ArchiveRemainsCompleteAndOnlyFrozenCandidatesAreOpen()
+    [Fact] public void ArchiveRemainsCompleteAndOnlyVerifiedPoolIsOpen()
     {
-        var ids=new[]{"spawn.bone-goomba","spawn.bone-spitter","spawn.dock-flyer","spawn.shellwood-wasp","spawn.shellwood-gnat","spawn.slab-fly-large"};
+        // 0.9.0 实机验收友方池 81 项；壳木蚋虫点名补位未过，退回待修。
+        var ids=new[]{"spawn.bone-goomba","spawn.bone-spitter","spawn.dock-flyer","spawn.shellwood-wasp","spawn.slab-fly-large","spawn.bone-hunter-chief","spawn.pilgrim-bell-thrower"};
         Assert.Equal(234,MonsterCatalog.All.Count);
-        Assert.Equal(ids.OrderBy(id=>id),MonsterCatalog.All.Where(Eligible).Select(m=>m.Id).OrderBy(id=>id));
+        Assert.Equal(81,MonsterCatalog.All.Count(Eligible));
+        Assert.Subset(MonsterCatalog.All.Where(Eligible).Select(m=>m.Id).ToHashSet(),ids.ToHashSet());
+        Assert.False(Eligible(MonsterCatalog.Find("spawn.shellwood-gnat")!));
         Assert.All(MonsterCatalog.All,m=>{if(Eligible(m)){Assert.True(m.CanFight);Assert.Empty(Reason(m));}else Assert.NotEmpty(Reason(m));});
         foreach(var id in ids)
         {
@@ -42,10 +45,12 @@ public sealed class SummonEligibilityTests
         foreach(var monster in MonsterCatalog.All.Where(m=>m.SummonEligible))
         {
             var description=descriptors.Single(a=>a.Id==monster.Id).Description;
-            Assert.Contains("本轮召唤白名单单位，验收记录随对应版本提供。",description);
+            Assert.Contains(monster.AllyOnly?"仅开放友方召唤":"本轮召唤白名单单位，验收记录随对应版本提供。",description);
             Assert.DoesNotContain("不进入默认礼物随机池",description);
         }
-        foreach(var monster in MonsterCatalog.All.Where(m=>!m.SummonEligible&&m.SourceScene.Length>0))
+        foreach(var monster in MonsterCatalog.All.Where(m=>m.EnemyOnlyEligible))
+            Assert.Contains("仅开放敌方召唤",descriptors.Single(a=>a.Id==monster.Id).Description);
+        foreach(var monster in MonsterCatalog.All.Where(m=>!m.SummonEligible&&!m.EnemyOnlyEligible&&m.SourceScene.Length>0))
             Assert.Contains("尚未列入召唤白名单",descriptors.Single(a=>a.Id==monster.Id).Description);
     }
     [Theory][InlineData("weak")][InlineData("strongBoss")][InlineData("ordinary")][InlineData("all")]
@@ -66,7 +71,7 @@ public sealed class SummonEligibilityTests
     }
     [Theory][InlineData("spawn.swamp-barnacle","固定地形")][InlineData("spawn.lilypad-trap","固定地形")][InlineData("spawn.centipede-trap","固定地形")]
     [InlineData("spawn.bloom-puncher","固定地形")][InlineData("spawn.bloom-shooter","固定地形")]
-    [InlineData("spawn.bone-worm-blueturret","固定地形")][InlineData("spawn.seth","Dormant")]
+    [InlineData("spawn.bone-worm-blueturret","固定地形")]
     public void ExclusionsRejectNamedDirectLegacyAndConversionCalls(string id,string cause)
     {
         var monster=MonsterCatalog.Find(id)!;Assert.Contains(cause,Reason(monster));
@@ -85,11 +90,10 @@ public sealed class SummonEligibilityTests
     }
     [Theory]
     [InlineData("spawn.swamp-shaman", "Attack Choice", true)]
-    [InlineData("spawn.bone-hunter-chief", "Attack Choice", true)]
     [InlineData("spawn.shakra", "Attack Choice", true)]
     [InlineData("spawn.arborium-keeper", "Attack Choice", true)]
     [InlineData("spawn.lost-lace", "Attack Choice", true)]
-    [InlineData("spawn.pilgrim-bell-thrower", "身体", true)]
+    [InlineData("spawn.seth", "Dormant", true)]
     [InlineData("spawn.lilypad-fly", "原作", false)]
     [InlineData("spawn.lifeblood-fly", "原作", false)]
     public void StaticExclusionsAreExplicitAndDoNotRewriteAttackCapability(string id, string cause, bool canFight)
@@ -98,18 +102,20 @@ public sealed class SummonEligibilityTests
         Assert.False(monster.SummonEligible);
         Assert.Contains(cause, monster.SummonExclusionReason);
         Assert.Equal(canFight, monster.CanFight);
-        Assert.DoesNotContain(ActionCatalog.UserFacing, a => a.Id == id);
+        // 仅敌方开放的单位仍在功能库中，但友方入口必须给出原排除原因。
+        if (!monster.EnemyOnlyEligible) Assert.DoesNotContain(ActionCatalog.UserFacing, a => a.Id == id);
+        else Assert.Contains(cause, SummonEligibility.RejectionReason(monster, true));
         Assert.Throws<ArgumentException>(() => SummonCommands.Resolve(id));
         Assert.Throws<ArgumentException>(() => NativeSummons.Convert(monster, 1));
         Assert.NotEmpty(ActionValidation.Validate(new() { ActionId = "ally.convert." + id }));
     }
     [Fact] public void ExistingRuleCanBeReadWithoutOverwritingItsActionOrParameters()
     {
-        var source=new RuleProfile{Rules=new(){new(){Name="旧赛斯",Root=new(){ActionId="spawn.seth",Arguments=new(){{"count","3"},{"power","4"}}}}}};
+        var source=new RuleProfile{Rules=new(){new(){Name="旧沼泽萨满",Root=new(){ActionId="spawn.swamp-shaman",Arguments=new(){{"count","3"},{"power","4"}}}}}};
         var read=ProfileStore.Read(JsonConvert.SerializeObject(source),false);
-        Assert.Equal("spawn.seth",read.Rules[0].Root.ActionId);Assert.Equal("4",read.Rules[0].Root.Arguments["power"]);
-        Assert.Contains(ProfileStore.ValidateRule(read.Rules[0]),e=>e.Contains("Dormant"));
-        Assert.Contains("Dormant",RuleDisplay.Effect(read.Rules[0].Root));
+        Assert.Equal("spawn.swamp-shaman",read.Rules[0].Root.ActionId);Assert.Equal("4",read.Rules[0].Root.Arguments["power"]);
+        Assert.Contains(ProfileStore.ValidateRule(read.Rules[0]),e=>e.Contains("Attack Choice"));
+        Assert.Contains("Attack Choice",RuleDisplay.Effect(read.Rules[0].Root));
     }
     [Fact] public void UnknownLegacyAssetDoesNotFallbackToAnUnsafeSceneObject()
     {
@@ -260,16 +266,33 @@ public sealed class SummonEligibilityTests
         }
         finally { enemyOnly.EnemyOnlyEligible=false; }
     }
+
+    /// <summary>仅友方单位保留友方召唤，敌方具名与敌方随机池都拒绝。</summary>
+    [Fact] public void AllyOnlyUnitsStayOutOfEnemyPools()
+    {
+        using var approved=new ApprovedSummonsScope(new[]{"spawn.bone-goomba","spawn.bone-spitter"});
+        var allyOnly=MonsterCatalog.Find("spawn.bone-spitter")!;
+        allyOnly.AllyOnly=true;
+        Assert.Empty(SummonEligibility.RejectionReason(allyOnly,true));
+        Assert.Contains("敌方",SummonEligibility.RejectionReason(allyOnly,false));
+        var enemyPicks=Enumerable.Range(0,64).Select(i=>NativeSummons.RandomMonster("e"+i,"weak",false).Id).ToHashSet();
+        var allyPicks=Enumerable.Range(0,64).Select(i=>NativeSummons.RandomMonster("a"+i,"weak",true).Id).ToHashSet();
+        Assert.DoesNotContain("spawn.bone-spitter",enemyPicks);
+        Assert.Contains("spawn.bone-spitter",allyPicks);
+        Assert.NotEmpty(ActionValidation.Validate(new(){ActionId="summon.named.enemy",Arguments=new(){["name"]="spawn.bone-spitter"}}));
+        Assert.Empty(ActionValidation.Validate(new(){ActionId="summon.named.ally",Arguments=new(){["name"]="spawn.bone-spitter"}}));
+    }
 }
 
 /// <summary>仅单元测试构造批准样本，finally/Dispose还原；不写审核清单，不用于QA或生产。</summary>
 internal sealed class ApprovedSummonsScope:IDisposable
 {
-    private readonly (MonsterDefinition Monster,bool Eligible)[] original=MonsterCatalog.All.Select(m=>(m,m.SummonEligible)).ToArray();
+    private readonly (MonsterDefinition Monster,bool Eligible,bool EnemyOnly,bool AllyOnly)[] original=MonsterCatalog.All.Select(m=>(m,m.SummonEligible,m.EnemyOnlyEligible,m.AllyOnly)).ToArray();
     public ApprovedSummonsScope(IEnumerable<string>? ids=null)
     {
         var approved=(ids??MonsterCatalog.All.Where(m=>m.CanFight&&m.Id is not ("spawn.bone-worm-blueturret" or "spawn.seth")).Select(m=>m.Id)).ToHashSet(StringComparer.Ordinal);
-        foreach(var monster in MonsterCatalog.All)monster.SummonEligible=approved.Contains(monster.Id);
+        // 阵营专属标记一并清空，测试只看本作用域给出的白名单。
+        foreach(var monster in MonsterCatalog.All){monster.SummonEligible=approved.Contains(monster.Id);monster.EnemyOnlyEligible=false;monster.AllyOnly=false;}
     }
-    public void Dispose(){foreach(var entry in original)entry.Monster.SummonEligible=entry.Eligible;}
+    public void Dispose(){foreach(var entry in original){entry.Monster.SummonEligible=entry.Eligible;entry.Monster.EnemyOnlyEligible=entry.EnemyOnly;entry.Monster.AllyOnly=entry.AllyOnly;}}
 }

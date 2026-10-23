@@ -1537,6 +1537,16 @@ internal sealed class OwnedSummon : MonoBehaviour
             if(resource!=null&&resource.DetachedOwner==this)resource.RemoveFromNativePool();
         }
         DetachedResources.Clear();
+        ReleaseHeroGrab();
+    }
+
+    /// <summary>抓取者被回收或死亡时原作不再发送松开事件；用原作全局强制松开，避免主播停在抓取状态。</summary>
+    private static void ReleaseHeroGrab()
+    {
+        var hero=HeroController.SilentInstance;
+        if(hero==null)return;
+        var wound=hero.GetComponents<PlayMakerFSM>().FirstOrDefault(f=>f.FsmName=="Roar and Wound States");
+        if(wound!=null&&(wound.ActiveStateName=="Hero Grab"||wound.ActiveStateName=="Hero Grab Invuln"))wound.SendEvent("HERO GRAB RELEASE FORCED");
     }
 }
 

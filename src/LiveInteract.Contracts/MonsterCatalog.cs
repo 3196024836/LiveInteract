@@ -34,9 +34,12 @@ public sealed class MonsterDefinition
     /// <summary>仅作为敌方开放（不会跟随主播但能正常作战）；仅从独立清单加载。</summary>
     [JsonIgnore]
     public bool EnemyOnlyEligible { get; set; }
-    /// <summary>敌方召唤资格：友方白名单单位，或单独列为仅敌方开放的单位。</summary>
+    /// <summary>友方验收通过但敌方筛测未过（不伤主播、打不死或死后锁主角），不进入敌方召唤；仅从独立清单加载。</summary>
     [JsonIgnore]
-    public bool EnemySummonEligible => SummonEligible || EnemyOnlyEligible;
+    public bool AllyOnly { get; set; }
+    /// <summary>敌方召唤资格：未标记仅友方的白名单单位，或单独列为仅敌方开放的单位。</summary>
+    [JsonIgnore]
+    public bool EnemySummonEligible => SummonEligible && !AllyOnly || EnemyOnlyEligible;
     /// <summary>未批准或明确排除的原因，不把运行时故障记为原作无攻击。</summary>
     [JsonIgnore]
     public string SummonExclusionReason { get; set; } = "尚未通过本轮完整实机验收，暂不开放召唤。";

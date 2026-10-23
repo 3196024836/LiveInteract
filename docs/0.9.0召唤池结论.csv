@@ -1,0 +1,235 @@
+﻿Id,名称,分档,友方,友方依据,敌方,敌方依据
+spawn.gloomfly,幽暗囊,Weak,待修,qa-claude60 核心矩阵 24/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、原生攻击未出手、ally_switches_to_player_target、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-hunter,阿利塔,Boss,待修,Codex 核心矩阵 25/31：actual_directional_follow_motion_-1、no_onscreen_follow_teleport_-1、actual_directional_follow_motion_1、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-goomba,颅潜虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.understore-thrower,圣厂投掷工,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-automaton-01,机枢咏者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.bone-worm-blueturret,生质蠕虫,Strong,永久排除,生质蠕虫是固定地形体，不适合作为可移动的友敌召唤物。,永久排除,生质蠕虫是固定地形体，不适合作为可移动的友敌召唤物。
+spawn.dustroach-caged,淤秽蟑螂,Weak,待修,Codex 核心矩阵 26/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.roachfeeder-short,蟑群牧者,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.wraith,丝魂,Strong,待修,qa-claude60 核心矩阵 29/31：原生攻击未出手,入池,敌方筛测6/6通过（仅敌方）
+spawn.crow,鸦虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-automaton-tiny,机枢工蜂,Weak,待修,qa-claude60 核心矩阵 27/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.understore-poker,圣厂戳刺工,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.song-handmaiden,丝偶侍女,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.lightbearer,执灯者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.scrollkeeper,诵经使,Strong,待修,Codex 核心矩阵 27/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1,入池,敌方筛测6/6通过（仅敌方）
+spawn.flower-queen-boss,尼莱斯,Boss,待修,Codex 核心矩阵 22/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.shellwood-gnat,壳木蚋虫,Weak,待修,qa-claude60 核心矩阵 29/31：点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.shellwood-wasp,木蜂,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.slab-fly-large,狱卒蝇,Strong,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.song-pilgrim-03,圣咏使徒,Strong,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.song-reed,簧片战士,Strong,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.pinstress-boss,针姬,Boss,待修,Codex 核心矩阵 20/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.pilgrim-staffwielder,引路朝圣者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-creeper,殡葬师,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-threaded-husk-spin-new,残丝轮骸,Strong,待修,Codex 核心矩阵 20/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.song-threaded-husk,残丝躯壳,Strong,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.bone-hunter-child,斯卡尔斥候,Weak,待修,Codex 核心矩阵 25/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、no_onscreen_follow_teleport_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.aspid-collector,阿克尼,Boss,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.pilgrim-04,角枪朝圣者,Weak,待修,Codex 核心矩阵 24/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.swamp-mosquito,沼栖飞蚋,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.mite,暗螨,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.farmer-centipede,残丝耙工,Weak,待修,qa-claude60 核心矩阵 30/31：目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.citadel-bat-large,帷虫之主,Strong,入池,core58 31/31（仅友方）,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.coral-goombas,珊瑚壳虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.coral-conch-shooter-heavy,重甲掷面虫,Strong,待修,qa-claude60 核心矩阵 27/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.roachfeeder-tall,蟑螂饲养员,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.skull-king,颅骨暴君,Boss,待修,Codex 核心矩阵 24/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、ally_switches_to_player_target、目标失效后不回跟随,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.pilgrim-hiker,攀山朝圣者,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.spike-lazy-flyer,伊莫巴,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-automaton-02,机枢清道夫,Strong,待修,qa-claude60 核心矩阵 23/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、原生攻击未出手、ally_switches_to_player_target、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.poke-swimmer,旋角凯虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.pilgrim-03-song,圣咏钟卫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.understore-mite-giant,巨型帷螨,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.bell-fly,有翼绒甲虫,Weak,待修,Codex 核心矩阵 25/31：follows_and_stops_-1、no_onscreen_follow_teleport_-1、actual_directional_follow_motion_1、no_onscreen_follow_teleport_1、原生攻击未出手、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.mossbone-mother,苔藓之母,Boss,待修,qa-claude60 核心矩阵 30/31：目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-moss-spitter,苔蚀朝圣者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.bone-goomba-large,颅蛮虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.fields-goomba,拟草虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.rhino,犀角掘地兽,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-automaton-fly-spike,机枢棘球,Weak,待修,Codex 核心矩阵 23/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.swamp-drifter,娥叶虫,Weak,待修,Codex 核心矩阵 22/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.surface-scuttler,沙行虫,Weak,永久排除,原作沙行虫只有警戒、背向逃跑、钻地和隐藏流程；未实例化原始预制体（含停用子物体）无DamageHero、DamageEnemies或ParticleDamageHero，敌方实机仅逃跑，不补造攻击，不开放敌友召唤。,永久排除,原作沙行虫只有警戒、背向逃跑、钻地和隐藏流程；未实例化原始预制体（含停用子物体）无DamageHero、DamageEnemies或ParticleDamageHero，敌方实机仅逃跑，不补造攻击，不开放敌友召唤。
+spawn.mossbone-crawler,苔藓蠕虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.coral-swimmer-fat,凯虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.pilgrim-01,扑袭朝圣者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.tormented-trobbio,痛苦的特罗比奥,Boss,待修,Codex 核心矩阵 22/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.tar-slug,熔岩蛞蝓,Weak,待修,Codex 核心矩阵 22/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.slab-prisoner-leaper-new,悔罪者,Weak,待修,Codex 核心矩阵 26/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.crypt-worm,戈鲁姆幼虫,Weak,待修,Codex 核心矩阵 22/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.dock-bomber,燧焰飞工,Strong,待修,Codex 核心矩阵 27/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-hopper-giant,硬骨长者,Strong,待修,Codex 核心矩阵 28/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.citadel-bat,帷虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.pilgrim-bell-thrower,朝圣钟卫,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.coral-king,壳王 卡汗,Boss,待修,Codex 核心矩阵 20/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.lilypad-fly,滑叶虫,Weak,永久排除,原作滑叶虫为惊飞、返航和落水停栖单位，未见攻击链；不适合作为战斗召唤物。,永久排除,原作滑叶虫为惊飞、返航和落水停栖单位，未见攻击链；不适合作为战斗召唤物。
+spawn.dragonfly-large,潘德拉戈,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.bone-hunter-buzzer,斯卡尔飞蚁,Weak,入池,Codex 31/31 + qa-claude59 快筛复查（仅友方）,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.pilgrim-staff-understore,圣厂清扫工,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.pilgrim-03,伏地朝圣者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.small-crab,小悬峭兽,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.swamp-shaman,伟大的格洛,Strong,待修,旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。,未开放,敌方筛测未过：死亡后主角状态被锁
+spawn.grasshopper-fly,埃斯卡里昂,Strong,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.bloom-shooter,爆粉葵,Weak,永久排除,原作射击花为附着地形的固定花体，按出生朝向原地射击，没有移动链；按固定地形单位排除，不开放敌友召唤。,永久排除,原作射击花为附着地形的固定花体，按出生朝向原地射击，没有移动链；按固定地形单位排除，不开放敌友召唤。
+spawn.rosary-pilgrim,念珠朝圣者,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.crystal-drifter-giant,巨型冰晶虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.coral-swimmer-small,尤玛,Weak,永久排除,原作尤玛为游动装饰性生物；未实例化原始预制体（含全部停用子物体）无伤害组件，Control仅初始化、游动和Burst Out出场流程，无攻击链；按原作无攻击排除，不补造攻击，不开放敌友召唤。,永久排除,原作尤玛为游动装饰性生物；未实例化原始预制体（含全部停用子物体）无伤害组件，Control仅初始化、游动和Burst Out出场流程，无攻击链；按原作无攻击排除，不补造攻击，不开放敌友召唤。
+spawn.zap-core-enemy,伏特维姆,Boss,待修,Codex 核心矩阵 25/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-hunter-chief,最终之爪,Boss,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.giant-flea,巨蚤,Strong,待修,qa-claude60 核心矩阵 30/31：原生攻击未出手,入池,敌方筛测6/6通过（仅敌方）
+spawn.gloom-beast,幽暗巨兽,Strong,入池,Codex 31/31 + qa-claude59 快筛复查（仅友方）,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.song-reed-grand,精英簧片战士,Strong,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.silk-boss,崇高圣母 灵丝,Boss,待修,Codex 核心矩阵 6/11：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、native_birth_completed_before_combat,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.song-scholar-acolyte,书库之子,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.flower-drifter,幻形花虻,Weak,待修,qa-claude60 核心矩阵 30/31：原生攻击未出手,入池,敌方筛测6/6通过（仅敌方）
+spawn.seth,赛斯,Boss,待修,赛斯原作 Dormant 出生/场景坐标仍待适配；本轮已重新纳入修复和完整实机验收，暂不开放，并非永久排除。,入池,敌方筛测6/6通过（仅敌方）
+spawn.spike-swimmer,钢棘凯虫,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.bone-flyer-giant,残暴的兽蝇,Boss,待修,Codex 核心矩阵 26/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：主播命中不掉血、主播打不死
+spawn.mossbone-crawler-fat,大型苔藓蠕虫,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.stick-insect-charger,尖角碎裂者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.giant-centipede,噬钟者,Boss,待修,Codex 核心矩阵 20/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,入池,敌方筛测6/6通过（仅敌方）
+spawn.conductor-boss,失缚怨魂,Boss,待修,Codex 核心矩阵 24/31：actual_directional_follow_motion_-1、follows_and_stops_-1、no_onscreen_follow_teleport_-1、actual_directional_follow_motion_1、follows_and_stops_1、no_onscreen_follow_teleport_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.mossbone-fly,苔翼虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.hunter-queen,斯卡尔歌后 卡梅莉塔,Boss,待修,Codex 核心矩阵 22/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.bone-thumper,髓渊兽,Weak,待修,Codex 核心矩阵 24/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-conch-driller-giant,巨型螺蝇,Strong,待修,qa-claude60 核心矩阵 26/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、no_onscreen_follow_teleport_1、原生攻击未出手、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.blue-assistant,生质异化的赞戈,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、NoPlayerDamageFromFriend、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('System.InvalidOperationException: Sequence con,入池,敌方筛测6/6通过（仅敌方）
+spawn.tar-slug-huge,成年熔岩蛞蝓,Strong,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.rock-roller,燧甲虫,Strong,待修,Codex 核心矩阵 20/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.song-automaton-goomba,机枢巡游者,Weak,待修,Codex 核心矩阵 26/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、real_enemy_collision_hurts、real_enemy_can_kill,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.weaver-servitor-large,仆从博兰,Strong,待修,Codex 核心矩阵 14/18：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-fly,残翼朝圣者,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.mitefly,飞蚀螨,Weak,待修,qa-claude60 核心矩阵 28/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.swamp-goomba,沼泽螨,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.shell-fossil-mimic,碎甲突袭者,Weak,待修,core58 核心矩阵 26/31：actual_directional_follow_motion_-1、follows_and_stops_-1、actual_directional_follow_motion_1、follows_and_stops_1、目标失效后不回跟随,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.coral-flyer,卡卡利,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、NoPlayerDamageFromFriend、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('System.InvalidOperationException: Sequence con,入池,敌方筛测6/6通过（仅敌方）
+spawn.farmer-wisp,焚身信徒,Strong,待修,快筛未过：ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('System.InvalidOperationException: Sequence con,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.grasshopper-child,金达尼尔,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.white-palace-fly,翅膀傀儡,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.song-pilgrim-01,圣咏特使,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-goomba-bounce-fly,颅翼虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.weaver-servitor,仆从伊格尼姆,Weak,待修,qa-claude60 核心矩阵 26/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、real_enemy_collision_hurts,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.coral-flyer-throw,雅戈,Strong,待修,快筛未过：ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('LiveInteract.Silksong.DeferredActionException:,入池,敌方筛测6/6通过（仅敌方）
+spawn.mite-heavy,帷螨,Weak,待修,快筛未过：跟随不到位、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('System.InvalidOperationException: Sequence con,入池,敌方筛测6/6通过（仅敌方）
+spawn.song-automaton-ball,机枢击钹者,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-warrior,卡拉卡,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.roachkeeper,蟑螂监管者,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击,入池,敌方筛测6/6通过（仅敌方）
+spawn.understore-automaton-ex,机枢搬运工,Weak,待修,qa-claude60 核心矩阵 8/8：未知,未开放,敌方筛测未过：主播命中不掉血、主播打不死
+spawn.garmond,失心加蒙德,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.slab-prisoner-fly-new,弱小悔罪者,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.swamp-muckman-tall,斯提金捕手,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.bone-circler-vicious,狂躁刃尾蜂,Weak,待修,qa-claude60 核心矩阵 30/31：目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-bellthrower-fly,有翼朝圣钟卫,Weak,待修,快筛未过：跟随不到位,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.swamp-mosquito-skinny,酸涎飞蚋,Weak,待修,qa-claude60 核心矩阵 29/31：点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.clockwork-dancer,机枢舞者,Boss,待修,快筛未过：未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播、主播打不死
+spawn.clover-dancer,三叶草舞者,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.swamp-ductsucker,腐殖吮吸者,Strong,待修,快筛未过：跟随不到位、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('System.InvalidOperationException: Sequence con,入池,敌方筛测6/6通过（仅敌方）
+spawn.fields-flyer,拟草蛾,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.song-pilgrim-02,医师,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.bone-circler,刃尾蜂,Weak,待修,"快筛未过：未观察到自然攻击、未证实原生命中、NoPlayerDamageFromFriend、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('SPAWN_NO_BODY [{""RequestId"": ""qa08-97d1e994ea9",入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-02-song,圣咏尖角虫,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.grass-goomba,卷叶虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.roachkeeper-chef,失格大厨 卢戈利,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.song-automaton-shield,机枢守卫,Strong,待修,core58 核心矩阵 28/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.crowman-dagger-juror,矮鸦虫陪审员,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.rosary-thief,念珠窃贼,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.coral-judge,裁决者,Strong,待修,"快筛未过：未观察到自然攻击、未证实原生命中、NoPlayerDamageFromFriend、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('SPAWN_NO_BODY [{""RequestId"": ""qa08-2d51b3e0ddd",入池,敌方筛测6/6通过（仅敌方）
+spawn.slab-fly-small-fresh,新生蝇,Weak,待修,"快筛未过：未观察到自然攻击、未证实原生命中、NoPlayerDamageFromFriend、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('SPAWN_NO_BODY [{""RequestId"": ""qa08-eff69cb23eb",未开放,敌方筛测未过：16秒内未伤到主播
+spawn.lilypad-trap,拟态睡莲,Strong,永久排除,原作水域地形的捕食花攻击子体，依赖父机关回收，没有独立移动本体；按固定地形单位排除，不开放敌友召唤。,永久排除,原作水域地形的捕食花攻击子体，依赖父机关回收，没有独立移动本体；按固定地形单位排除，不开放敌友召唤。
+spawn.centipede-trap,加尔皮德,Strong,永久排除,原作蜈蚣突袭依赖原场景墙/顶节点FindClosest，按固定地形机关排除，不开放敌友召唤。,永久排除,原作蜈蚣突袭依赖原场景墙/顶节点FindClosest，按固定地形机关排除，不开放敌友召唤。
+spawn.shakra,沙克拉,Boss,待修,旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。,未开放,敌方筛测未过：16秒内未伤到主播、主播打不死
+spawn.abyss-crawler,阴影爬虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-beast,钟道兽,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-big-jellyfish,尤玛玛,Strong,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.dustroach-pollywog,沼蛆,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.roof-crab,悬峭兽,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-hunter,斯卡尔追猎者,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.lace,蕾丝,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.bone-hunter-trapper,被放逐的格尔,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.coral-goomba-large,珊瑚巨怪,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、NoPlayerDamageFromFriend、ZeroDamageSafe、ActualEnemyWeaponHurts、NoOwnedActorsAfterClear、NoActiveOwnedResourcesAfterClear、ERR:RuntimeError('System.InvalidOperationException: Sequence con,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-fisher,渔夫,Weak,待修,qa-claude60 核心矩阵 28/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.song-pilgrim-maestro,圣咏指挥,Strong,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.crystal-drifter,冰晶虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.abyss-mass,蒙召救主,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.splinter-queen,碎裂者长姊,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-stomper-song,圣咏长老,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.understore-small,圣厂工虫,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.vampire-gnat,荒沼翼主,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.first-weaver,原初罪者,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.peaks-drifter,雪精灵,Weak,待修,qa-claude60 核心矩阵 27/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-01-song,圣咏扑袭者,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.farmer-scissors,裁丝疯匠,Weak,待修,qa-claude60 核心矩阵 27/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-conch-driller,螺蝇,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播、主播打不死
+spawn.understore-heavy,圣厂维修工,Strong,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.cloverstag-white,苍白苜鹿,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.slab-fly-broodmother,育母,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.bone-hunter-tiny,斯卡尔工蚁,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.song-heavy-sentry,圣咏槌手,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-worm,戈鲁姆,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.pilgrim-03-understore,圣厂擦地工,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.slab-fly-mid,看守蝇,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.coral-conch-stabber,刺螺虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.song-administrator,圣咏大臣,Strong,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.crowman-dagger,矮鸦虫,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.swamp-barnacle,巴纳克,Weak,永久排除,原作悬挂长触须的固定吞噬陷阱，依赖顶挂锚点/吞咽场景链，按固定地形单位排除，不开放敌友召唤。,永久排除,原作悬挂长触须的固定吞噬陷阱，依赖顶挂锚点/吞咽场景链，按固定地形单位排除，不开放敌友召唤。
+spawn.bone-spitter,焦油螨,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.dock-guard-thrower,监工兄弟 西格尼斯 & 格隆,Boss,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.pilgrim-02,壮硕朝圣者,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.roachkeeper-chef-tiny,蟑螂厨师,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.last-judge,末代裁决者,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.pond-skater,滑水者,Weak,待修,qa-claude60 核心矩阵 25/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-spike-goomba,珊瑚绒甲虫,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.arborium-keeper,忆廊使徒,Strong,待修,旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-crawler,刺铠虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.lost-lace,失心蕾丝,Boss,待修,旧适配依赖 Attack Choice 强制入态；本轮已重新纳入全目录修复和验收，尚未通过完整验收，暂不开放，并非永久排除。,入池,敌方筛测6/6通过（仅敌方）
+spawn.abyss-crawler-large,阴影冲锋者,Strong,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.song-knight,次席戍卫,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,未开放,敌方筛测未过：16秒内未伤到主播、主播命中不掉血、主播打不死
+spawn.song-golem,第四圣咏团,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.cloverstag,苜鹿,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-conch-shooter,掷面虫,Weak,待修,qa-claude60 核心矩阵 29/31：点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.crowman-juror,高鸦虫陪审员,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.black-thread-core,虚空聚合体,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-bubble-brute,珊瑚卡拉卡,Strong,待修,qa-claude60 核心矩阵 30/31：目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.dock-charger,深潜者,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.stick-insect-flyer,裂皮碎裂者,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.farmer-catcher,灵丝筛工,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.swamp-muckman,斯提金猎手,Weak,待修,qa-claude60 核心矩阵 26/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、原生攻击未出手、目标失效后不回跟随,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.bell-goomba,绒甲虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播、主播打不死
+spawn.bloom-puncher,假面丽花,Weak,永久排除,原作拳击花为附着地形的固定花体，只有原地攻击/重生链，没有移动链；按固定地形单位排除，不开放敌友召唤。,永久排除,原作拳击花为附着地形的固定花体，只有原地攻击/重生链，没有移动链；按固定地形单位排除，不开放敌友召唤。
+spawn.dock-flyer,燧石飞工,Weak,入池,qa-claude60 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.stick-insect,碎裂者,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.spine-floater,绒棘虫,Weak,待修,qa-claude60 核心矩阵 29/31：点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.scholar,书库管理员,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.crowman,高鸦虫,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.blade-spider-hang,纺络跳蛛,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.slab-fly-small,痂蝇,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.blade-spider,纺络蛛,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.bone-hopper,硬骨跳跃者,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-roller,卷球幼兽,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-hunter-fly,斯卡尔长矛手,Strong,待修,快筛未过：跟随不到位,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.coral-warrior-grey,边陲守望者,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.crowman-juror-tiny,鸦虫陪审员,Weak,待修,qa-claude60 核心矩阵 28/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.bone-hunter-throw,斯卡尔守卫,Strong,待修,core58 核心矩阵 27/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、no_onscreen_follow_teleport_1、目标失效后不回跟随,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.bloat-roach,浮肿蟑螂,Strong,待修,qa-claude60 核心矩阵 27/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.understore-automaton,机枢飞工,Weak,待修,qa-claude60 核心矩阵 28/31：ally_switches_to_player_target、点名目标未被自然击杀、不补位下一个敌人,入池,敌方筛测6/6通过（仅敌方）
+spawn.pilgrim-04-song,圣咏飞虫,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.coral-judge-child,蠕行幼虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.bone-flyer,兽蝇,Weak,入池,Codex 31/31 + qa-claude59 快筛复查,入池,友方池单位，敌方筛测6/6通过
+spawn.grasshopper-slasher,维达尼尔,Strong,待修,qa-claude60 核心矩阵 26/31：actual_directional_follow_motion_-1、no_onscreen_follow_teleport_-1、actual_directional_follow_motion_1、no_onscreen_follow_teleport_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.phantom,幽影,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.coral-brawler,卡拉卡格,Strong,待修,core58 核心矩阵 28/31：actual_directional_follow_motion_-1、actual_directional_follow_motion_1、目标失效后不回跟随,入池,敌方筛测6/6通过（仅敌方）
+spawn.gnat-giant,螨母,Strong,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.hornet-dragonfly,潘德拉,Weak,待修,快筛未过：跟随不到位,入池,敌方筛测6/6通过（仅敌方）
+spawn.shield-dock-worker,烟岩筛工,Strong,入池,core58 31/31（仅友方）,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.fields-flock-flyers,惊叫虫,Weak,永久排除,原作惊叫虫只有FlockFlyer受惊群飞/歌唱反应，没有DamageHero或攻击FSM；属于无攻击环境生物，不补造攻击，不开放敌友召唤。,永久排除,原作惊叫虫只有FlockFlyer受惊群飞/歌唱反应，没有DamageHero或攻击FSM；属于无攻击环境生物，不补造攻击，不开放敌友召唤。
+spawn.bone-worm-blueblood,生质幼虫,Strong,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.dock-worker,炼岩工,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.crawfather,鸦虫教父,Strong,待修,qa-claude60 核心矩阵 27/31：原生攻击未出手、点名目标未被自然击杀、不补位下一个敌人,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.garmond-zaza,加蒙德 & 扎扎,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.pilgrim-05,年迈朝圣者,Weak,入池,core58 31/31,入池,友方池单位，敌方筛测6/6通过
+spawn.trobbio,特罗比奥,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,入池,敌方筛测6/6通过（仅敌方）
+spawn.spinner-boss,黑寡妇,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中、ActualEnemyWeaponHurts,入池,敌方筛测6/6通过（仅敌方）
+spawn.lifeblood-fly,生质飞籽,Weak,永久排除,原作生质飞籽为受击后提供蓝血的无意识囊体，非攻击单位；不适合作为战斗召唤物。,永久排除,原作生质飞籽为受击后提供蓝血的无意识囊体，非攻击单位；不适合作为战斗召唤物。
+spawn.sand-centipede,沙噬虫,Weak,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播
+spawn.wisp-pyre-effigy,炽焰之父,Boss,待修,快筛未过：跟随不到位、未观察到自然攻击、未证实原生命中,未开放,敌方筛测未过：16秒内未伤到主播

@@ -252,6 +252,17 @@ internal sealed partial class QaHarness
                 case "hero-regain":
                     // 场地初始化会收回主播操作；模拟挥针前恢复输入，不重置召唤或生命。
                     RequireIsolation(); HeroController.SilentInstance.RegainControl(); HeroController.SilentInstance.AcceptInput(); break;
+                case "hero-heal":
+                    // 敌方筛测给主播补满生命，避免低血基线在验证击杀前被打死；不清场。
+                    RequireIsolation(); PlayerData.instance.health = PlayerData.instance.maxHealth; break;
+                case "hero-fsm":
+                    // 读取主角状态机当前状态及出口；给出 State 时复位，用于清除上一单位遗留的抓取锁。
+                    RequireIsolation(); var heroFsm=HeroController.SilentInstance.GetComponents<PlayMakerFSM>().First(f=>f.FsmName==(string)command["Fsm"]!);
+                    var resetState=(string?)command["State"];if(resetState!=null){if(!heroFsm.FsmStates.Any(state=>state.Name==resetState))throw new InvalidOperationException("不存在的原作状态");heroFsm.SetState(resetState);}
+                    result.Success=true;result.Message=new JObject{["State"]=heroFsm.ActiveStateName,
+                        ["Global"]=new JArray(heroFsm.FsmGlobalTransitions.Select(t=>t.EventName+"->"+t.ToState)),
+                        ["Transitions"]=new JArray(heroFsm.FsmStates.Select(s=>new JObject{["Name"]=s.Name,["Out"]=new JArray(s.Transitions.Select(t=>t.EventName+"->"+t.ToState))}))}.ToString(Formatting.None);
+                    bridge.Send(new() { Kind = "result", Result = result }); return;
                 case "hero-attack":
                     RequireIsolation();
                     // 调用玩家普通挥针入口，保留原生武器窗口、碰撞与伤害；不直接命中敌人。

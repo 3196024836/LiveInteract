@@ -18,7 +18,8 @@ public static class SummonEligibility
         if (!monster.CanFight) { return monster.Name + "没有攻击动作，不支持召唤；本次没有生成替代单位。"; }
         if (friendly ? monster.SummonEligible : monster.EnemySummonEligible) { return ""; }
         // 只开放了另一阵营时，说明当前阵营尚未验收，而不是笼统“不可召唤”。
-        var reason = monster.SummonEligible || monster.EnemySummonEligible ? "尚未通过" + (friendly ? "友军" : "敌方") + "实机验收。" : monster.SummonExclusionReason;
+        var reason = monster.EnemyOnlyEligible && friendly && monster.SummonExclusionReason.Length > 0 && !monster.SummonExclusionReason.StartsWith("尚未通过") ? monster.SummonExclusionReason
+            : monster.SummonEligible || monster.EnemySummonEligible ? "尚未通过" + (friendly ? "友军" : "敌方") + "实机验收。" : monster.SummonExclusionReason;
         return monster.Name + (friendly ? "不可召唤（友军）：" : "不可召唤（敌方）：") + reason + " 本次没有生成替代单位。";
     }
 
@@ -47,11 +48,16 @@ public static class SummonEligibility
         var enemyApproved = new HashSet<string>(review.EnemyOnlyIds, StringComparer.Ordinal);
         if (review.EnemyOnlyIds.Distinct(StringComparer.Ordinal).Count() != review.EnemyOnlyIds.Count || review.EnemyOnlyIds.Any(id => !ids.Contains(id) || approved.Contains(id)))
         { throw new InvalidDataException("仅敌方召唤清单包含未知、重复或已在友方白名单中的记录。"); }
-        if (monsters.Any(m => (approved.Contains(m.Id) || enemyApproved.Contains(m.Id)) && (!m.CanFight || review.ExclusionReasons.ContainsKey(m.Id))))
+        var allyOnly = new HashSet<string>(review.AllyOnlyIds, StringComparer.Ordinal);
+        if (review.AllyOnlyIds.Distinct(StringComparer.Ordinal).Count() != review.AllyOnlyIds.Count || review.AllyOnlyIds.Any(id => !approved.Contains(id)))
+        { throw new InvalidDataException("仅友方清单只能标记友方白名单内的单位且不得重复。"); }
+        // 仅敌方单位可保留排除原因，用来说明友方为何未开放。
+        if (monsters.Any(m => approved.Contains(m.Id) && (!m.CanFight || review.ExclusionReasons.ContainsKey(m.Id)) || enemyApproved.Contains(m.Id) && !m.CanFight))
         { throw new InvalidDataException("召唤批准清单不能同时批准无攻击或明确排除的单位。"); }
         foreach (var monster in monsters)
         {
             monster.EnemyOnlyEligible = enemyApproved.Contains(monster.Id);
+            monster.AllyOnly = allyOnly.Contains(monster.Id);
             monster.SummonEligible = approved.Contains(monster.Id);
             monster.SummonExclusionReason = monster.SummonEligible ? "" : review.ExclusionReasons.TryGetValue(monster.Id, out var reason) ? reason : "尚未通过本轮完整实机验收，暂不开放召唤。";
         }
@@ -64,5 +70,7 @@ public static class SummonEligibility
         public Dictionary<string, string> ExclusionReasons { get; set; } = new();
         // 可选：仅作为敌方开放的单位。
         public List<string> EnemyOnlyIds { get; set; } = new();
+        // 可选：友方白名单中敌方筛测未过、不进入敌方召唤的单位。
+        public List<string> AllyOnlyIds { get; set; } = new();
     }
 }
