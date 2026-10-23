@@ -19,7 +19,7 @@ public static class ActionCatalog
     {
         var monster=MonsterCatalog.Find(actionId);
         if(monster==null&&NativeSummons.Find(actionId) is {} ally) { monster=MonsterCatalog.Find(ally.MonsterId); }
-        return monster==null || monster.CanFight&&monster.SummonEligible;
+        return monster==null || monster.CanFight&&(monster.SummonEligible||monster.EnemySummonEligible);
     }
 
     /// <summary>读取程序集内的固定动作定义。</summary>
@@ -37,7 +37,7 @@ public static class ActionCatalog
                 Category = monster.Tier switch { MonsterTier.Weak => "弱怪", MonsterTier.Strong => "强怪", _ => "Boss" },
                 Support = monster.CanFight ? "implemented" : "unavailable",
                 Description = "使用本机游戏的" + monster.Name + "预制体。" +
-                    (monster.SummonEligible ? "本轮召唤白名单单位，验收记录随对应版本提供。" : monster.SourceScene.Length>0 ? "扩展目录，尚未列入召唤白名单；不参与具名或随机召唤。" : "") +
+                    (monster.SummonEligible ? "本轮召唤白名单单位，验收记录随对应版本提供。" : monster.EnemyOnlyEligible ? "仅开放敌方召唤（不会跟随主播）。" : monster.SourceScene.Length>0 ? "扩展目录，尚未列入召唤白名单；不参与具名或随机召唤。" : "") +
                     (!monster.CanFight?"原作被动生物，没有攻击动作；不支持召唤。":"") +
                     (monster.IsBoss ? "跨场景 Boss 属试验功能，AI 可能依赖原场景，请用独立存档测试。" : "可在角色附近生成，紧急停止会清理本工具生成的对象。"),
                 Parameters = new List<ActionParameter>

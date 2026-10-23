@@ -31,6 +31,12 @@ public sealed class MonsterDefinition
     /// <summary>当前生产召唤白名单资格；冻结候选可供最终验收，不表示完整发布验收通过。仅从独立清单加载。</summary>
     [JsonIgnore]
     public bool SummonEligible { get; set; }
+    /// <summary>仅作为敌方开放（不会跟随主播但能正常作战）；仅从独立清单加载。</summary>
+    [JsonIgnore]
+    public bool EnemyOnlyEligible { get; set; }
+    /// <summary>敌方召唤资格：友方白名单单位，或单独列为仅敌方开放的单位。</summary>
+    [JsonIgnore]
+    public bool EnemySummonEligible => SummonEligible || EnemyOnlyEligible;
     /// <summary>未批准或明确排除的原因，不把运行时故障记为原作无攻击。</summary>
     [JsonIgnore]
     public string SummonExclusionReason { get; set; } = "尚未通过本轮完整实机验收，暂不开放召唤。";

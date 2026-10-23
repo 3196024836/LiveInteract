@@ -23,9 +23,10 @@ public static class ActionValidation
         var direct=MonsterCatalog.Find(request.ActionId);
         if(direct==null&&NativeSummons.Find(request.ActionId) is {} ally) { direct=MonsterCatalog.Find(ally.MonsterId); }
         if(direct==null&&request.ActionId.StartsWith("ally.convert.",StringComparison.Ordinal)) { direct=MonsterCatalog.Find(request.ActionId.Substring("ally.convert.".Length)); }
+        var friendly=SummonCommands.IsFriendly(request.ActionId,request.Arguments); // 按请求阵营校验对应白名单。
         if(direct!=null&&enforceSummonEligibility)
         {
-            var rejection=SummonEligibility.RejectionReason(direct);
+            var rejection=SummonEligibility.RejectionReason(direct,friendly);
             if(rejection.Length>0) { errors.Add(rejection);return errors; }
         }
         if (request.GameId != "silksong" || descriptor == null || descriptor.Support == "unavailable" && (enforceSummonEligibility || direct==null))
@@ -90,7 +91,7 @@ public static class ActionValidation
             var monster=SummonCommands.FindSource(source);
             if(monster!=null&&enforceSummonEligibility)
             {
-                var rejection=SummonEligibility.RejectionReason(monster);
+                var rejection=SummonEligibility.RejectionReason(monster,friendly);
                 if(rejection.Length>0) { errors.Add(rejection); }
             }
             else if(monster==null&&enforceSummonEligibility) { errors.Add("无法确认此旧入口的来源已获本轮批准；请使用已批准的准确怪物名，本次没有生成替代单位。"); }
@@ -100,7 +101,7 @@ public static class ActionValidation
         {
             if(enforceSummonEligibility)
             {
-                try { SummonCommands.Resolve(name); }
+                try { SummonCommands.Resolve(name,friendly); }
                 catch (ArgumentException error) { errors.Add(error.Message); }
             }
         }
@@ -109,10 +110,10 @@ public static class ActionValidation
             try
             {
                 if(request.ActionId is "summon.random" or "summon.random.ally" or "summon.random.enemy")
-                    NativeSummons.RandomMonster("validation",request.Arguments.TryGetValue("pool",out var pool)?pool:"ordinary");
-                else if(request.ActionId=="boss.random") { NativeSummons.Boss("validation"); }
+                    NativeSummons.RandomMonster("validation",request.Arguments.TryGetValue("pool",out var pool)?pool:"ordinary",friendly);
+                else if(request.ActionId=="boss.random") { NativeSummons.Boss("validation",friendly); }
                 else if(request.ActionId=="ally.native.free-random") { NativeSummons.FreeAlly("validation"); }
-                else if(request.ActionId=="enemy.random") { NativeSummons.RandomMonster("validation","ordinary"); }
+                else if(request.ActionId=="enemy.random") { NativeSummons.RandomMonster("validation","ordinary",false); }
                 else if(request.ActionId is "enemy.clone" or "enemy.cloneSafe")
                     errors.Add("此旧场景复制入口无法确认来源已获本轮批准；请改用已批准具名召唤，本次没有生成替代单位。");
             }

@@ -241,6 +241,25 @@ public sealed class SummonEligibilityTests
         }
     }
 
+    /// <summary>仅敌方开放的单位只进敌方召唤与敌方随机池，友方入口仍拒绝。</summary>
+    [Fact] public void EnemyOnlyUnitsJoinOnlyEnemyPools()
+    {
+        using var approved=new ApprovedSummonsScope(new[]{"spawn.bone-goomba"});
+        var enemyOnly=MonsterCatalog.Find("spawn.bone-spitter")!;
+        try
+        {
+            enemyOnly.EnemyOnlyEligible=true;
+            Assert.Empty(SummonEligibility.RejectionReason(enemyOnly,false));
+            Assert.Contains("友军",SummonEligibility.RejectionReason(enemyOnly,true));
+            var enemyPicks=Enumerable.Range(0,64).Select(i=>NativeSummons.RandomMonster("e"+i,"weak",false).Id).ToHashSet();
+            var allyPicks=Enumerable.Range(0,64).Select(i=>NativeSummons.RandomMonster("a"+i,"weak",true).Id).ToHashSet();
+            Assert.Contains("spawn.bone-spitter",enemyPicks);
+            Assert.DoesNotContain("spawn.bone-spitter",allyPicks);
+            Assert.Empty(ActionValidation.Validate(new(){ActionId="summon.named.enemy",Arguments=new(){["name"]="spawn.bone-spitter"}}));
+            Assert.NotEmpty(ActionValidation.Validate(new(){ActionId="summon.named.ally",Arguments=new(){["name"]="spawn.bone-spitter"}}));
+        }
+        finally { enemyOnly.EnemyOnlyEligible=false; }
+    }
 }
 
 /// <summary>仅单元测试构造批准样本，finally/Dispose还原；不写审核清单，不用于QA或生产。</summary>

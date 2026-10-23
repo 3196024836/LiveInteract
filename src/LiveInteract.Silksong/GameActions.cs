@@ -285,13 +285,13 @@ internal sealed class GameActions
             case "ally.native.bone-goomba": case "ally.native.understore-thrower": case "ally.native.shellwood-gnat": case "ally.native.shellwood-wasp": case "ally.native.slab-fly-large":
                 return await SpawnNativeAllyAsync(NativeSummons.Find(request.ActionId)!,request);
             case "summon.named": case "summon.named.enemy": case "summon.named.ally":
-                var namedMonster=SummonCommands.Resolve(Text(request,"name"));
+                var namedMonster=SummonCommands.Resolve(Text(request,"name"),SummonCommands.IsFriendly(request.ActionId,request.Arguments));
                 return await SpawnResolvedGroupAsync(new[]{namedMonster},request,SummonCommands.IsFriendly(request.ActionId,request.Arguments),1);
             case "summon.random": case "summon.random.enemy": case "summon.random.ally":
-                var choices=Enumerable.Range(request.SelectionOffset,(int)Number(request,"count",1)).Select(i=>NativeSummons.RandomMonster(selectionSeed+"-"+i,Text(request,"pool"))).ToArray();
+                var choices=Enumerable.Range(request.SelectionOffset,(int)Number(request,"count",1)).Select(i=>NativeSummons.RandomMonster(selectionSeed+"-"+i,Text(request,"pool"),SummonCommands.IsFriendly(request.ActionId,request.Arguments))).ToArray();
                 return await SpawnResolvedGroupAsync(choices,request,SummonCommands.IsFriendly(request.ActionId,request.Arguments),Number(request,"power",1));
             case "boss.random":
-                var selectedBoss=NativeSummons.Boss(selectionSeed);request.EffectText="随机Boss · "+selectedBoss.Name+" ×1";return await SpawnNamedAsync(selectedBoss,request);
+                var selectedBoss=NativeSummons.Boss(selectionSeed,SummonCommands.IsFriendly(request.ActionId,request.Arguments));request.EffectText="随机Boss · "+selectedBoss.Name+" ×1";return await SpawnNamedAsync(selectedBoss,request);
             case "enemy.growStack": case "enemy.shrinkStack":
                 var growTarget = SelectEnemy(Text(request, "enemy"));
                 var layers = growTarget.GetComponents<AppearanceStack>().FirstOrDefault(item => !item.Retired) ?? growTarget.gameObject.AddComponent<AppearanceStack>();
@@ -597,7 +597,7 @@ internal sealed class GameActions
     /// <summary>先完成整批资源加载再创建；任何同步创建失败都撤销本次新对象，避免重试重复赠送。</summary>
     private async Task<string> SpawnResolvedGroupAsync(MonsterDefinition[] monsters,ActionRequest request,bool friendly,double power)
     {
-        foreach(var monster in monsters)SummonEligibility.Require(monster);
+        foreach(var monster in monsters)SummonEligibility.Require(monster,friendly);
         if(!CanAdmitSummons(monsters.Length,friendly,request.Id))return QueueSpawn(request,(friendly?"友军 ":"敌军 ")+string.Join("、",monsters.GroupBy(m=>m.Id).Select(g=>g.First().Name+" ×"+g.Count())),monsters.Length);
         var clearEpoch=summonClearEpoch;var started=generation;var handles=new List<AsyncOperationHandle<GameObject>>();
         foreach(var monster in monsters)
@@ -729,7 +729,7 @@ internal sealed class GameActions
     /// <summary>具名和旧版资源入口共用正确的预制体加载与回执路径。</summary>
     private async Task<string> SpawnNamedAsync(MonsterDefinition monster, ActionRequest request)
     {
-            SummonEligibility.Require(monster);
+            SummonEligibility.Require(monster,SummonCommands.IsFriendly(request.ActionId,request.Arguments));
             if(!CanAdmitSummons((int)Number(request,"count",1),SummonCommands.IsFriendly(request.ActionId,request.Arguments),request.Id))return QueueSpawn(request,monster.Name+" ×"+Number(request,"count",1),(int)Number(request,"count",1));
             var clearEpoch = summonClearEpoch;
             var startedGeneration = generation;
@@ -1180,7 +1180,7 @@ internal sealed class GameActions
             ??MonsterCatalog.Find(source.GetComponent<OwnedSummon>()?.AssetKey??"")
             ??SummonCommands.FindSource(source.name.Replace(" [LiveInteract]",""));
         if(definition==null)throw new ArgumentException("该场景对象不在稳定召唤目录中，未创建副本。");
-        SummonEligibility.Require(definition);
+        SummonEligibility.Require(definition,ally!=null||SummonCommands.IsFriendly(request.ActionId,request.Arguments));
         spawned.RemoveAll(item => item == null);
         if(ally==null&&SummonCommands.IsFriendly(request.ActionId,request.Arguments))
         {

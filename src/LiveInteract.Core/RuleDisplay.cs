@@ -35,7 +35,7 @@ public static class RuleDisplay
         if(monster==null&&NativeSummons.Find(step.ActionId) is {} ally) { monster=MonsterCatalog.Find(ally.MonsterId); }
         if(monster==null&&step.ActionId is "summon.named" or "summon.named.ally" or "summon.named.enemy") { monster=SummonCommands.FindSource(Value("name")); }
         if(monster==null&&step.ActionId is "enemy.spawn" or "boss.clone" or "enemy.asset" or "boss.asset") { monster=SummonCommands.FindSource(Value(step.ActionId is "enemy.asset" or "boss.asset"?"asset":"enemy")); }
-        if(monster!=null&&SummonEligibility.RejectionReason(monster) is { Length:>0 } rejection) { name+=" · "+rejection; }
+        if(monster!=null&&SummonEligibility.RejectionReason(monster,SummonCommands.IsFriendly(step.ActionId,step.Arguments)) is { Length:>0 } rejection) { name+=" · "+rejection; }
         return name;
     }
 

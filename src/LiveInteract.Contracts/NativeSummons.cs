@@ -24,9 +24,9 @@ public static class NativeSummons
     // 稳定的执行单位种子：加载重试不改抽签结果，不使用进程随机化的string.GetHashCode。
     public static int Choice(string executionId,int count)
     { if(count<1)throw new ArgumentOutOfRangeException(nameof(count));var seed=17;foreach(var ch in executionId ?? "")seed=unchecked(seed*31+ch);return new Random(seed).Next(count); }
-    public static MonsterDefinition Boss(string executionId)
+    public static MonsterDefinition Boss(string executionId,bool friendly=false)
     {
-        var pool=MonsterCatalog.All.Where(m=>m.IsBoss&&m.CanFight&&m.SummonEligible&&m.RandomEligible).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();
+        var pool=MonsterCatalog.All.Where(m=>m.IsBoss&&m.CanFight&&(friendly?m.SummonEligible:m.EnemySummonEligible)&&m.RandomEligible).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();
         if(pool.Length==0) { throw new InvalidOperationException("Boss池没有本轮批准且具有随机资格的战斗单位。"); }
         return pool[Choice(executionId,pool.Length)];
     }
@@ -40,7 +40,10 @@ public static class NativeSummons
     public static MonsterDefinition RandomMonster(string executionId,bool includeBoss)=>RandomMonster(executionId,includeBoss?"all":"ordinary");
 
     /// <summary>新分档池按可攻击、召唤白名单与 Tier 抽取；旧 ordinary/all 另保留 RandomEligible。重试使用同一执行单位 ID。</summary>
-    public static MonsterDefinition RandomMonster(string executionId,string pool)
+    public static MonsterDefinition RandomMonster(string executionId,string pool)=>RandomMonster(executionId,pool,true);
+
+    /// <summary>按阵营白名单抽取：友方只用友军白名单，敌方另含仅敌方开放单位。</summary>
+    public static MonsterDefinition RandomMonster(string executionId,string pool,bool friendly)
     {
         Func<MonsterDefinition,bool> accepts = pool switch
         {
@@ -50,7 +53,7 @@ public static class NativeSummons
             "all" => m=>m.RandomEligible,
             _ => throw new ArgumentException("未知怪物随机池："+pool,nameof(pool))
         };
-        var candidates=MonsterCatalog.All.Where(m=>m.CanFight&&m.SummonEligible&&accepts(m)).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();
+        var candidates=MonsterCatalog.All.Where(m=>m.CanFight&&(friendly?m.SummonEligible:m.EnemySummonEligible)&&accepts(m)).OrderBy(m=>m.Id,StringComparer.Ordinal).ToArray();
         if(candidates.Length==0) { throw new InvalidOperationException("该怪物随机池没有符合资格的本轮批准战斗单位："+pool); }
         return candidates[Choice(executionId,candidates.Length)];
     }

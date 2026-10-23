@@ -12,10 +12,10 @@ public static class SummonCommands
         if(name.Length==0)throw new ArgumentException("缺少怪物名称，例如："+prefix+" 木蜂");
         return name;
     }
-    public static MonsterDefinition Resolve(string name)
+    public static MonsterDefinition Resolve(string name,bool friendly=true)
     {
         var monster=FindSource(name) ?? throw new ArgumentException("没有匹配到准确名称「"+name+"」。请在游戏功能库查看已批准怪物名；本次没有生成替代单位。");
-        SummonEligibility.Require(monster);
+        SummonEligibility.Require(monster,friendly);
         return monster;
     }
 
