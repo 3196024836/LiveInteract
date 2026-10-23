@@ -69,10 +69,6 @@ internal sealed class RuleEditorWindow : Window
         var gifts = new StackPanel(); left.Children.Add(gifts);
         giftName = Ui.Field(gifts, "礼物名称", rule.Trigger.GiftName);
         gifts.Children.Add(new TextBlock { Text = "例如：小心心。也可以从运行记录直接选择收到的礼物。", Foreground = Ui.Brush("#91AEBE"), TextWrapping = TextWrapping.Wrap, Margin = new(0, 7, 0, 0) });
-        giftMinimum = Ui.Field(gifts, "礼物单价下限（钻，0 不限）", rule.Trigger.MinGiftUnitValue.ToString(CultureInfo.InvariantCulture));
-        giftMaximum = Ui.Field(gifts, "礼物单价上限（钻，0 不限）", rule.Trigger.MaxGiftUnitValue.ToString(CultureInfo.InvariantCulture));
-        freeGift = new CheckBox { Content = "仅零价 / 单价未知礼物", IsChecked = rule.Trigger.FreeOrUnknownGiftOnly, Margin = new(0, 10, 0, 4) }; gifts.Children.Add(freeGift);
-        freeGift.Click += (_, _) => UpdatePreview();
         threshold = Ui.Field(left, "每多少个 / 次触发一次", rule.Trigger.Threshold.ToString(CultureInfo.InvariantCulture));
         left.Children.Add(sourceHint);
         enabled = new CheckBox { Content = "启用这条规则", IsChecked = rule.Enabled, Margin = new(0, 5, 0, 14) }; left.Children.Add(enabled);
@@ -82,6 +78,12 @@ internal sealed class RuleEditorWindow : Window
         userCooldown = Ui.Field(options, "同一观众执行间隔（秒，0 不限制）", rule.UserCooldownSeconds.ToString(CultureInfo.InvariantCulture));
         perEvent = new TextBox { Text = rule.MaximumPerEvent.ToString(CultureInfo.InvariantCulture) };
         giftId = Ui.Field(options, "礼物 ID（可留空，填写后优先匹配）", rule.Trigger.GiftId);
+        // 单价筛选属于少用的礼物细分条件，和礼物 ID 一起放在可选设置里，只在礼物来源时显示。
+        var giftOptions = new StackPanel(); options.Children.Add(giftOptions);
+        giftMinimum = Ui.Field(giftOptions, "礼物单价下限（钻，0 不限）", rule.Trigger.MinGiftUnitValue.ToString(CultureInfo.InvariantCulture));
+        giftMaximum = Ui.Field(giftOptions, "礼物单价上限（钻，0 不限）", rule.Trigger.MaxGiftUnitValue.ToString(CultureInfo.InvariantCulture));
+        freeGift = new CheckBox { Content = "仅零价 / 单价未知礼物", IsChecked = rule.Trigger.FreeOrUnknownGiftOnly, Margin = new(0, 10, 0, 4) }; giftOptions.Children.Add(freeGift);
+        freeGift.Click += (_, _) => UpdatePreview();
         if (rule.Trigger.AllowedUsers.Count > 0 || rule.Trigger.BlockedUsers.Count > 0 || rule.Trigger.MinimumFanLevel > 0 || rule.Trigger.RequireFollower || rule.Probability < 1 || rule.Trigger.SingleExecution)
         {
             options.Children.Add(new TextBlock { Text = "这条旧规则还包含身份、概率或计数限制，将保留原设置。", TextWrapping = TextWrapping.Wrap, Foreground = Ui.Brush("#F4B38F"), Margin = new(0, 12, 0, 0) });
@@ -103,6 +105,7 @@ internal sealed class RuleEditorWindow : Window
         {
             chat.Visibility = (LiveEventType)type.SelectedValue == LiveEventType.Chat ? Visibility.Visible : Visibility.Collapsed;
             gifts.Visibility = (LiveEventType)type.SelectedValue == LiveEventType.Gift ? Visibility.Visible : Visibility.Collapsed;
+            giftOptions.Visibility = gifts.Visibility;
             if (changed)
             {
                 rule.Trigger.Counting = (LiveEventType)type.SelectedValue is LiveEventType.Gift ? TriggerCounting.PerEvent : TriggerCounting.RoomTotal;

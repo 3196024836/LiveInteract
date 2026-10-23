@@ -120,7 +120,7 @@ public partial class App : Application
             else
             {
                 singleInstance = new Mutex(true, @"Local\LiveInteract.Desktop.v1", out var created);
-                if (!created) { MessageBox.Show("花花直播互动已经运行，请使用已打开的窗口。", "LiveInteract"); Shutdown(); return; }
+                if (!created) { MessageBox.Show("花花直播互动已经运行，请使用已打开的窗口。", "花花直播互动"); Shutdown(); return; }
             }
             var window = new MainWindow(data, preview); // 原生控制台。
             if (preview) { window.WindowStartupLocation = WindowStartupLocation.Manual; window.Left = -20000; window.Top = -20000; window.ShowInTaskbar = false; }
@@ -136,7 +136,7 @@ public partial class App : Application
         {
             Directory.CreateDirectory(data); File.WriteAllText(Path.Combine(data, "startup-error.txt"), exception.ToString());
             if (e.Args.Length > 0) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "startup-error.txt"), exception.ToString()); }
-            else { MessageBox.Show("启动未完成：" + exception.Message + "\n\n诊断位置：" + Path.Combine(data, "startup-error.txt"), "LiveInteract", MessageBoxButton.OK, MessageBoxImage.Error); }
+            else { MessageBox.Show("启动未完成：" + exception.Message + "\n\n诊断位置：" + Path.Combine(data, "startup-error.txt"), "花花直播互动", MessageBoxButton.OK, MessageBoxImage.Error); }
             Shutdown(1);
         }
     }

@@ -16,6 +16,8 @@ public sealed class AppSettings
     public string Platform { get; set; } = "douyin";
     /// <summary>哔哩哔哩直播间公开地址或房间号。</summary>
     public string BilibiliRoom { get; set; } = "";
+    /// <summary>本人是否已勾选直播接入风险确认；下次打开直播间窗口默认沿用。</summary>
+    public bool LiveConsentAccepted { get; set; }
     /// <summary>是否开启本机透明展示。</summary>
     public bool BrowserOverlay { get; set; } = true;
     /// <summary>是否显示游戏内提示。</summary>
