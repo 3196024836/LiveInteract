@@ -32,6 +32,8 @@ internal sealed class LiveSourceWindow : Window
     private readonly string userData;
     private readonly LiveRuntime runtime;
     private readonly DispatcherTimer statusTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
+    // 平台消息通道已建立时的状态文本；状态栏据此显示“已连接”。
+    private const string ChannelOpen = "消息通道已建立，分类数据以实际收包为准";
     private string connectionState = "尚未连接";
     private readonly HashSet<string> tracked = new();
     private readonly Dictionary<string, string> rememberedRoom = new() { [DouyinKey] = "", [BilibiliKey] = "" };
@@ -45,6 +47,10 @@ internal sealed class LiveSourceWindow : Window
     public event Action<string>? SourceStatusChanged;
     /// <summary>向主窗口保存公开直播间地址：平台标识与实际地址。</summary>
     public event Action<string, string>? SelectionChanged;
+    /// <summary>本窗口暂停互动时报告简短原因，供主窗口状态显示。</summary>
+    public event Action<string>? Paused;
+    /// <summary>本人勾选或取消风险确认时通知主窗口记住选择。</summary>
+    public event Action<bool>? ConsentChanged;
 
     /// <summary>建立手动登录与接入验证窗口。</summary>
     /// <param name="runtime">当前工具会话。</param>
@@ -52,12 +58,13 @@ internal sealed class LiveSourceWindow : Window
     /// <param name="platform">上次使用的平台。</param>
     /// <param name="douyinRoom">上次填写的抖音地址。</param>
     /// <param name="bilibiliRoom">上次填写的哔哩哔哩地址。</param>
-    public LiveSourceWindow(LiveRuntime runtime, string dataDirectory, string platform, string douyinRoom, string bilibiliRoom)
+    /// <param name="consentAccepted">上次是否已勾选风险确认。</param>
+    public LiveSourceWindow(LiveRuntime runtime, string dataDirectory, string platform, string douyinRoom, string bilibiliRoom, bool consentAccepted)
     {
         this.runtime = runtime; userData = dataDirectory;
         this.platform = platform == BilibiliKey ? BilibiliKey : DouyinKey;
         rememberedRoom[DouyinKey] = douyinRoom; rememberedRoom[BilibiliKey] = bilibiliRoom;
-        Title = "连接本人直播间 · LiveInteract"; Width = 1120; Height = 820; MinWidth = 900; MinHeight = 680; WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        Title = "连接直播间 · 花花直播互动"; Width = 1120; Height = 820; MinWidth = 900; MinHeight = 680; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         var root = new Grid(); // 设置区和实际网页。
         root.RowDefinitions.Add(new() { Height = GridLength.Auto }); root.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) }); Content = root;
         var panel = new StackPanel { Margin = new(20, 18, 20, 15) }; // 清楚区分浏览网页与收到数据。
@@ -68,7 +75,8 @@ internal sealed class LiveSourceWindow : Window
         platformBox = new ComboBox { Width = 150 }; platformBox.Items.Add(douyinItem); platformBox.Items.Add(bilibiliItem);
         platformBox.SelectedItem = this.platform == BilibiliKey ? bilibiliItem : douyinItem; platformBox.SelectionChanged += (_, _) => SwitchPlatform(); platformRow.Children.Add(platformBox);
         panel.Children.Add(platformRow);
-        consent = new CheckBox { Content = "我了解上述风险，同意本次打开本人直播间并验证接入" }; panel.Children.Add(consent);
+        consent = new CheckBox { Content = "我了解上述风险，同意本次打开本人直播间并验证接入", IsChecked = consentAccepted }; panel.Children.Add(consent);
+        consent.Click += (_, _) => ConsentChanged?.Invoke(consent.IsChecked == true);
         installRuntime=new Button{Content="在软件内准备浏览器组件",Visibility=Visibility.Collapsed,HorizontalAlignment=HorizontalAlignment.Left,Margin=new(0,8,0,0)};
         installRuntime.Click+=async(_,_)=>
         {
@@ -79,17 +87,32 @@ internal sealed class LiveSourceWindow : Window
         };panel.Children.Add(installRuntime);
         var row = new DockPanel { Margin = new(0, 9, 0, 0) }; // 地址栏与显式连接按钮。
         connect = new Button { Content = "打开并监听", Style = (Style)FindResource("PrimaryButton"), Margin = new(10, 0, 0, 0) }; DockPanel.SetDock(connect, Dock.Right); row.Children.Add(connect);
+        var addressLabel = new TextBlock { Text = "直播间号或地址", VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 12, 0) }; DockPanel.SetDock(addressLabel, Dock.Left); row.Children.Add(addressLabel);
         address = new TextBox { Text = rememberedRoom[this.platform], ToolTip = "直播间短号或直播页地址" }; row.Children.Add(address); panel.Children.Add(row);
-        status = new TextBlock { Text = "尚未连接。打开网页不代表弹幕、礼物和点赞均已验证。", Foreground = Ui.Brush("#AFC4D3"), Margin = new(0, 11, 0, 0), FontSize = 13 }; panel.Children.Add(status); root.Children.Add(panel);
+        status = new TextBlock { Text = "尚未连接。打开网页不代表弹幕、礼物和点赞均已验证。", Foreground = Ui.Brush("#A8BAAD"), Margin = new(0, 11, 0, 0), FontSize = 13 }; panel.Children.Add(status); root.Children.Add(panel);
         browser.DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 16, 25, 35); Grid.SetRow(browser, 1); root.Children.Add(browser);
         connect.Click += async (_, _) => await ConnectAsync();
         statusTimer.Tick += (_, _) =>
         {
             if (packets == 0) { return; }
-            SetStatus(connectionState + " · 实收 " + packets + " 帧 · 弹幕 " + runtime.CountForType(LiveEventType.Chat) + " / 礼物 " + runtime.CountForType(LiveEventType.Gift) + " / 点赞 " + runtime.CountForType(LiveEventType.Like) + " · 待解析 " + runtime.Journal.PendingFrames + " · 待核对帧 " + runtime.Journal.ReviewFrames);
+            // 主行只给分类数量，帧级计数放到提示里。
+            SetStatus((connectionState == ChannelOpen ? "已连接" : connectionState) + " · 弹幕 " + runtime.CountForType(LiveEventType.Chat) + " / 礼物 " + runtime.CountForType(LiveEventType.Gift) + " / 点赞 " + runtime.CountForType(LiveEventType.Like));
+            status.ToolTip = "实收 " + packets + " 帧 · 待解析 " + runtime.Journal.PendingFrames + " · 待核对帧 " + runtime.Journal.ReviewFrames;
         };
         statusTimer.Start();
-        Closing += (_, _) => { RememberRoom(); statusTimer.Stop(); runtime.SetEnabled(false); browser.Dispose(); SourceStatusChanged?.Invoke("直播间窗口已关闭；收到的输入和排队任务已保留"); };
+        Closing += (_, e) =>
+        {
+            // 互动进行中关闭会暂停新触发，先由本人确认。
+            if (runtime.Enabled && MessageBox.Show(this, "关闭后会暂停互动，排队保留。确定关闭？", "关闭直播间窗口", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) { e.Cancel = true; return; }
+            RememberRoom(); statusTimer.Stop(); Pause("直播间窗口已关闭"); browser.Dispose(); SourceStatusChanged?.Invoke("直播间窗口已关闭；收到的输入和排队任务已保留");
+        };
+    }
+
+    /// <summary>暂停新触发并报告原因；排队任务保留。</summary>
+    /// <param name="reason">显示在主窗口状态上的简短原因。</param>
+    private void Pause(string reason)
+    {
+        Paused?.Invoke(reason); runtime.SetEnabled(false);
     }
 
     /// <summary>切换平台时保存当前地址，并换成该平台上次使用的地址。</summary>
@@ -129,7 +152,7 @@ internal sealed class LiveSourceWindow : Window
                 {
                     var value = JObject.Parse(eventArgs.ParameterObjectAsJson); // 不记录含签名的完整网络地址。
                     var endpoint = (string?)value["url"] ?? ""; // 仅筛选当前平台自己的弹幕通道。
-                    if (IsAllowedEndpoint(endpoint)) { tracked.Add((string?)value["requestId"] ?? ""); connectionState = "消息通道已建立，分类数据以实际收包为准"; }
+                    if (IsAllowedEndpoint(endpoint)) { tracked.Add((string?)value["requestId"] ?? ""); connectionState = ChannelOpen; }
                 };
                 browser.CoreWebView2.GetDevToolsProtocolEventReceiver("Network.webSocketFrameReceived").DevToolsProtocolEventReceived += (_, eventArgs) => ReceiveFrame(eventArgs.ParameterObjectAsJson);
                 browser.CoreWebView2.GetDevToolsProtocolEventReceiver("Network.webSocketClosed").DevToolsProtocolEventReceived += (_, eventArgs) =>
@@ -139,7 +162,7 @@ internal sealed class LiveSourceWindow : Window
                 };
                 browser.CoreWebView2.DocumentTitleChanged += (_, _) =>
                 {
-                    if (browser.CoreWebView2.DocumentTitle.Contains("验证")) { runtime.SetEnabled(false); connectionState = "平台需要本人完成验证，暂停新触发"; SetStatus(connectionState); }
+                    if (browser.CoreWebView2.DocumentTitle.Contains("验证")) { Pause("平台需要本人完成验证"); connectionState = "平台需要本人完成验证，暂停新触发"; SetStatus(connectionState); }
                 };
                 browser.CoreWebView2.NavigationCompleted += (_, eventArgs) =>
                 {
@@ -189,7 +212,7 @@ internal sealed class LiveSourceWindow : Window
             Interlocked.Increment(ref packets);
             runtime.CaptureFrame(bytes, platform == BilibiliKey ? "bili:" + roomId : roomId); // 房间前缀决定使用哪个平台解析器。
         }
-        catch (Exception exception) { runtime.SetEnabled(false); connectionState = "接收无法安全落盘，禁止启用送礼互动：" + exception.Message; runtime.Log("严重接入错误", connectionState, false); SetStatus(connectionState); }
+        catch (Exception exception) { Pause("直播接收异常，详情见消息与队列"); connectionState = "接收无法安全落盘，禁止启用送礼互动：" + exception.Message; runtime.Log("严重接入错误", connectionState, false); SetStatus(connectionState); }
     }
 
     /// <summary>只接受当前平台自己的弹幕通道。</summary>
