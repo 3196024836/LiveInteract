@@ -116,7 +116,7 @@ internal static class Program
                         if(!queueText.Contains("5 / 6")||!queueText.Contains("7 只")||!queueText.Contains("已暂停补位"))throw new Exception("Queue counters were not displayed");
                         report["QueuePausePreservesSettings"]=true;report["QueueSettingsPayload"]=true;report["QueueCountersFromFixtureDisplayed"]=true;
                         report["QueueDefaults40HalfSecond200"]=true;report["AllFourQueueFieldsPersisted"]=true;
-                        Field<ListBox>(typeof(MainWindow),main,"Navigation").SelectedIndex=5;
+                        Field<ListBox>(typeof(MainWindow),main,"Navigation").SelectedIndex=3;
                         main.UpdateLayout();main.Dispatcher.Invoke(()=>{},DispatcherPriority.ContextIdle);
                         var label=Field<TextBlock>(typeof(MainWindow),main,"ClearSummonsHotkeyText");
                         if(!label.Text.StartsWith("F9"))throw new Exception("Shortcut label stale");
