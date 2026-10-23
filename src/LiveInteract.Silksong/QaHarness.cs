@@ -249,6 +249,9 @@ internal sealed partial class QaHarness
                     var dummyRb=combatDummy.GetComponent<Rigidbody2D>();
                     if(dummyRb!=null){dummyRb.linearVelocity=Vector2.zero;dummyRb.constraints=RigidbodyConstraints2D.FreezeAll;}
                     Physics2D.SyncTransforms();break;
+                case "hero-regain":
+                    // 场地初始化会收回主播操作；模拟挥针前恢复输入，不重置召唤或生命。
+                    RequireIsolation(); HeroController.SilentInstance.RegainControl(); HeroController.SilentInstance.AcceptInput(); break;
                 case "hero-attack":
                     RequireIsolation();
                     // 调用玩家普通挥针入口，保留原生武器窗口、碰撞与伤害；不直接命中敌人。
