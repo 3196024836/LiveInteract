@@ -105,17 +105,7 @@ public sealed class GamePipeServer : IGameAdapter, IAsyncDisposable
     /// <returns>清理任务。</returns>
     public async ValueTask DisposeAsync()
     {
-        if (writer != null)
-        {
-            try
-            {
-                await ResetAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(1));
-            }
-            catch (Exception exception) when (exception is IOException or TimeoutException or ObjectDisposedException)
-            {
-                Diagnostic?.Invoke("退出时连接已关闭：" + exception.Message);
-            }
-        }
+        // 正常退出不发清场指令：游戏端断线时自行恢复临时效果，排队召唤与已生成友军保留。
         shutdown.Cancel();
         if (worker != null)
         {

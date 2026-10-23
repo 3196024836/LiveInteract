@@ -62,7 +62,7 @@ public sealed class BilibiliDecoderTests
     [Theory][InlineData(false)][InlineData(true)]
     public void CompressedBatchYieldsEveryEvent(bool brotli)
     {
-        var json = "{\"cmd\":\"SEND_GIFT\",\"data\":{\"giftName\":\"小心心\",\"num\":3,\"uid\":9,\"uname\":\"送礼人\",\"price\":100,\"coin_type\":\"gold\",\"tid\":\"31036\"}}";
+        var json = "{\"cmd\":\"SEND_GIFT\",\"data\":{\"giftName\":\"小心心\",\"num\":3,\"uid\":9,\"uname\":\"送礼人\",\"price\":100,\"coin_type\":\"gold\",\"giftId\":31036,\"tid\":\"1729650000123456789\"}}";
         var items = new BilibiliPacketDecoder().DecodeFrame(Compressed(json, brotli), "bili:8", "9");
         var gift = Assert.Single(items);
         Assert.Equal(LiveEventType.Gift, gift.Type);

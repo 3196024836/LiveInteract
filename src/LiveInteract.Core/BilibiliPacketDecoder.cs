@@ -120,7 +120,7 @@ public sealed class BilibiliPacketDecoder
                     item = new LiveEvent
                     {
                         Type = LiveEventType.Gift,
-                        GiftId = Str(data["tid"]),
+                        GiftId = Str(data["giftId"]), // tid 是每笔送礼流水号，giftId 才是礼物种类。
                         GiftName = name,
                         GiftUnitValue = Math.Max(0, price),
                         Count = count,

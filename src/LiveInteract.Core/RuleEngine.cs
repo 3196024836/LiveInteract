@@ -84,14 +84,15 @@ public sealed class RuleEngine
                 {
                     continue;
                 }
-                counterKey += ":" + value.UserId;
+                counterKey += ":user:" + value.UserId;
             }
             var threshold = Math.Max(1, trigger.Threshold); // 有效门槛。
             var total = amount; // 当前可结算数量。
             if (trigger.Counting is TriggerCounting.RoomTotal or TriggerCounting.PerUser)
             {
                 total = Math.Min(long.MaxValue / 2, counters.GetValueOrDefault(counterKey)) + Math.Min(long.MaxValue / 2, amount);
-                counters[counterKey] = total % threshold;
+                // 余数为零即已全部结算，删除条目避免观众越多状态越大。
+                if (total % threshold == 0) { counters.Remove(counterKey); } else { counters[counterKey] = total % threshold; }
             }
             var candidates = (int)Math.Min(reliable ? int.MaxValue : Math.Clamp(rule.MaximumPerEvent, 1, 1000), total / threshold); // 有界触发数。
             if (trigger.SingleExecution) { candidates = Math.Min(1, candidates); }
@@ -122,8 +123,9 @@ public sealed class RuleEngine
             {
                 continue;
             }
-            cooldowns[rule.Id] = now;
-            cooldowns[userKey] = now;
+            // 可靠模式由执行端节流，不读冷却；只记录确实设置了冷却的维度。
+            if (!reliable && rule.CooldownSeconds > 0) { cooldowns[rule.Id] = now; }
+            if (!reliable && rule.UserCooldownSeconds > 0) { cooldowns[userKey] = now; }
             result.Add(new(rule, fired));
             if (rule.StopAfterMatch)
             {
@@ -131,10 +133,13 @@ public sealed class RuleEngine
             }
         }
 
-        // 用户筛选计数有上界；到达上界时回收会话统计并明确由界面重置会话。
+        // 未凑满门槛的单观众余数有上界；超出时丢弃这些零头，不能让整条输入流水线停摆。
         if (counters.Count > 50000)
         {
-            throw new InvalidOperationException("单用户累计维度已超过会话上限，请暂停并重置会话；未清空已有计数。");
+            foreach (var partial in counters.Keys.Where(k => k.Contains(":user:", StringComparison.Ordinal)).ToArray())
+            {
+                counters.Remove(partial);
+            }
         }
         if (cooldowns.Count > 50000)
         {
@@ -177,6 +182,9 @@ public sealed class RuleEngine
         foreach (var pair in state["Cooldowns"]!.ToObject<Dictionary<string, DateTimeOffset>>()!) { cooldowns[pair.Key] = pair.Value; }
         foreach (var pair in state["Executions"]!.ToObject<Dictionary<string, int>>()!) { executions[pair.Key] = pair.Value; }
     }
+
+    /// <summary>程序启动即新会话：清零“本次会话最多触发次数”的计数，累计余数保留。</summary>
+    public void ResetSession() => executions.Clear();
 
     /// <summary>读取规则在本会话已触发次数。</summary>
     /// <param name="ruleId">规则标识。</param>

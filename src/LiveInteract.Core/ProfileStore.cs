@@ -101,6 +101,10 @@ public static class ProfileStore
             if (step.Kind == StepKind.Action && rule.GameId == "silksong")
             {
                 if (step.Arguments == null || step.ParameterBindings == null) { errors.Add("动作参数缺失。"); return; }
+                // 具名召唤只有“生成怪物/生成小弟＋名称”弹幕可以留空名称，其他来源保存时就要求填写。
+                var commandOnly = rule.Trigger.Type == LiveEventType.Chat && rule.Trigger.Keywords?.Count > 0 && rule.Trigger.Keywords.All(k => k.StartsWith("生成怪物", StringComparison.Ordinal) || k.StartsWith("生成小弟", StringComparison.Ordinal));
+                if (enforceSummonEligibility && step.ActionId is "summon.named" or "summon.named.ally" or "summon.named.enemy" && !commandOnly &&
+                    (!step.Arguments.TryGetValue("name", out var summonName) || string.IsNullOrWhiteSpace(summonName))) { errors.Add("请填写准确怪物名；只有“生成怪物/生成小弟”弹幕口令可以留空。"); }
                 var arguments = new Dictionary<string, string>(step.Arguments); // 联动字段只验证来源，执行时再解析数值。
                 foreach (var pair in step.ParameterBindings)
                 {

@@ -281,7 +281,7 @@ public sealed class InteractionJournal : IDisposable
             if (result.Retryable)
             {
                 if (stopped) { Sql("UPDATE jobs SET cancelled=cancelled+1,state='Cancelled',reason=$r WHERE id=$i", ("$r", "主播已停止；在途单位确认尚未执行，已取消"), ("$i", id)); }
-                else { Defer(id, result.Message); }
+                else { Defer(id, result.Message, result.ErrorCode == "SUMMON_QUEUED" ? 2 : 0.4); } // 游戏端排队要等实际生成，放慢重询。
                 return;
             }
             Transaction(() =>

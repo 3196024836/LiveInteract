@@ -60,7 +60,7 @@ public sealed class LiveRuntime : IAsyncDisposable
     public LiveRuntime(bool startBridge = true, string? dataDirectory = null, IGameAdapter? testAdapter = null, bool runWorkers = true)
     {
         Journal = new InteractionJournal(dataDirectory == null ? ":memory:" : Path.Combine(dataDirectory, "interactions.db"));
-        Journal.RecoverAfterRestart(); engine.LoadState(Journal.EngineState); decoder.LoadState(Journal.DecoderState);
+        Journal.RecoverAfterRestart(); engine.LoadState(Journal.EngineState); engine.ResetSession(); decoder.LoadState(Journal.DecoderState);
         decoder.Warning += message => Log("协议诊断", message, false);
         bilibili.Warning += message => Log("协议诊断", message, false);
         Game = new GamePipeServer(); adapter = testAdapter ?? Game;
@@ -175,10 +175,7 @@ public sealed class LiveRuntime : IAsyncDisposable
         if (disposing) { return; } disposing = true; enabled = false;
         currentActions.Cancel(); shutdown.Cancel(); changed.Writer.TryComplete();
         try { await Task.WhenAll(workers); } catch (OperationCanceledException) { }
-        if (Game.IsConnected)
-        {
-            try { await Game.ResetAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(1)); } catch (Exception exception) when (exception is IOException or TimeoutException) { }
-        }
+        // 不发送 reset：那会取消游戏端排队召唤并清场，只有紧急停止才这样做。
         await Game.DisposeAsync();
         currentActions.Dispose(); foreach (var item in retired) { item.Dispose(); }
         lock (logGate) { logWriter?.Dispose(); }
@@ -191,7 +188,13 @@ public sealed class LiveRuntime : IAsyncDisposable
         {
             while (!shutdown.IsCancellationRequested)
             {
-                var frame = Journal.ReadFrame();
+                StoredFrame? frame;
+                try { frame = Journal.ReadFrame(); }
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    // 存储暂时故障不能让解帧线程静默退出；记录后稍后重试。
+                    Log("存储故障", "读取原始帧失败，1 秒后重试：" + exception.Message, false); await Task.Delay(1000, shutdown.Token); continue;
+                }
                 if (frame == null) { await Task.Delay(50, shutdown.Token); continue; }
                 try
                 {
@@ -251,37 +254,49 @@ public sealed class LiveRuntime : IAsyncDisposable
             while (!shutdown.IsCancellationRequested)
             {
                 if (!adapter.IsConnected) { await Task.Delay(100, shutdown.Token); continue; }
-                var job = Journal.AcquireNext(!enabled);
-                if (job == null) { await Task.Delay(40, shutdown.Token); continue; }
-                var descriptor = job.Root.Kind == StepKind.Action ? ActionCatalog.All.FirstOrDefault(a => a.Id == job.Root.ActionId) : null;
-                if (!adapter.IsConnected || (descriptor?.RequiresGameplay != false && adapter.Status?.CanAct != true))
+                try { await ProcessOneJobAsync(); }
+                catch (Exception exception) when (exception is not OperationCanceledException)
                 {
-                    Journal.Defer(job.Id, !adapter.IsConnected ? "等待游戏重新连接，数量已保留" : "等待进入角色场景 / 结束暂停、死亡或过场"); await Task.Delay(25, shutdown.Token); continue;
-                }
-                if (HasPersistent(job.Root) && !AllowPersistent)
-                {
-                    Journal.Defer(job.Id, "等待主播允许本次会话的永久修改"); continue;
-                }
-                var context = JsonConvert.DeserializeObject<ActionContext>(JsonConvert.SerializeObject(job.Context))!;
-                context.JobId = job.Id; context.UnitIndex = job.UnitIndex; context.TriggerIndex = (int)Math.Min(int.MaxValue, job.UnitIndex + 1); context.Triggerer = job.Triggerer; context.SourceType = job.SourceType; context.RequestIdPrefix = job.Id + "-" + job.UnitIndex;
-                try
-                {
-                    var success = await executor.ExecuteAsync(job.Root, job.Triggerer + " · " + job.RuleName + (job.IsSimulation ? " [模拟输入]" : ""), AllowPersistent, currentActions.Token, context);
-                    var result = Journal.LastResult(job.Id, job.UnitIndex) ?? new ActionResult { Success = success, Message = success ? "已完成" : "执行前校验失败，详情见运行日志", ErrorCode = success ? "" : "VALIDATION" };
-                    Journal.CompleteUnit(job.Id, result);
-                }
-                catch (OperationCanceledException)
-                {
-                    Journal.CompleteUnit(job.Id, new() { ErrorCode = "UNKNOWN", Message = "执行中被中断，结果未知；需核对，不自动重放" });
-                }
-                catch (Exception exception)
-                {
-                    Journal.CompleteUnit(job.Id, new() { ErrorCode = "UNKNOWN", Message = "执行期间异常，结果未知：" + exception.Message });
-                    Log("执行异常", job.Triggerer + " · " + job.Effect + " · " + exception.Message, false, null, job.Triggerer, job.SourceType, job.Id, "UNKNOWN");
+                    // 账本读写故障不能让执行线程静默退出；记录后稍后重试。
+                    Log("存储故障", "读取或更新执行队列失败，1 秒后重试：" + exception.Message, false); await Task.Delay(1000, shutdown.Token);
                 }
             }
         }
         catch (OperationCanceledException) when (shutdown.IsCancellationRequested) { }
+    }
+
+    /// <summary>取出并执行一个待执行单位；条件未满足时延后。</summary>
+    /// <returns>处理完成任务。</returns>
+    private async Task ProcessOneJobAsync()
+    {
+        var job = Journal.AcquireNext(!enabled);
+        if (job == null) { await Task.Delay(40, shutdown.Token); return; }
+        var descriptor = job.Root.Kind == StepKind.Action ? ActionCatalog.All.FirstOrDefault(a => a.Id == job.Root.ActionId) : null;
+        if (!adapter.IsConnected || (descriptor?.RequiresGameplay != false && adapter.Status?.CanAct != true))
+        {
+            Journal.Defer(job.Id, !adapter.IsConnected ? "等待游戏重新连接，数量已保留" : "等待进入角色场景 / 结束暂停、死亡或过场"); await Task.Delay(25, shutdown.Token); return;
+        }
+        if (HasPersistent(job.Root) && !AllowPersistent)
+        {
+            Journal.Defer(job.Id, "等待主播允许本次会话的永久修改"); return;
+        }
+        var context = JsonConvert.DeserializeObject<ActionContext>(JsonConvert.SerializeObject(job.Context))!;
+        context.JobId = job.Id; context.UnitIndex = job.UnitIndex; context.TriggerIndex = (int)Math.Min(int.MaxValue, job.UnitIndex + 1); context.Triggerer = job.Triggerer; context.SourceType = job.SourceType; context.RequestIdPrefix = job.Id + "-" + job.UnitIndex;
+        try
+        {
+            var success = await executor.ExecuteAsync(job.Root, job.Triggerer + " · " + job.RuleName + (job.IsSimulation ? " [模拟输入]" : ""), AllowPersistent, currentActions.Token, context);
+            var result = Journal.LastResult(job.Id, job.UnitIndex) ?? new ActionResult { Success = success, Message = success ? "已完成" : "执行前校验失败，详情见运行日志", ErrorCode = success ? "" : "VALIDATION" };
+            Journal.CompleteUnit(job.Id, result);
+        }
+        catch (OperationCanceledException)
+        {
+            Journal.CompleteUnit(job.Id, new() { ErrorCode = "UNKNOWN", Message = "执行中被中断，结果未知；需核对，不自动重放" });
+        }
+        catch (Exception exception)
+        {
+            Journal.CompleteUnit(job.Id, new() { ErrorCode = "UNKNOWN", Message = "执行期间异常，结果未知：" + exception.Message });
+            Log("执行异常", job.Triggerer + " · " + job.Effect + " · " + exception.Message, false, null, job.Triggerer, job.SourceType, job.Id, "UNKNOWN");
+        }
     }
     private static bool HasPersistent(ActionStep step) => step.Kind == StepKind.Action ? ActionCatalog.All.Any(a => a.Id == step.ActionId && a.IsPersistent) : step.Children.Any(HasPersistent);
     private void Wake() => changed.Writer.TryWrite(true);

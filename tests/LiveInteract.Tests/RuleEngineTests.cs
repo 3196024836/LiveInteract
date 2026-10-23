@@ -94,6 +94,58 @@ public sealed class RuleEngineTests
         Assert.Single(new RuleEngine().Evaluate(Chat("m2", "回血"), [first, second]));
     }
 
+    /// <summary>可靠模式不记录用不到的冷却，观众再多状态也不随人数增长。</summary>
+    [Fact]
+    public void ReliableModeStateDoesNotGrowWithViewers()
+    {
+        var engine = new RuleEngine(reliable: true); // 运行时使用的可靠模式。
+        var rule = ChatRule(); // 每条弹幕都命中的规则。
+        for (var index = 0; index < 2000; index++) { engine.Evaluate(new() { Id = "c" + index, Type = LiveEventType.Chat, Text = "回血", UserId = "u" + index }, [rule]); }
+        Assert.True(engine.SaveState().Length < 200, engine.SaveState().Length.ToString());
+    }
+
+    /// <summary>已结算的单观众计数会删除，超过上限也不会让输入流水线抛错停摆。</summary>
+    [Fact]
+    public void PerUserCountersAreBoundedWithoutThrowing()
+    {
+        var engine = new RuleEngine(reliable: true); // 独立累计状态。
+        var settled = ChatRule(); // 每次都刚好凑满门槛的规则。
+        settled.Trigger = new() { Type = LiveEventType.Like, Threshold = 1, Counting = TriggerCounting.PerUser };
+        var partial = ChatRule(); // 永远凑不满门槛、只留余数的规则。
+        partial.Id = "partial"; partial.Trigger = new() { Type = LiveEventType.Like, Threshold = 1000, Counting = TriggerCounting.PerUser };
+        for (var index = 0; index < 50010; index++) { engine.Evaluate(new() { Id = "l" + index, Type = LiveEventType.Like, Count = 1, UserId = "u" + index }, [settled, partial]); }
+        Assert.True(engine.SaveState().Length < 5_000_000);
+        Assert.True(engine.AccumulatedCount(partial.Id) < 50010);
+    }
+
+    /// <summary>“本次会话最多触发次数”在新会话清零，同会话内回滚恢复仍保留。</summary>
+    [Fact]
+    public void MaximumTriggersResetsForNewSession()
+    {
+        var rule = ChatRule(); rule.MaximumTriggers = 1; // 每场只触发一次的规则。
+        var engine = new RuleEngine(reliable: true); // 上一场。
+        Assert.Single(engine.Evaluate(Chat("s1", "回血"), [rule]));
+        var saved = engine.SaveState(); // 持久化的规则状态。
+        var restored = new RuleEngine(reliable: true); restored.LoadState(saved); // 同会话回滚恢复。
+        Assert.Empty(restored.Evaluate(Chat("s2", "回血"), [rule]));
+        var next = new RuleEngine(reliable: true); next.LoadState(saved); next.ResetSession(); // 程序重启后的新会话。
+        Assert.Single(next.Evaluate(Chat("s3", "回血"), [rule]));
+    }
+
+    /// <summary>礼物触发的具名召唤必须填写名称；弹幕口令可以留空。</summary>
+    [Fact]
+    public void NamedSummonRequiresNameUnlessChatCommand()
+    {
+        var gift = ChatRule(); gift.Id = "g"; gift.Name = "礼物召唤"; // 礼物来源规则。
+        gift.Trigger = new() { Type = LiveEventType.Gift, GiftName = "小心心" };
+        gift.Root = new() { Kind = StepKind.Action, ActionId = "summon.named.ally", Arguments = new() { ["name"] = "" } };
+        Assert.Contains(ProfileStore.ValidateRule(gift), error => error.Contains("准确怪物名", StringComparison.Ordinal));
+        var command = ChatRule(); command.Id = "c"; command.Name = "弹幕召唤"; // 弹幕口令规则。
+        command.Trigger = new() { Type = LiveEventType.Chat, TextMatching = TextMatching.StartsWith, Keywords = ["生成小弟"] };
+        command.Root = new() { Kind = StepKind.Action, ActionId = "summon.named.ally", Arguments = new() { ["name"] = "" } };
+        Assert.DoesNotContain(ProfileStore.ValidateRule(command), error => error.Contains("准确怪物名", StringComparison.Ordinal));
+    }
+
     /// <summary>建立通用测试规则。</summary>
     /// <returns>已启用的规则。</returns>
     private static RuleDefinition ChatRule() => new() { Enabled = true, Trigger = new() { Type = LiveEventType.Chat, TextMatching = TextMatching.Exact, Keywords = ["回血"] } };

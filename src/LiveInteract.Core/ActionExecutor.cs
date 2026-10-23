@@ -74,9 +74,10 @@ public sealed class ActionExecutor
                     ActionId = step.ActionId, Arguments = new(step.Arguments), DurationSeconds = step.DurationSeconds,
                     Stacking = step.Stacking, AllowPersistent = allowPersistent && (persistentPermission?.Invoke() ?? true), DisplayText = displayText
                 };
-                if (step.ActionId is "summon.named" or "summon.named.enemy" or "summon.named.ally" && context?.SourceType == LiveEventType.Chat)
+                if (step.ActionId is "summon.named" or "summon.named.enemy" or "summon.named.ally")
                 {
-                    var prefix=new[]{"生成怪物","生成小弟"}.FirstOrDefault(p=>context.InputText.StartsWith(p,StringComparison.Ordinal));
+                    // 只有弹幕口令能从文字里取名；礼物/点赞等来源留空名称直接拒绝，不发给游戏。
+                    var prefix=context is { SourceType: LiveEventType.Chat } ? new[]{"生成怪物","生成小弟"}.FirstOrDefault(p=>context.InputText.StartsWith(p,StringComparison.Ordinal)) : null;
                     if(prefix!=null)
                     {
                         try { request.Arguments["name"]=SummonCommands.Extract(context.InputText,prefix); }

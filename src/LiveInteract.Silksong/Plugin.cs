@@ -259,10 +259,12 @@ public sealed class Plugin : BaseUnityPlugin
     }
     private void Remember(ActionResult result)
     {
+        // 同一指令重复的等待回执只落盘一次，避免排队期间主线程反复刷盘。
+        var repeatedWait = result.Retryable && completed.TryGetValue(result.RequestId, out var previous) && previous.Retryable && previous.ErrorCode == result.ErrorCode;
         if (!completed.ContainsKey(result.RequestId)) { completedOrder.Enqueue(result.RequestId); }
         completed[result.RequestId] = result;
         while (completedOrder.Count > 100000) { completed.Remove(completedOrder.Dequeue()); }
-        try { receiptStore.Save(result); }
+        try { if (!repeatedWait) { receiptStore.Save(result); } }
         catch (Exception exception) { Logger.LogError("回执未能落盘，结果只能在当前进程核对：" + exception); bridge.Send(new() { Kind = "diagnostic", Text = "游戏回执未能落盘：" + exception.Message }); }
         bridge.Send(new() { Kind = "result", Result = result });
     }
