@@ -80,7 +80,7 @@ public sealed class ActionExecutor
                     var prefix=context is { SourceType: LiveEventType.Chat } ? new[]{"生成怪物","生成小弟"}.FirstOrDefault(p=>context.InputText.StartsWith(p,StringComparison.Ordinal)) : null;
                     if(prefix!=null)
                     {
-                        try { request.Arguments["name"]=SummonCommands.Extract(context.InputText,prefix); }
+                        try { request.Arguments["name"]=SummonCommands.Extract(context!.InputText,prefix); }
                         catch(ArgumentException error){return Reject(request,error.Message);}
                     }
                     else if(!request.Arguments.TryGetValue("name",out var configured)||string.IsNullOrWhiteSpace(configured))return Reject(request,"请填写准确怪物名，或发送生成怪物＋名称 / 生成小弟＋名称。");
