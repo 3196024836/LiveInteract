@@ -15,7 +15,7 @@ using LiveInteract.Contracts;
 namespace LiveInteract.Silksong;
 
 /// <summary>主线程执行、可核对回执和简洁的渐隐触发提示。</summary>
-[BepInPlugin("cn.liveinteract.silksong", "花花直播互动", "0.9.0")]
+[BepInPlugin("cn.liveinteract.silksong", "花花直播互动", "0.9.1")]
 [BepInProcess("Hollow Knight Silksong.exe")]
 public sealed class Plugin : BaseUnityPlugin
 {
@@ -73,7 +73,7 @@ public sealed class Plugin : BaseUnityPlugin
         }
         Application.logMessageReceived += OnUnityMessage;
         menuInfoUntil = Time.realtimeSinceStartup + 6;
-        Logger.LogInfo("花花直播互动 Mod 0.9.0 已加载。");
+        Logger.LogInfo("花花直播互动 Mod 0.9.1 已加载。");
     }
 
     private void Update()

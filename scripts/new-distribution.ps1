@@ -6,12 +6,14 @@ param(
 )
 $ErrorActionPreference='Stop'
 
-# 只解析文档清单，不构建或写包；0.9.0缺本版材料时提前停止。
+# 只解析文档清单，不构建或写包；0.9.x缺本版材料时提前停止。0.9.x召唤池沿用0.9.0实测结论，小版本另附更新说明。
 function Get-DistributionDocuments {
     param([string]$Root,[string]$Version)
     $usage=Join-Path $Root ("docs\"+$Version+'使用说明.md')
     $acceptance=Join-Path $Root ("docs\"+$Version+'验收结果.md')
-    if($Version -eq '0.9.0'){
+    if($Version -like '0.9.*'){
+        $usage=Join-Path $Root 'docs\0.9.0使用说明.md'
+        $acceptance=Join-Path $Root 'docs\0.9.0验收结果.md'
         $documents=@(
             [pscustomobject]@{Source=$usage;FileName='使用说明.md'}
             [pscustomobject]@{Source=$acceptance;FileName='0.9.0验收结果.md'}
@@ -21,8 +23,9 @@ function Get-DistributionDocuments {
             # 最终逐只入池结论：友方/敌方是否开放及原因。
             [pscustomobject]@{Source=(Join-Path $Root 'docs\0.9.0召唤池结论.csv');FileName='0.9.0召唤池结论.csv'}
         )
+        if($Version -ne '0.9.0'){$documents+=[pscustomobject]@{Source=(Join-Path $Root ("docs\"+$Version+'更新说明.md'));FileName=($Version+'更新说明.md')}}
         $missing=@($documents | Where-Object{-not(Test-Path -LiteralPath $_.Source -PathType Leaf)})
-        if($missing.Count -gt 0){throw ('0.9.0发布文档缺失，停止装包，不回退旧版：'+(($missing | ForEach-Object{$_.Source}) -join '；'))}
+        if($missing.Count -gt 0){throw ($Version+'发布文档缺失，停止装包，不回退旧版：'+(($missing | ForEach-Object{$_.Source}) -join '；'))}
     }else{
         # 其他版本保留既有说明/结果回退及0.8.2逐只验收表。
         if(-not(Test-Path -LiteralPath $usage)){$usage=Join-Path $Root 'docs\0.8.2使用说明.md'}
