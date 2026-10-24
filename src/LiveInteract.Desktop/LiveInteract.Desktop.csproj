@@ -12,6 +12,7 @@
   <EmbeddedResource Include="../../直播素材/官方礼物图标/rose.png" LogicalName="LiveInteract.Desktop.gift.rose.png" />
   <EmbeddedResource Include="../../直播素材/官方礼物图标/lollipop.png" LogicalName="LiveInteract.Desktop.gift.lollipop.png" />
   <EmbeddedResource Include="../../直播素材/官方礼物图标/han.png" LogicalName="LiveInteract.Desktop.gift.han.png" />
+  <EmbeddedResource Include="../../直播素材/官方礼物图标/beer.png" LogicalName="LiveInteract.Desktop.gift.beer.png" />
  </ItemGroup>
  <ItemGroup><Content Include="../../profiles/*"><Link>profiles/%(Filename)%(Extension)</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory><CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory></Content></ItemGroup>
 </Project>

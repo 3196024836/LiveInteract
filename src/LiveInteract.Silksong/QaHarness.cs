@@ -259,7 +259,7 @@ internal sealed partial class QaHarness
                     // 读取主角状态机当前状态及出口；给出 State 时复位，用于清除上一单位遗留的抓取锁。
                     RequireIsolation(); var heroFsm=HeroController.SilentInstance.GetComponents<PlayMakerFSM>().First(f=>f.FsmName==(string)command["Fsm"]!);
                     var resetState=(string?)command["State"];if(resetState!=null){if(!heroFsm.FsmStates.Any(state=>state.Name==resetState))throw new InvalidOperationException("不存在的原作状态");heroFsm.SetState(resetState);}
-                    result.Success=true;result.Message=new JObject{["State"]=heroFsm.ActiveStateName,
+                    result.Success=true;result.Message=new JObject{["State"]=heroFsm.ActiveStateName,["Grabber"]=HeroGrabTracker.Grabber!=null?Hierarchy(HeroGrabTracker.Grabber.transform):null,["RecentEvents"]=new JArray(HeroGrabTracker.Recent),
                         ["Global"]=new JArray(heroFsm.FsmGlobalTransitions.Select(t=>t.EventName+"->"+t.ToState)),
                         ["Transitions"]=new JArray(heroFsm.FsmStates.Select(s=>new JObject{["Name"]=s.Name,["Out"]=new JArray(s.Transitions.Select(t=>t.EventName+"->"+t.ToState))}))}.ToString(Formatting.None);
                     bridge.Send(new() { Kind = "result", Result = result }); return;

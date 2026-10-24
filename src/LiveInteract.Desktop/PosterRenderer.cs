@@ -26,7 +26,7 @@ internal static class PosterRenderer
     /// <summary>礼物名到随包图标的对应关系；没有图标的礼物只显示文字。</summary>
     private static readonly Dictionary<string, string> GiftIcons = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["小心心"] = "heart.png", ["玫瑰"] = "rose.png", ["棒棒糖"] = "lollipop.png", ["给到夯"] = "han.png"
+        ["小心心"] = "heart.png", ["玫瑰"] = "rose.png", ["棒棒糖"] = "lollipop.png", ["给到夯"] = "han.png", ["大啤酒"] = "beer.png"
     };
 
     private sealed record Row(string Trigger, string Effect, Brush EffectBrush, string? Icon);

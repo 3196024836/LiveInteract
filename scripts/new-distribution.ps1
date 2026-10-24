@@ -18,6 +18,8 @@ function Get-DistributionDocuments {
             [pscustomobject]@{Source=(Join-Path $Root 'docs\0.9.0怪物分类.csv');FileName='0.9.0怪物分类.csv'}
             [pscustomobject]@{Source=(Join-Path $Root 'docs\0.9.0召唤筛选表.csv');FileName='0.9.0召唤筛选表.csv'}
             [pscustomobject]@{Source=(Join-Path $Root 'docs\0.9.0召唤验收.csv');FileName='0.9.0召唤验收.csv'}
+            # 最终逐只入池结论：友方/敌方是否开放及原因。
+            [pscustomobject]@{Source=(Join-Path $Root 'docs\0.9.0召唤池结论.csv');FileName='0.9.0召唤池结论.csv'}
         )
         $missing=@($documents | Where-Object{-not(Test-Path -LiteralPath $_.Source -PathType Leaf)})
         if($missing.Count -gt 0){throw ('0.9.0发布文档缺失，停止装包，不回退旧版：'+(($missing | ForEach-Object{$_.Source}) -join '；'))}

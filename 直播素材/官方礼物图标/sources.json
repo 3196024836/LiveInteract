@@ -1,7 +1,7 @@
 {
   "checkedAt": "2026-10-20",
   "source": "https://live.douyin.com/webcast/gift/list/?aid=6383&app_name=douyin_web&live_id=1&device_platform=web&language=zh-CN&gift_scene=1",
-  "note": "四件礼物图标全部来自抖音直播间官方礼物列表接口返回的原图，不再使用绘制图标，也不标未经核实的金额。",
+  "note": "五件礼物图标全部来自抖音直播间官方礼物列表接口返回的原图，不再使用绘制图标，也不标未经核实的金额。",
   "gifts": [
     {
       "name": "小心心",
@@ -34,6 +34,13 @@
       "file": "han.png",
       "rule": "v06-strong-enemy",
       "url": "https://p11-webcast.douyinpic.com/img/webcast/790005c00699b99d2f2ab27aac8cfa1b.png~tplv-obj.png"
+    },
+    {
+      "name": "大啤酒",
+      "giftId": 2002,
+      "file": "beer.png",
+      "rule": "v09-copy-next",
+      "url": "https://p11-webcast.douyinpic.com/img/webcast/71801c53df3977b1470ac2afb8250ac1.png~tplv-obj.png"
     }
   ]
 }

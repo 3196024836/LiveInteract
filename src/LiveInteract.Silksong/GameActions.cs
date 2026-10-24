@@ -1540,13 +1540,49 @@ internal sealed class OwnedSummon : MonoBehaviour
         ReleaseHeroGrab();
     }
 
-    /// <summary>抓取者被回收或死亡时原作不再发送松开事件；用原作全局强制松开，避免主播停在抓取状态。</summary>
-    private static void ReleaseHeroGrab()
+    /// <summary>本召唤物是当前抓取者时，原作不会再发送松开事件；用原作全局强制松开，避免主播停在抓取状态。场景原生敌人的抓取不受影响。</summary>
+    private void ReleaseHeroGrab()
     {
+        var grabber=HeroGrabTracker.Grabber;
+        if(grabber==null||!grabber.transform.IsChildOf(transform))return;
+        HeroGrabTracker.Grabber=null;
         var hero=HeroController.SilentInstance;
         if(hero==null)return;
         var wound=hero.GetComponents<PlayMakerFSM>().FirstOrDefault(f=>f.FsmName=="Roar and Wound States");
         if(wound!=null&&(wound.ActiveStateName=="Hero Grab"||wound.ActiveStateName=="Hero Grab Invuln"))wound.SendEvent("HERO GRAB RELEASE FORCED");
+    }
+}
+
+/// <summary>记录向主角发出抓取事件的原作对象，供召唤物销毁时判断自己是否正在抓住主角。</summary>
+[HarmonyPatch]
+internal static class HeroGrabTracker
+{
+    /// <summary>最近一次抓取事件的发送者；松开或无记录时为空。</summary>
+    internal static GameObject? Grabber;
+#if LIVEINTERACT_QA
+    internal static readonly List<string> Recent=new();
+#endif
+
+    /// <summary>PlayMaker 状态机实际处理事件的入口；跨对象 SendEventByName 走这里而不经 Event(FsmEvent)。</summary>
+    /// <returns>Fsm.ProcessEvent 各重载。</returns>
+    private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        => typeof(HutongGames.PlayMaker.Fsm).GetMethods(System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)
+            .Where(m=>m.Name=="ProcessEvent"&&m.GetParameters().Length>0&&m.GetParameters()[0].ParameterType==typeof(HutongGames.PlayMaker.FsmEvent));
+
+    /// <summary>主角抓取状态机收到抓取/松开事件时更新记录。</summary>
+    /// <param name="__instance">接收事件的状态机。</param>
+    /// <param name="__args">事件及可选的发送者数据。</param>
+    private static void Prefix(HutongGames.PlayMaker.Fsm __instance, object[] __args)
+    {
+        var fsmEvent=__args[0] as HutongGames.PlayMaker.FsmEvent;
+        if(fsmEvent==null||__instance.Name!="Roar and Wound States"||__instance.GameObject==null||__instance.GameObject.GetComponent<HeroController>()==null)return;
+        // 状态机互发事件只填 SentByFsm，脚本直接发送才填 SentByGameObject；未随参数传入时读当前全局数据。
+        var data=__args.OfType<HutongGames.PlayMaker.FsmEventData>().FirstOrDefault()??HutongGames.PlayMaker.Fsm.EventData;
+#if LIVEINTERACT_QA
+        Recent.Add(fsmEvent.Name+"<"+(data?.SentByFsm?.GameObject?.name??"-")+"/"+(data?.SentByGameObject?.name??"-"));if(Recent.Count>8)Recent.RemoveAt(0);
+#endif
+        if(fsmEvent.Name is "HERO GRAB" or "HERO GRAB VULNERABLE")Grabber=data?.SentByFsm?.GameObject??data?.SentByGameObject;
+        else if(fsmEvent.Name.StartsWith("HERO GRAB RELEASE",StringComparison.Ordinal)||fsmEvent.Name=="HERO GRAB END")Grabber=null;
     }
 }
 

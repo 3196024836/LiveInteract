@@ -14,6 +14,9 @@ if($Publish){
     $dirty=git status --porcelain
     if($LASTEXITCODE -ne 0){throw 'Cannot inspect git worktree'}
     if($dirty){throw 'Commit/review source changes before publishing. No files staged or uploaded.'}
+    # 客户端只读 main 上的清单；从其他分支发布会让用户永远收不到更新。
+    $branch=git rev-parse --abbrev-ref HEAD
+    if($branch -ne 'main'){throw 'Publish from main only; clients read update/latest.json on main.'}
     $remote=git remote get-url origin
     if($LASTEXITCODE -ne 0 -or $remote -notmatch 'github.com[:/]3196024836/LiveInteract(\.git)?$'){throw 'Origin does not match release repository'}
 }
