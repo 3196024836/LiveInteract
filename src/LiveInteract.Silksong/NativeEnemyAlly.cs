@@ -29,6 +29,10 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     private readonly Dictionary<int,float> incoming=new();
     private readonly List<Collider2D> contacts=new();
     private readonly List<Collider2D> touching=new();
+    // 逐物理步复用的攻击框与去重集合，避免每步分配。
+    private readonly List<Collider2D> boxes=new();
+    private readonly HashSet<Collider2D> contactSet=new();
+    private float lastFrameSeconds;private int strikeFrame=-1;
     private readonly List<Collider2D> ownColliders=new();
     private readonly RaycastHit2D[] wallContacts = new RaycastHit2D[8];
     private HealthManager? enemy;
@@ -76,8 +80,21 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
             return gameObject;
         }
     }
-    public bool HasEnemy=>enemy!=null&&!enemy.isDead&&enemy.hp>0&&enemy.gameObject.activeInHierarchy&&
-        !NativeAllyExecution.IsFriendly(enemy.gameObject)&&enemy.GetComponentInParent<HeroController>()==null;
+    // 阵营判定要逐级查父物体且每帧被读上千次；同一目标同一帧内不会换阵营，只缓存这一部分，生死仍实时读取。
+    private HealthManager? factionChecked;private int factionFrame=-1;private bool factionHostile;
+    public bool HasEnemy
+    {
+        get
+        {
+            if(enemy==null||enemy.isDead||enemy.hp<=0||!enemy.gameObject.activeInHierarchy)return false;
+            if(factionFrame!=Time.frameCount||factionChecked!=enemy)
+            {
+                factionChecked=enemy;factionFrame=Time.frameCount;
+                factionHostile=!NativeAllyExecution.IsFriendly(enemy.gameObject)&&enemy.GetComponentInParent<HeroController>()==null;
+            }
+            return factionHostile;
+        }
+    }
     public bool TargetInRange(AlertRange? range)
     {
         if(!HasEnemy)return false;
@@ -138,7 +155,8 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     /// <param name="state">原作自然进入的状态。</param>
     private void OnNativeStateChanged(FsmState state)
     {
-        if(GameActions.Current?.CanAct!=true || NativeFriendlyAi || state?.Fsm==null ||
+        // 销毁过程中子状态机仍可能切换状态；本组件已失效时不再访问自身。
+        if(this==null||GameActions.Current?.CanAct!=true || NativeFriendlyAi || state?.Fsm==null ||
             !CompanionCombatPolicy.IsRetargetEntryBoundary(GetComponent<OwnedSummon>()?.AssetKey??"",state.Fsm.Name,state.Name))return;
         var focus=CompanionFocus.For(transform.position);
         if(focus==null || focus==enemy)return;
@@ -154,6 +172,8 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
 
     private void Update()
     {
+        // FixedUpdate 内 deltaTime 恒为物理步长，帧耗时只能在这里记下。
+        lastFrameSeconds=Time.unscaledDeltaTime;
         var hero=HeroController.SilentInstance;if(hero==null)return;
         if(GameActions.Current?.CanAct!=true){offscreenSince=-1;return;}
         var heroPosition=hero.transform.position;
@@ -249,7 +269,9 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
 
         if(GameActions.Current?.CanAct!=true)return;
         SteerToTarget();
-        StrikeEnemies();
+        // 帧率跌破20时Unity每帧追跑十几个物理步，逐步判定攻击会越卡越慢；此时每帧只判一次。
+        // 原作攻击框通常持续多个物理步，同一目标本就有0.65秒命中间隔，不会因此漏判。
+        if(lastFrameSeconds<=.05f||strikeFrame!=Time.frameCount){strikeFrame=Time.frameCount;StrikeEnemies();}
         TakeEnemyHits();
     }
     /// <summary>按原作实际开启的攻击碰撞向敌人结算，不向主播结算。</summary>
@@ -260,12 +282,18 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
             var weapon=weapons[weaponIndex];
             if(weapon==null || !weapon.enabled || !weapon.gameObject.activeInHierarchy || weapon.damageDealt<=0)continue;
 
-            foreach(var box in weapon.GetComponents<Collider2D>())
+            weapon.GetComponents(boxes);
+            for(var boxIndex=0;boxIndex<boxes.Count;boxIndex++)
             {
+                var box=boxes[boxIndex];
                 if(!box.enabled)continue;
                 var filter=new ContactFilter2D{useTriggers=true,useLayerMask=false};
                 contacts.Clear();box.Overlap(filter,contacts);touching.Clear();box.GetContacts(filter,touching);
-                foreach(var item in touching)if(!contacts.Contains(item))contacts.Add(item);
+                if(touching.Count>0)
+                {
+                    contactSet.Clear();contactSet.UnionWith(contacts);
+                    foreach(var item in touching)if(contactSet.Add(item))contacts.Add(item);
+                }
                 foreach(var contact in contacts)
                 {
                     if(contact==null)continue;
@@ -349,7 +377,8 @@ internal sealed class NativeEnemyAlly : MonoBehaviour
     }
     private void OnDestroy()
     {
-        foreach(var fsm in fsms)if(fsm!=null)fsm.Fsm.StateChanged-=OnNativeStateChanged;
+        // 生成当帧即被清场时 Start 尚未执行，fsms 仍为空。
+        if(fsms!=null)foreach(var fsm in fsms)if(fsm!=null&&fsm.Fsm!=null)fsm.Fsm.StateChanged-=OnNativeStateChanged;
         NativeCombatContacts.Clear();locomotion?.Dispose();foreach(var p in projectiles)if(p!=null&&p.Owner==this)p.Disarm();
     }
 }

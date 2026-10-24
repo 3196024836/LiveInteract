@@ -46,6 +46,9 @@ internal sealed class GameActions
     private readonly HashSet<string> exercised = new();
     private readonly List<string> sceneKeys = new();
     private readonly List<string> prefabKeys = new();
+    // 心跳每秒4次；资源目录、工具、纹章和主角事件在一局内不变，只排序一次，不随心跳重复扫描。
+    private List<string>? sortedSceneKeys, sortedPrefabKeys, toolNames, crestNames, skillEvents;
+    private int skillEventsHero;
     private bool indexedResources;
     private Vector3? markedPosition;
     private string markedScene = "";
@@ -167,7 +170,7 @@ internal sealed class GameActions
         effects.Tick(Time.realtimeSinceStartup);
         appearanceStacks.RemoveAll(item => item == null);
         TickPickups();
-        if(CanAct && Time.realtimeSinceStartup>=nextHostileScan){nextHostileScan=Time.realtimeSinceStartup+.25f;hostileCache=Enemies();}
+        if(CanAct && Time.realtimeSinceStartup>=nextHostileScan){nextHostileScan=Time.realtimeSinceStartup+.25f;hostileCache=ActiveEnemies();}
         for (var index=companions.Count-1;index>=0;index--)
         {
             var lease=companions[index];
@@ -903,19 +906,27 @@ internal sealed class GameActions
                 }
                 diagnostics.Add("资源候选目录已读取；敌人和 Boss 的跨场景行为仍需逐项实测。");
             }
-            status.SceneIds = sceneKeys.Distinct().OrderBy(key => key).ToList();
-            status.EnemyAssetIds = prefabKeys.Distinct().OrderBy(key => key).ToList();
-            status.EnemyIds = Enemies().Select(item => item.name + "#" + item.GetInstanceID()).Distinct().OrderBy(item => item).ToList();
-            status.ToolIds = ToolItemManager.GetAllTools().Where(item => item != null).Select(item => item.name).Distinct().OrderBy(item => item).ToList();
-            status.CrestIds = ToolItemManager.GetAllCrests().Where(item => item != null).Select(item => item.name).Distinct().OrderBy(item => item).ToList();
-            foreach (var fsmName in new[] { "spellControl", "silkSpecialFSM", "toolsFSM" })
+            status.SceneIds = sortedSceneKeys ??= sceneKeys.Distinct().OrderBy(key => key).ToList();
+            status.EnemyAssetIds = sortedPrefabKeys ??= prefabKeys.Distinct().OrderBy(key => key).ToList();
+            // 复用 Tick 每0.25秒的敌人扫描；整场景查找生命组件是心跳里最重的一步。
+            status.EnemyIds = hostileCache.Where(item => item != null).Select(item => item.name + "#" + item.GetInstanceID()).Distinct().OrderBy(item => item).ToList();
+            if (toolNames is not { Count: > 0 }) { toolNames = ToolItemManager.GetAllTools().Where(item => item != null).Select(item => item.name).Distinct().OrderBy(item => item).ToList(); }
+            if (crestNames is not { Count: > 0 }) { crestNames = ToolItemManager.GetAllCrests().Where(item => item != null).Select(item => item.name).Distinct().OrderBy(item => item).ToList(); }
+            status.ToolIds = toolNames; status.CrestIds = crestNames;
+            var hero = HeroController.SilentInstance;
+            if (hero != null && (skillEvents == null || skillEventsHero != hero.GetInstanceID()))
             {
-                var fsm = AccessTools.Field(typeof(HeroController), fsmName)?.GetValue(HeroController.SilentInstance) as PlayMakerFSM; // 白名单状态机。
-                if (fsm != null && fsm.Fsm?.Events != null)
+                skillEventsHero = hero.GetInstanceID(); skillEvents = new List<string>();
+                foreach (var fsmName in new[] { "spellControl", "silkSpecialFSM", "toolsFSM" })
                 {
-                    status.SkillEvents.AddRange(fsm.Fsm.Events.Select(item => fsmName + ":" + item.Name));
+                    var fsm = AccessTools.Field(typeof(HeroController), fsmName)?.GetValue(hero) as PlayMakerFSM; // 白名单状态机。
+                    if (fsm != null && fsm.Fsm?.Events != null)
+                    {
+                        skillEvents.AddRange(fsm.Fsm.Events.Select(item => fsmName + ":" + item.Name));
+                    }
                 }
             }
+            if (skillEvents != null) { status.SkillEvents = skillEvents; }
         }
         return status;
     }
@@ -979,11 +990,12 @@ internal sealed class GameActions
         foreach (var obj in spawned)
         {
             if (obj == null || !obj.activeInHierarchy || !spawnedOwners.TryGetValue(obj.GetInstanceID(), out var name)) { continue; }
-            var collider = obj.GetComponentInChildren<Collider2D>();
             // 警戒圈、尸体池与派生特效不是身体；优先原生主精灵，避免名字被附属物抬高。
             var body=obj.GetComponent<Renderer>();
             if(body==null||!body.enabled||body.forceRenderingOff)
                 body=obj.GetComponentsInChildren<MeshRenderer>().FirstOrDefault(r=>r.enabled&&!r.forceRenderingOff&&r.GetComponent<tk2dBaseSprite>()!=null&&r.GetComponent<SummonOutlineVisual>()==null);
+            // 碰撞框只在没有可见精灵时兜底；每次重绘都要跑，找到精灵就不再查。
+            var collider = body == null ? obj.GetComponentInChildren<Collider2D>() : null;
             var point = body != null ? new Vector3(body.bounds.center.x, body.bounds.max.y + .35f, obj.transform.position.z) : collider != null ? new Vector3(collider.bounds.center.x, collider.bounds.max.y + .35f, obj.transform.position.z) : obj.transform.position + Vector3.up * 1.5f;
             yield return new SpawnLabel { Name = name, Position = point, IsFriendly = obj.GetComponent<OwnedCompanion>() != null };
         }
@@ -1096,9 +1108,16 @@ internal sealed class GameActions
         }
     }
 
-    /// <summary>找到当前场景有效且非玩家的生命组件。</summary>
+    /// <summary>每0.25秒的友军索敌扫描改读原作启用登记表；整场景查找在满屏单位时单次要6～9毫秒。</summary>
+    /// <returns>当前启用且存活的非玩家生命组件。</returns>
+    private static HealthManager[] ActiveEnemies() => HealthManager.EnumerateActiveEnemies().Where(IsHostileTarget).ToArray();
+
+    /// <summary>两种扫描共用的敌人判定：存活、在场景内、不属于主播或友方。</summary>
+    private static bool IsHostileTarget(HealthManager item) => item != null && !item.isDead && item.hp > 0 && !item.IsPartOfSendToTarget && item.gameObject.scene.IsValid() && item.GetComponentInParent<HeroController>() == null && !NativeAllyExecution.IsFriendly(item.gameObject);
+
+    /// <summary>找到当前场景有效且非玩家的生命组件；含停用组件，供按名选择、全灭等低频指令使用。</summary>
     /// <returns>当前场景敌人。</returns>
-    private static HealthManager[] Enemies() => Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None).Where(item => item != null && !item.isDead && item.hp > 0 && !item.IsPartOfSendToTarget && item.gameObject.scene.IsValid() && item.GetComponentInParent<HeroController>() == null && !NativeAllyExecution.IsFriendly(item.gameObject)).ToArray();
+    private static HealthManager[] Enemies() => Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None).Where(IsHostileTarget).ToArray();
 
     /// <summary>选择指定对象或最近敌人。</summary>
     /// <param name="name">内部名称或名称加实例号。</param>
@@ -1365,12 +1384,14 @@ internal sealed class GameActions
         if(pendingRunning||HasInFlightActions?.Invoke()==true||Time.realtimeSinceStartup<nextCacheTrim||namedPrefabHandles.Count<=12)return;
         nextCacheTrim=Time.realtimeSinceStartup+2;
         var live=new HashSet<string>(spawned.Where(o=>o!=null).Select(o=>o.GetComponent<OwnedSummon>()?.AssetKey??""));
-        var effects=Resources.FindObjectsOfTypeAll<OwnedTransientResource>().Where(o=>o!=null&&o.gameObject.scene.IsValid()).ToArray();
-        foreach(var effect in effects)if(effect.gameObject.activeInHierarchy)live.Add(effect.AssetKey);
+        foreach(var effect in OwnedTransientResource.Active)if(effect!=null&&effect.gameObject.scene.IsValid())live.Add(effect.AssetKey);
+        OwnedTransientResource[]? effects=null;
         foreach(var pair in namedPrefabHandles.ToArray())
         {
             if(namedPrefabHandles.Count<=12)break;
             if(live.Contains(pair.Key)||!pair.Value.IsValid()||!pair.Value.IsDone)continue;
+            // 停用的池化残留不在登记表里；只有真要释放时才做一次全资源查找。
+            effects??=Resources.FindObjectsOfTypeAll<OwnedTransientResource>().Where(o=>o!=null&&o.gameObject.scene.IsValid()).ToArray();
             foreach(var effect in effects.Where(e=>e!=null&&e.AssetKey==pair.Key&&!e.gameObject.activeInHierarchy))effect.RemoveFromNativePool();
             namedPrefabHandles.Remove(pair.Key);releasingPrefabs.Enqueue((pair.Value,Time.frameCount));
         }
@@ -1592,6 +1613,10 @@ internal sealed class OwnedTransientResource : MonoBehaviour
     public string AssetKey="";
     public bool Friendly;
     public OwnedSummon? DetachedOwner;
+    // 场景中启用的实例；缓存修剪每两秒读取一次，不必全资源扫描。
+    internal static readonly HashSet<OwnedTransientResource> Active=new();
+    private void OnEnable()=>Active.Add(this);
+    private void OnDisable()=>Active.Remove(this);
     public void RemoveFromNativePool()
     {
         var pool=AccessTools.Field(typeof(ObjectPool),"_instance")?.GetValue(null);

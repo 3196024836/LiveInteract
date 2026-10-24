@@ -252,9 +252,26 @@ internal sealed partial class QaHarness
                 case "hero-regain":
                     // 场地初始化会收回主播操作；模拟挥针前恢复输入，不重置召唤或生命。
                     RequireIsolation(); HeroController.SilentInstance.RegainControl(); HeroController.SilentInstance.AcceptInput(); break;
+                case "frames":
+                    // 不开采样补丁的帧计数，供性能对比；只读。
+                    result.Success=true;result.Message=new JObject{["Frame"]=Time.frameCount,["Time"]=Time.realtimeSinceStartup,["Focused"]=Application.isFocused,
+                        ["ManagedMB"]=GC.GetTotalMemory(false)/1048576,["MonoHeapMB"]=UnityEngine.Profiling.Profiler.GetMonoHeapSizeLong()/1048576,["UnityMB"]=UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong()/1048576}.ToString(Formatting.None);
+                    bridge.Send(new() { Kind = "result", Result = result }); return;
+                case "enemy-scan-cost":
+                    {
+                        // 分段计时敌人扫描：整场景查找、廉价过滤和阵营判定各自耗时。
+                        RequireIsolation(); var watch=System.Diagnostics.Stopwatch.StartNew();
+                        var all=UnityEngine.Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None);var find=watch.Elapsed.TotalMilliseconds;
+                        var alive=all.Where(item=>item!=null&&!item.isDead&&item.hp>0&&!item.IsPartOfSendToTarget&&item.gameObject.scene.IsValid()).ToArray();var cheap=watch.Elapsed.TotalMilliseconds;
+                        var noHero=alive.Where(item=>item.GetComponentInParent<HeroController>()==null).ToArray();var heroCheck=watch.Elapsed.TotalMilliseconds;
+                        var hostile=noHero.Where(item=>!NativeAllyExecution.IsFriendly(item.gameObject)).ToArray();var faction=watch.Elapsed.TotalMilliseconds;
+                        result.Success=true;result.Message=new JObject{["All"]=all.Length,["Alive"]=alive.Length,["Hostile"]=hostile.Length,["FindMs"]=find,["CheapMs"]=cheap-find,["HeroMs"]=heroCheck-cheap,["FactionMs"]=faction-heroCheck,
+                            ["TopNames"]=new JArray(alive.GroupBy(item=>item.name).OrderByDescending(g=>g.Count()).Take(8).Select(g=>g.Key+"×"+g.Count()))}.ToString(Formatting.None);
+                        bridge.Send(new(){Kind="result",Result=result});return;
+                    }
                 case "hero-heal":
-                    // 敌方筛测给主播补满生命，避免低血基线在验证击杀前被打死；不清场。
-                    RequireIsolation(); PlayerData.instance.health = PlayerData.instance.maxHealth; break;
+                    // 敌方筛测给主播补满生命，避免低血基线在验证击杀前被打死；不清场。给出 Health 时设为该值，用于复现被召唤物击杀。
+                    RequireIsolation(); PlayerData.instance.health = (int?)command["Health"] ?? PlayerData.instance.maxHealth; break;
                 case "hero-fsm":
                     // 读取主角状态机当前状态及出口；给出 State 时复位，用于清除上一单位遗留的抓取锁。
                     RequireIsolation(); var heroFsm=HeroController.SilentInstance.GetComponents<PlayMakerFSM>().First(f=>f.FsmName==(string)command["Fsm"]!);
@@ -283,7 +300,7 @@ internal sealed partial class QaHarness
                 case "load-isolation":
                     RequireIsolation(); owner.StartCoroutine(RunLoadIsolation(result)); return;
                 case "runtime-profile-start":
-                    RequireIsolation(); QaRuntimeTimings.Start(); break;
+                    RequireIsolation(); QaRuntimeTimings.Start((bool?)command["Light"] ?? false); break;
                 case "runtime-profile-state":
                 case "runtime-profile-stop":
                     RequireIsolation(); result.Success = true;

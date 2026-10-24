@@ -38,6 +38,8 @@ public sealed class Plugin : BaseUnityPlugin
     private Font? font;
     private GUIStyle? label;
     private GUIStyle? ownerLabel;
+    // 名字宽度随字号变化；同名召唤物每帧重绘不再重复排版测量。
+    private readonly Dictionary<string, float> labelWidths = new();
     private GUIStyle? clearHintLabel;
     private string clearSummonsHotkey = "";
     private bool stopping, wasConnected;
@@ -97,7 +99,7 @@ public sealed class Plugin : BaseUnityPlugin
                 overlayEnabled.Value = (bool?)options["enabled"] ?? overlayEnabled.Value;
                 if(options["clearSummonsHotkey"]!=null){clearSummonsHotkey=DisplayNames.Clean((string?)options["clearSummonsHotkey"]??"");if(clearSummonsHotkey=="观众")clearSummonsHotkey="";}
                 var size = Math.Max(12, Math.Min(36, (int?)options["fontSize"] ?? 18));
-                if (size != overlayFontSize.Value) { overlayFontSize.Value = size; label = null; ownerLabel = null; clearHintLabel = null; }
+                if (size != overlayFontSize.Value) { overlayFontSize.Value = size; label = null; ownerLabel = null; clearHintLabel = null; labelWidths.Clear(); }
                 if (ColorUtility.TryParseHtmlString((string?)options["accent"] ?? "#D9F9EF", out var parsed)) { textColor = parsed; }
                 noticeSeconds = Math.Max(1, Math.Min(30, (float?)options["seconds"] ?? 5));
                 actions.SpawnLimit = Math.Max(0, (int?)options["spawnLimit"] ?? 0);
@@ -141,6 +143,8 @@ public sealed class Plugin : BaseUnityPlugin
     /// <summary>空闲战斗画面不绘制固定框，只绘制短时触发列表和已生成怪物的名字。</summary>
     private void OnGUI()
     {
+        // 只用固定矩形绘制，不需要布局事件；每帧只在重绘时计算一次名字与提示。
+        if (Event.current.type != EventType.Repaint) { return; }
         if (label == null)
         {
             font ??= Font.CreateDynamicFontFromOSFont(new[] { "Microsoft YaHei UI", "Microsoft YaHei", "Arial" }, overlayFontSize.Value);
@@ -183,9 +187,13 @@ public sealed class Plugin : BaseUnityPlugin
             {
                 var point = camera.WorldToScreenPoint(item.Position);
                 if (point.z <= 0 || point.x < -100 || point.x > Screen.width + 100 || point.y < 0 || point.y > Screen.height) { continue; }
-                var width = Math.Min(320, Math.Max(60, ownerLabel!.CalcSize(new GUIContent(item.Name)).x + 12));
+                if (!labelWidths.TryGetValue(item.Name, out var width))
+                {
+                    if (labelWidths.Count > 512) { labelWidths.Clear(); }
+                    labelWidths[item.Name] = width = Math.Min(320, Math.Max(60, ownerLabel!.CalcSize(new GUIContent(item.Name)).x + 12));
+                }
                 var rect = new Rect(Math.Max(2, Math.Min(Screen.width - width - 2, point.x - width / 2)), Screen.height - point.y - 27, width, 26);
-                DrawText(rect, item.Name, item.IsFriendly ? new Color(0.72f, 1f, 0.82f) : new Color(1f, 0.36f, 0.36f), ownerLabel);
+                DrawText(rect, item.Name, item.IsFriendly ? new Color(0.72f, 1f, 0.82f) : new Color(1f, 0.36f, 0.36f), ownerLabel!);
             }
         }
     }

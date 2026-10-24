@@ -38,7 +38,8 @@ internal static class QaRuntimeTimings
     private static bool enabled;
 
     /// <summary>在当前候选上采样适配、碰撞和装饰的实际主线程耗时。</summary>
-    internal static void Start()
+    /// <param name="light">只计时帧级入口，跳过每帧上万次的小方法，降低采样本身的拖慢。</param>
+    internal static void Start(bool light = false)
     {
         Stop(); Counters.Clear(); HitEvents.Clear(); NativeCalls.Clear(); NativeTimes.Clear();
         // 每层分别计时；父子方法的耗时不可相加。
@@ -46,7 +47,8 @@ internal static class QaRuntimeTimings
         {
             foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly))
             {
-                if (method.Name is not ("OnGUI" or "Tick" or "Update" or "FixedUpdate" or "LateUpdate" or "Retarget" or "SteerToTarget" or "StrikeEnemies" or "TakeEnemyHits" or "Before" or "BeforeIterator" or "Prefix" or "OnTriggerEnter2D" or "OnCollisionEnter2D" or "DoDamage" or "EvaluateDamage" or "ProcessDamageBuffer" or "LateFixedUpdate" or "Refresh" or "Remove" or "BeforeSummonHit" or "AfterSummonHit" or "BeforeHeroDamage" or "BeforeHealthLoss" or "After" or "Prepare" or "InNativeRange" or "Release" or "Step" or "Register" or "AssignSpawn" or "IgnoreHero" or "FindHostile" or "For" or "Align" or "MaintainAll" or "TargetInRange" or "get_CanChangeTarget" or "get_TargetObject" or "get_HasEnemy")) { continue; }
+                if (method.Name is not ("OnGUI" or "Tick" or "Update" or "FixedUpdate" or "LateUpdate" or "Retarget" or "SteerToTarget" or "StrikeEnemies" or "TakeEnemyHits" or "Before" or "BeforeIterator" or "Prefix" or "OnTriggerEnter2D" or "OnCollisionEnter2D" or "DoDamage" or "EvaluateDamage" or "ProcessDamageBuffer" or "LateFixedUpdate" or "Refresh" or "Remove" or "BeforeSummonHit" or "AfterSummonHit" or "BeforeHeroDamage" or "BeforeHealthLoss" or "After" or "Prepare" or "InNativeRange" or "Release" or "Step" or "Register" or "AssignSpawn" or "IgnoreHero" or "FindHostile" or "For" or "Align" or "MaintainAll" or "TargetInRange" or "get_CanChangeTarget" or "get_TargetObject" or "get_HasEnemy" or "Enemies" or "DrainPending" or "TrimUnusedPrefabs" or "TickPickups" or "CaptureStatus")) { continue; }
+                if (light && method.Name is "For" or "get_HasEnemy" or "get_TargetObject" or "get_CanChangeTarget" or "Before" or "BeforeIterator" or "After" or "TargetInRange" or "InNativeRange" or "IgnoreHero" or "Prefix" or "Refresh") { continue; }
                 Hooks.Patch(method, prefix: new HarmonyMethod(typeof(QaRuntimeTimings), nameof(Before)),
                     finalizer: new HarmonyMethod(typeof(QaRuntimeTimings), nameof(After)));
             }

@@ -79,10 +79,14 @@ internal static class NativeAllyExecution
         else if(!IsFriendlyFlow||__instance is HealthManager){Current=null;Origin=__instance.gameObject;FallbackTarget=null;IsFriendlyFlow=false;ResourceKey=null;}
         // 新弹体的 OnEnable 没有父级，必须继承调用者；不能把仍有效的友方上下文清空。
     }
+    // 协程状态机类型固定，所属组件字段只需反射一次。
+    private static readonly Dictionary<Type,FieldInfo?> iteratorOwners=new();
     private static void BeforeIterator(object __instance,out NativeCallState __state)
     {
         __state=Capture();
-        var field=__instance.GetType().GetFields(BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public).OrderBy(f=>f.Name=="<>4__this"?0:1).FirstOrDefault(f=>typeof(MonoBehaviour).IsAssignableFrom(f.FieldType));
+        var type=__instance.GetType();
+        if(!iteratorOwners.TryGetValue(type,out var field))
+            iteratorOwners[type]=field=type.GetFields(BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public).OrderBy(f=>f.Name=="<>4__this"?0:1).FirstOrDefault(f=>typeof(MonoBehaviour).IsAssignableFrom(f.FieldType));
         if(field?.GetValue(__instance) is MonoBehaviour owner)Enter(owner);
     }
     private static void After(NativeCallState __state)
@@ -190,7 +194,7 @@ internal static class NativeAllyExecution
         }
         else if(marker!=null)marker.Assign(null,Origin,false);
     }
-    public static void Dispose(){hooks.UnpatchSelf();patched.Clear();Current=null;Origin=null;FallbackTarget=null;InSpawnedFlow=false;IsFriendlyFlow=false;}
+    public static void Dispose(){hooks.UnpatchSelf();patched.Clear();iteratorOwners.Clear();Current=null;Origin=null;FallbackTarget=null;InSpawnedFlow=false;IsFriendlyFlow=false;}
 }
 internal struct NativeCallState
 {
@@ -386,6 +390,10 @@ internal static class FriendlyCoroutineOriginHook
             !string.IsNullOrEmpty(__instance.GetComponentInParent<OwnedTransientResource>()?.AssetKey)))
         {__result=null!;return false;}
         if(__0==null||__0 is SummonScopedRoutine)return true;
+        // 敌方召唤物打死主播时，死亡/复活协程由主角自己启动；沿用召唤上下文会把复活转场当成剧情拦下，主播永远停在死亡。
+        // 友方上下文保持原样：友军本就打不到主播，且其中主播生命写入必须继续被拦截。
+        if(NativeAllyExecution.InSpawnedFlow&&!NativeAllyExecution.IsFriendlyFlow&&__instance.GetComponentInParent<HeroController>()!=null)
+        {__0=new SummonScopedRoutine(__0,new NativeCallState(),false,__instance.gameObject);return true;}
         var ally=NativeAllyExecution.Current??__instance.GetComponentInParent<NativeEnemyAlly>();
         if(ally!=null||NativeAllyExecution.InSpawnedFlow)__0=new SummonScopedRoutine(__0,new NativeCallState{Ally=ally,Origin=NativeAllyExecution.Origin??ally?.gameObject??__instance.gameObject,FallbackTarget=__instance.gameObject,Spawned=true,Friendly=NativeAllyExecution.IsFriendlyFlow||ally!=null,ResourceKey=NativeAllyExecution.ResourceKey},__instance.GetComponentInParent<OwnedSummon>()!=null||__instance.GetComponentInParent<NativeAllyProjectile>()!=null||!string.IsNullOrEmpty(__instance.GetComponentInParent<OwnedTransientResource>()?.AssetKey),__instance.gameObject);
         return true;
@@ -418,9 +426,18 @@ internal static class FriendlyFsmTargetWriteGuard
 internal static class FriendlyFsmTargetReadGuard
 {
     private static MethodBase TargetMethod()=>AccessTools.PropertyGetter(typeof(FsmGameObject),nameof(FsmGameObject.Value));
-    private static void Postfix(ref GameObject __result)
+    private static void Postfix(FsmGameObject __instance,ref GameObject __result)
     {
-        if(!NativeAllyExecution.IsFriendlyFlow||__result==null||__result.GetComponentInParent<HeroController>()==null)return;
+        if(!NativeAllyExecution.IsFriendlyFlow)return;
+        // 原作这些目标变量指向主播、从不为空；改指敌人后，敌人被击杀/清场的下一帧状态机可能先于重定向读到已销毁对象。
+        // 只替换本友军自己的目标变量，其他变量保留原作“为空即丢失目标”的语义。
+        if(__result is not null&&__result==null)
+        {
+            var ally=NativeAllyExecution.Current;
+            if(ally!=null&&ally.OwnsTargetVariable(__instance))__result=ally.TargetObject!;
+            return;
+        }
+        if(__result==null||__result.GetComponentInParent<HeroController>()==null)return;
         __result=NativeAllyExecution.Current?.TargetObject??NativeAllyExecution.FallbackTarget??NativeAllyExecution.Origin!;
     }
 }

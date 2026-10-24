@@ -148,7 +148,8 @@ internal static class SummonSceneTransitionHook
 {
     private static bool Prefix(System.Reflection.MethodBase __originalMethod)
     {
-        if(!NativeAllyExecution.InSpawnedFlow)return true;
+        // 主播死亡后的复活转场无论由谁触发都必须放行，否则会卡在死亡状态。
+        if(!NativeAllyExecution.InSpawnedFlow||HeroController.SilentInstance?.cState.dead==true)return true;
         NativeAllyExecution.NotifyStoryBlocked(__originalMethod.DeclaringType!.Name+"."+__originalMethod.Name);return false;
     }
 }
@@ -190,6 +191,18 @@ internal static class SummonCinematicEntryHook
     }
 }
 
+/// <summary>原作 FaceObject 在目标为空时 Finish 后未返回，继续取 transform 抛空引用（V2 已带 return）。
+/// 原作目标是主播从不为空；友军把目标换成敌人后，敌人被击杀或清场就会触发。按 V2 的写法补上返回。</summary>
+[HarmonyPatch(typeof(HutongGames.PlayMaker.Actions.FaceObject),"DoFace")]
+internal static class FaceObjectMissingTargetHook
+{
+    private static bool Prefix(HutongGames.PlayMaker.Actions.FaceObject __instance)
+    {
+        if(__instance.objectB==null||__instance.objectB.IsNone||__instance.objectB.Value==null){__instance.Finish();return false;}
+        return true;
+    }
+}
+
 /// <summary>副本销毁后注销原作抖动渲染回调，避免留下逐帧空引用。</summary>
 [HarmonyPatch]
 internal static class SummonJitterLifetimeHook
@@ -209,8 +222,21 @@ internal static class SummonJitterLifetimeHook
 [HarmonyPatch]
 internal static class SummonDeathTimeScaleHook
 {
-    private static IEnumerable<System.Reflection.MethodBase> TargetMethods()=>typeof(GameManager).GetMethods(System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic).Where(m=>m.Name=="SetTimeScale");
+    private static IEnumerable<System.Reflection.MethodBase> TargetMethods()=>typeof(GameManager).GetMethods(System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic).Where(m=>m.Name=="SetTimeScale"&&m.ReturnType==typeof(void));
     private static bool Prefix()=>!NativeAllyExecution.InSpawnedFlow;
+}
+/// <summary>协程版 SetTimeScale 拦截时交回空协程；直接返回 null 会让原作 FreezeMoment 的 StartCoroutine 报 routine is null。</summary>
+[HarmonyPatch]
+internal static class SummonDeathTimeScaleRoutineHook
+{
+    private static IEnumerable<System.Reflection.MethodBase> TargetMethods()=>typeof(GameManager).GetMethods(System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic).Where(m=>m.Name=="SetTimeScale"&&m.ReturnType==typeof(System.Collections.IEnumerator));
+    private static bool Prefix(ref System.Collections.IEnumerator __result)
+    {
+        if(!NativeAllyExecution.InSpawnedFlow)return true;
+        __result=Skip();return false;
+    }
+    /// <summary>不改时间缩放、立即结束的协程。</summary>
+    private static System.Collections.IEnumerator Skip(){yield break;}
 }
 
 /// <summary>召唤Boss尸体的延迟FreezeMoment组件不能在下一帧脱离来源后触发全局慢镜头。</summary>

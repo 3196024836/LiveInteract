@@ -112,6 +112,9 @@ internal sealed partial class QaHarness
         return new JObject{["Layout"]=layout,["X"]=point.x,["FloorY"]=floor,["Colliders"]=terrainFixture.GetComponentsInChildren<Collider2D>().Length};
     }
 
+    /// <summary>目标可能已在本帧销毁；Unity 假空对象不能用 ?. 继续取组件。</summary>
+    private static int? SummonId(GameObject? target)=>target!=null?target.GetComponentInParent<OwnedSummon>()?.GetInstanceID():null;
+
     private JObject FollowSnapshot()
     {
         var hero=HeroController.SilentInstance;
@@ -135,9 +138,9 @@ internal sealed partial class QaHarness
                     ["X"]=a.transform.position.x,["Y"]=a.transform.position.y,["Z"]=a.transform.position.z,["Locomotion"]=ally?.LocomotionMode,["StepProbe"]=ally?.StepProbe,["SafeRetarget"]=ally?.CanChangeTarget,["ScaleX"]=a.transform.localScale.x,
                     ["Hp"]=a.GetComponentInChildren<HealthManager>()?.hp,["Gravity"]=rb?.gravityScale,["Vx"]=rb?.linearVelocity.x,["Vy"]=rb?.linearVelocity.y,["Visible"]=ally?.IsOnScreen,
                     ["HasEnemy"]=ally?.HasEnemy,["Target"]=ally?.TargetObject?.name,
-                    ["TargetHp"]=ally?.TargetObject?.GetComponentInChildren<HealthManager>()?.hp,["TargetId"]=ally?.TargetObject?.GetComponentInParent<OwnedSummon>()?.GetInstanceID(),
+                    ["TargetHp"]=ally?.TargetObject?.GetComponentInChildren<HealthManager>()?.hp,["TargetId"]=SummonId(ally?.TargetObject),
                     ["Clip"]=animator?.CurrentClip?.name,["ClipTime"]=animator?.CurrentClip==null?null:animator.ClipTimeSeconds,
-                    ["ClockTargetId"]=clock==null?null:(AccessTools.Field(typeof(ClockworkHatchling),"target").GetValue(clock) as GameObject)?.GetComponentInParent<OwnedSummon>()?.GetInstanceID(),
+                    ["ClockTargetId"]=clock==null?null:SummonId(AccessTools.Field(typeof(ClockworkHatchling),"target").GetValue(clock) as GameObject),
                     ["ClockState"]=clock==null?null:AccessTools.Field(typeof(ClockworkHatchling),"currentState").GetValue(clock)?.ToString(),
                     ["Fsms"]=new JArray(a.GetComponentsInChildren<PlayMakerFSM>(true).Select(f=>new JObject{["Fsm"]=f.FsmName,["State"]=f.ActiveStateName})) };
             })) };
